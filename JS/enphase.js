@@ -108,7 +108,7 @@ if (!/^\d{12}$/.test(envoy_serial_no)) {
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_ip === null || envoy_ip === undefined || envoy_ip === '') {
-   console.error('⚠️ variable envoy_ip not set – skript stopped');
+   console.error('⚠️ variable envoy_ip not set – script stopped');
    console.log('Please set the variable envoy_ip to the IP address of your Envoy device.');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
