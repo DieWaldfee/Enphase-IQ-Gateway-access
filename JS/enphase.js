@@ -1,6 +1,6 @@
 // -------------------------------------------------------------------------------------------------------------------
 // reference: https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/10?_=1757761762260
-// thanks to gregj for the basic developement and steffe-s for the further developement
+// thanks to gregj for the basic development and steffe-s for the further development
 // this script transfers the blockly implementation into plain javascript
 // -------------------------------------------------------------------------------------------------------------------
 // This script reads the data from an Enphase Envoy IQ Gateway and writes it to the corresponding states in ioBroker
