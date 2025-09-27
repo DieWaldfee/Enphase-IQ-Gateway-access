@@ -407,7 +407,7 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
       return true;
    } catch (error) {
       error_cnt += 1;
-      console.log(log_msg + ': ' + error.message + ' | Error cnt: ' + String(error_cnt));
+      console.error(log_msg + ': ' + error.message + ' | Error cnt: ' + String(error_cnt));
       return false;
    }
 }
