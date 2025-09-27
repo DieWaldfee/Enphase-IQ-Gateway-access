@@ -318,7 +318,7 @@ function httpsRequestAsyncGet(options) {
       req.end();
    });
 }
-// Helper function to wrap https.request GET
+// Helper function to wrap https.request POST
 function httpsRequestAsyncPost(options) {
    return new Promise((resolve, reject) => {
       const req = https.request(options, (res) => {
