@@ -191,7 +191,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
 }
 
 // -------------------------------------------------------------------------------------------------------------------
-// basic funktion: IObSetState
+// basic function: IObSetState
 // -------------------------------------------------------------------------------------------------------------------
 // Create new or update existing states in IOBroker according to the JSON structure received from local
 // Envoy URL (function 'GetEnvoyData).In case of a unix timestamp field this function will create an
