@@ -287,7 +287,7 @@ async function IObSetState(id, obj, debug = 0) {
 }
 
 // -------------------------------------------------------------------------------------------------------------------
-// basic funktion: GetEnvoyData
+// basic function: GetEnvoyData
 // -------------------------------------------------------------------------------------------------------------------
 // Fetch PV data from your local Envoy. The JSON response of the given URL will then update (or create
 // if not existing) the corresponding states in IOBroker (via function IObSetState)
