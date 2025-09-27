@@ -81,19 +81,19 @@ function stopMyScript() {
 }
 
 if (envoy_username === null || envoy_username === undefined || envoy_username === '') {
-   console.error('⚠️ variable envoy_username not set – skript stopped');
+   console.error('⚠️ variable envoy_username not set – script stopped');
    console.log('Please set the variable envoy_username to your Enphase Enlighten Cloud username.');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_password === null || envoy_password === undefined || envoy_password === '') {
-   console.error('⚠️ variable envoy_password not set – skript stopped');
+   console.error('⚠️ variable envoy_password not set – script stopped');
    console.log('Please set the variable envoy_password to your Enphase Enlighten Cloud password.');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_serial_no === null || envoy_serial_no === undefined || envoy_serial_no === '') {
-   console.error('⚠️ variable envoy_serial_no not set – skript stopped');
+   console.error('⚠️ variable envoy_serial_no not set – script stopped');
    console.log('Please set the variable envoy_serial_no to the serial number of your Envoy device.');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
