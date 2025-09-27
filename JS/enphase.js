@@ -162,7 +162,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
       const responseData = await loginResponse.json();
       if (debug > 1) console.log('Response from login: ' + JSON.stringify(responseData));
 
-      // Token-Anfrage
+      // Token request
       const tokenData = {
          session_id: responseData.session_id,
          serial_num: envoy_serial_no,
