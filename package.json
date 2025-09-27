@@ -1,0 +1,61 @@
+{
+  "name": "enphase-iq-gateway-iobroker",
+  "version": "1.0.0",
+  "description": "ioBroker JavaScript integration for Enphase IQ Gateway Local APIs with Token-Based Authentication",
+  "main": "JS/enphase-simple.js",
+  "scripts": {
+    "lint": "eslint JS/*.js",
+    "validate": "node -c JS/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DieWaldfee/Enphase-IQ-Gateway-access.git"
+  },
+  "keywords": [
+    "enphase",
+    "iq-gateway",
+    "envoy",
+    "solar",
+    "iobroker",
+    "javascript",
+    "home-automation",
+    "photovoltaic",
+    "monitoring"
+  ],
+  "author": "DieWaldfee",
+  "license": "GPL-3.0",
+  "homepage": "https://github.com/DieWaldfee/Enphase-IQ-Gateway-access#readme",
+  "bugs": {
+    "url": "https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/issues"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "dependencies": {
+    "https": "*",
+    "http": "*"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "iobroker": {
+    "name": "Enphase IQ Gateway Integration",
+    "description": "Direct local API access to Enphase IQ Gateway for solar monitoring",
+    "version": "1.0.0",
+    "type": "script",
+    "adapter": "javascript",
+    "requirements": [
+      "Enphase IQ Gateway (Envoy) on local network",
+      "Valid Enphase authentication token",
+      "ioBroker with JavaScript adapter"
+    ],
+    "features": [
+      "Real-time production monitoring",
+      "Consumption tracking", 
+      "Individual inverter monitoring",
+      "System information",
+      "Automatic state management",
+      "Error handling and retry logic"
+    ]
+  }
+}
