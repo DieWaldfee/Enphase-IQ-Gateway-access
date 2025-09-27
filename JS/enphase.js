@@ -143,7 +143,7 @@ if (bearer_token == '') {
  */
 // -------------------------------------------------------------------------------------------------------------------
 async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug = 0) {
-   // Login-Anfrage
+   // Login request
    const loginData = querystring.stringify({
       'user[email]': envoy_username,
       'user[password]': envoy_password,
