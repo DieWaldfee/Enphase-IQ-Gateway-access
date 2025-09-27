@@ -18,7 +18,7 @@
 // -------------------------------------------------------------------------------------------------------------------
 // Version 0.0.1 - initial version by greoj
 // Version 0.0.2 - lifedata added by steffe-s
-// Version ... - further developement by steffe-s
+// Version ... - further development by steffe-s
 // Version 0.1.0 - complete transfer into plain javascript by Matthias Rauchschwalbe
 // -------------------------------------------------------------------------------------------------------------------
 // Note: extracted values are in milliWatt (1/1000 W), so a value of 1000 equals 1 Watt
