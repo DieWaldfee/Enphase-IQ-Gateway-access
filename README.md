@@ -4,6 +4,25 @@ Accessing IQ Gateway Local APIs with Token-Based Authentication <br>
 
 ---
 
+## Description
+
+This JavaScript code enables access to the **local Enphase IQ Gateway** and stores all retrieved data in **ioBroker datapoints**.
+
+Key points:
+
+* An **internet connection** is required to obtain a **bearer token** from Enphase servers.
+* To receive this token, you need an **Enphase Enlighten account** at:
+  👉 [https://enlighten.enphaseenergy.com](https://enlighten.enphaseenergy.com)
+* Using your credentials, the script will request a bearer token to authenticate access to your **local Envoy IQ Gateway**.
+* Once authenticated, the script will:
+
+  * Request all relevant datapoints
+  * Store them in ioBroker datapoints
+  * Update existing datapoints if present, or create new ones if missing
+* A **live link** to the Enphase server is refreshed regularly to maintain up-to-date access and data synchronization.
+
+---
+
 ## ⚠️ Disclaimer / Liability Notice
 
 This project is provided **as-is**, without any guarantees, warranties, or liabilities.
@@ -28,25 +47,6 @@ Please carefully review your **regional license agreement** with Enphase regardi
 * Access to their servers
 * Usage limitations of their API
 * Restrictions on local data collection and processing
-
----
-
-## Description
-
-This JavaScript code enables access to the **local Enphase IQ Gateway** and stores all retrieved data in **ioBroker datapoints**.
-
-Key points:
-
-* An **internet connection** is required to obtain a **bearer token** from Enphase servers.
-* To receive this token, you need an **Enphase Enlighten account** at:
-  👉 [https://enlighten.enphaseenergy.com](https://enlighten.enphaseenergy.com)
-* Using your credentials, the script will request a bearer token to authenticate access to your **local Envoy IQ Gateway**.
-* Once authenticated, the script will:
-
-  * Request all relevant datapoints
-  * Store them in ioBroker datapoints
-  * Update existing datapoints if present, or create new ones if missing
-* A **live link** to the Enphase server is refreshed regularly to maintain up-to-date access and data synchronization.
 
 ---
 
