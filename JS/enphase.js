@@ -386,7 +386,7 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
       headers: { Authorization: `Bearer ${bearer_token}` },
    };
 
-   if (debug > 0) console.log(log_msg + '...startetd');
+   if (debug > 0) console.log(log_msg + '...started');
    if (debug > 1) console.log('Query local Envoy IP: ' + envoy_ip + ' ...process started');
    let jsonData;
    try {
