@@ -362,7 +362,7 @@ async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug =
       jsonData = JSON.parse(response);
    } catch (error) {
       // Error handling for request failure or JSON parsing error -> stop script here
-      throw new Error('Error local Envoy IP: ' + envoy_ip + '. Error: ' + error.message);
+      throw new Error(`Error querying local Envoy at IP ${envoy_ip}: ${error.message}`);
    }
 
    try {
