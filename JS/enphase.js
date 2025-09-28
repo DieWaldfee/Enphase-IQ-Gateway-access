@@ -61,6 +61,9 @@ let ivp_livedata_stream = '/ivp/livedata/stream'; // URL path to get livedata st
 let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
 let ivp_production = '/production.json'; // URL path to get production data from local Envoy
 //                                                      (old URL, but includes "day" counter "whToday")
+// unix timestamp -> seconds since 1970-01-01 :: 1685000000 ≈ Juni 2023 :: 4100000000 ≈ Januar 2100
+const MIN_VALID_TIMESTAMP = 1685000000;
+const MAX_VALID_TIMESTAMP = 4100000000;
 
 // -------------------------------------------------------------------------------------------------------------------
 // end this script if a mandatory variable is not set
@@ -229,7 +232,7 @@ async function IObSetState(id, obj, debug = 0) {
                setState(id + '.' + attr, value, true);
             } else {
                // It is a number or date
-               if (new Date(value).getTime() > 0 && Number(value) > 1685000000 && Number(value) < 4100000000) {
+               if (new Date(value).getTime() > 0 && Number(value) > MIN_VALID_TIMESTAMP && Number(value) < MAX_VALID_TIMESTAMP) {
                   // value is a date
                   if (debug > 1) console.log('Updating date state: ' + id + '.' + attr + ' with value: ' + value);
                   if (debug > 2)
@@ -257,7 +260,7 @@ async function IObSetState(id, obj, debug = 0) {
                createState(id + '.' + attr, value, false, { type: 'string', read: true, write: true });
             } else {
                // It is a number or date
-               if (new Date(value).getTime() > 0 && Number(value) > 1685000000 && Number(value) < 4100000000) {
+               if (new Date(value).getTime() > 0 && Number(value) > MIN_VALID_TIMESTAMP && Number(value) < MAX_VALID_TIMESTAMP) {
                   // value is a date
                   if (debug > 1) console.log('Creating date state: ' + id + '.' + attr + ' with value: ' + value);
                   if (debug > 2)
@@ -518,3 +521,4 @@ const tokenRenewalSchedule = schedule('0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
+
