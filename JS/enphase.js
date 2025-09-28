@@ -509,7 +509,7 @@ const cyclicSchedule = schedule(pollingCron, async () => {
          error_cnt -= 1;
       }
    } catch (err) {
-      console.error('Error in scheduled polling loop:' + err.message);
+      console.error('Error in scheduled polling loop: ' + err.message);
    }
 });
 
