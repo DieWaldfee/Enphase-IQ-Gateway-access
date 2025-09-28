@@ -495,8 +495,9 @@ const cyclicSchedule = schedule(pollingCron, async () => {
             await IObSetState(dpPrefix + 'livedata', livedataData);
          }
          // 8. Get PV LIVEDATA STREAM STATUS update
+         const scStreamState = getState(dpPrefix + 'livedata.connection.sc_stream');
          if (existsState(dpPrefix + 'livedata.connection.sc_stream') &&
-             getState(dpPrefix + 'livedata.connection.sc_stream').val === 'disabled') {
+             scStreamState && scStreamState.val === 'disabled') {
             // Start SC stream after disconnect
             if (debug > 0) console.log('SC stream is disabled. Attempting to enable it...');
             await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
