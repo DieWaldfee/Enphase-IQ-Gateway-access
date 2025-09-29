@@ -65,6 +65,28 @@ Failure to comply may violate your agreement with Enphase.
 
 ---
 
+## Installation
+
+1. Create a new, empty JavaScript in ioBroker.
+2. Copy the code in your Javascript.
+3. Fill in your own credentials and device information in the following lines:
+
+```javascript
+let envoy_username = '';   // Enphase Enlighten Cloud username (required)
+let envoy_password = '';   // Enphase Enlighten Cloud password (required)
+let envoy_serial_no = '';  // 12-digit serial number of your Envoy (required)
+let envoy_ip = '';         // IP address of your local Envoy (required)
+```
+
+3. Save and run – done.
+
+## Where to find the required information
+**Username & Password:** Use your login credentials from [https://enlighten.enphaseenergy.com](https://enlighten.enphaseenergy.com)<br>
+**Serial number:** In the Enphase app or web interface: under System → Devices → Gateway → SN<br>
+**IP address:** From your local network (e.g. in your router’s DHCP table) or by assigning a static IP to the Envoy device<br>
+
+(For reliable operation, make sure the IP address does not change: in your router settings, add a DHCP reservation and assign a fixed IP address to the Envoy device.)
+
 ## Reference
 
 * Community discussion: [https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5](https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5)
