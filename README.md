@@ -117,6 +117,6 @@ Example:
 ## Reference
 
 * Community discussion: [https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5](https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5)
-* Original code contributions from: **steffe-s** and **gregoj**
+* Original code contributions from: **steffe-s** and **greoj**
 
 ---
