@@ -100,6 +100,18 @@ If you want to adjust the update rate, you can change the polling interval from 
 let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change as needed)
 ```
 
+---
+
+### Datapoint Configuration
+
+The script automatically creates all datapoints under `0_userdata.0.enphase.` by default.
+If you want to use a different path, you can adjust it with the following parameter:
+
+```javascript
+let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
+```
+Example:
+<img width="1091" height="335" alt="grafik" src="https://github.com/user-attachments/assets/da84c156-9711-46d8-a964-1a1aaa8ea75c" />
 
 
 ## Reference
