@@ -87,6 +87,21 @@ let envoy_ip = '';         // IP address of your local Envoy (required)
 
 (For reliable operation, make sure the IP address does not change: in your router settings, add a DHCP reservation and assign a fixed IP address to the Envoy device.)
 
+## optional configuration
+By default, only errors are written to the log. If you need more detailed information, increase the debug level above zero:
+
+```javascript
+let debug = 0; // Debug level (0 = none, 1 = error, 2 = info, 3 = debug)
+```
+
+If you want to adjust the update rate, you can change the polling interval from the default value of 1 minute to your preference:
+
+```javascript
+let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change as needed)
+```
+
+
+
 ## Reference
 
 * Community discussion: [https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5](https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5)
