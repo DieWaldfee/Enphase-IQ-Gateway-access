@@ -86,7 +86,7 @@
                             </value>
                             <value name="COMMON">
                               <block type="text" id="w=XU]d?y-grDbS.z{$q-">
-                                <field name="TEXT">{"name": "Einspeisung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                <field name="TEXT">{"name": "Einspeisung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true, "min" : 0}</field>
                               </block>
                             </value>
                             <next>
@@ -138,7 +138,7 @@
                                             </value>
                                             <value name="COMMON">
                                               <block type="text" id="|uNQF]k:wJYkaPACEJa7">
-                                                <field name="TEXT">{"name": "Batterie nur Entladung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                                <field name="TEXT">{"name": "Batterie nur Entladung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true, "min" : 0}</field>
                                               </block>
                                             </value>
                                             <next>
