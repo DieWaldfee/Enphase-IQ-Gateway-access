@@ -1,0 +1,967 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="create" id="|1e{I-l2[S#Uwe:,Slp8" x="-337" y="-662">
+    <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.SC_Stream_Status</field>
+    <value name="VALUE">
+      <block type="logic_boolean" id="i~-1uBtqvgM6YBDRkUa^">
+        <field name="BOOL">FALSE</field>
+      </block>
+    </value>
+    <value name="COMMON">
+      <block type="text" id="78*lNp.iLvaf35]h.Gu`">
+        <field name="TEXT">{"name": "SC Stream Status", "type": "boolean", "role": "state", "read": true, "write": true}</field>
+      </block>
+    </value>
+    <next>
+      <block type="create" id="fpV-ir51Ul,38kSe)q!*">
+        <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batteriekapazität</field>
+        <value name="VALUE">
+          <block type="math_number" id="LKN0M-lUHm$Ml!7o(c[e">
+            <field name="NUM">0</field>
+          </block>
+        </value>
+        <value name="COMMON">
+          <block type="text" id="G$8KX{{LB~R2!U/o8rc$">
+            <field name="TEXT">{"name": "Batteriekapazität", "type": "number", "unit": "%", "role": "value", "read": true, "write": true}</field>
+          </block>
+        </value>
+        <next>
+          <block type="create" id="^6SM/a6-+}x%VOYFP.vK">
+            <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+            <value name="VALUE">
+              <block type="math_number" id="rv{uO+U@oJtBhG+}x^6L">
+                <field name="NUM">0</field>
+              </block>
+            </value>
+            <value name="COMMON">
+              <block type="text" id="l+me!zeqk9r4v)zgEkz.">
+                <field name="TEXT">{"name": "PV-Erzeugung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+              </block>
+            </value>
+            <next>
+              <block type="create" id=":[K;RNVrG{=*w~+9[MW%">
+                <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Netzbezug_ohne_Einspeisung</field>
+                <value name="VALUE">
+                  <block type="math_number" id="44,OSX=R!YuYeUxzL++U">
+                    <field name="NUM">0</field>
+                  </block>
+                </value>
+                <value name="COMMON">
+                  <block type="text" id="T6;@Wz[Tzt*%_i+c,Fj^">
+                    <field name="TEXT">{"name": "Netzbezug ohne Einspeisung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="create" id="ZLV.X%LNc,;/3*`NS]?l">
+                    <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Hausverbrauch</field>
+                    <value name="VALUE">
+                      <block type="math_number" id="kpy)8;cg~MWen1k-4Y$z">
+                        <field name="NUM">0</field>
+                      </block>
+                    </value>
+                    <value name="COMMON">
+                      <block type="text" id="CQ5^q[P8g]CfD)_B9U){">
+                        <field name="TEXT">{"name": "Hausverbrauch", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="create" id="u,]5gT6,.d)}~LWF)g3{">
+                        <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Energienetz</field>
+                        <value name="VALUE">
+                          <block type="math_number" id="^JKivYj_4}S7Zky=[}Al">
+                            <field name="NUM">0</field>
+                          </block>
+                        </value>
+                        <value name="COMMON">
+                          <block type="text" id="4t_2WXe}gH^ZjfguSOor">
+                            <field name="TEXT">{"name": "Energienetz", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="create" id="L^AWY$AFGD1HJR1NMu|$">
+                            <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Einspeisung</field>
+                            <value name="VALUE">
+                              <block type="math_number" id="F%A_@,Lgs(5w6ZEE84p`">
+                                <field name="NUM">0</field>
+                              </block>
+                            </value>
+                            <value name="COMMON">
+                              <block type="text" id="w=XU]d?y-grDbS.z{$q-">
+                                <field name="TEXT">{"name": "Einspeisung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="create" id="c#slqB=RVg(k+[!KI2(l">
+                                <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_PV</field>
+                                <value name="VALUE">
+                                  <block type="math_number" id="GK#5MjT5YZWtzP55mhFv">
+                                    <field name="NUM">0</field>
+                                  </block>
+                                </value>
+                                <value name="COMMON">
+                                  <block type="text" id="%@X`I*z7i8Ip;~yRRbD*">
+                                    <field name="TEXT">{"name": "Batterieladung über PV", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="create" id="Y6wZ~+3YLl%rOh%YIgXd">
+                                    <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_Netz</field>
+                                    <value name="VALUE">
+                                      <block type="math_number" id="B#i0~FuV;D`03`:ANy8K">
+                                        <field name="NUM">0</field>
+                                      </block>
+                                    </value>
+                                    <value name="COMMON">
+                                      <block type="text" id="-E[5;K3VPrUtvkzG:F#e">
+                                        <field name="TEXT">{"name": "Batterieladung über Netz", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="create" id="a-x|ur7(%[mgY``ReD;=">
+                                        <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterieentladung_über_Netz</field>
+                                        <value name="VALUE">
+                                          <block type="math_number" id="Y,#_UOoLxXbd9`q*FZ6`">
+                                            <field name="NUM">0</field>
+                                          </block>
+                                        </value>
+                                        <value name="COMMON">
+                                          <block type="text" id="Ttgq}ZsUD2_+$9rrXj=V">
+                                            <field name="TEXT">{"name": "Batterieentladung über Netz", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="create" id="Jk!(B~ZKq`2R]L+o]^sn">
+                                            <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterie_nur_Entladung</field>
+                                            <value name="VALUE">
+                                              <block type="math_number" id="|Q!c[y}bALmQt35R]:Cu">
+                                                <field name="NUM">0</field>
+                                              </block>
+                                            </value>
+                                            <value name="COMMON">
+                                              <block type="text" id="|uNQF]k:wJYkaPACEJa7">
+                                                <field name="TEXT">{"name": "Batterie nur Entladung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                              </block>
+                                            </value>
+                                            <next>
+                                              <block type="create" id="/ZgQGcyyT0tow~kt8X]4">
+                                                <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Netz_gesamt</field>
+                                                <value name="VALUE">
+                                                  <block type="math_number" id="Zmfwvxt~J4OV5q^nBwr#">
+                                                    <field name="NUM">0</field>
+                                                  </block>
+                                                </value>
+                                                <value name="COMMON">
+                                                  <block type="text" id="}JRnp(p(k{!zOZ`|[TT}">
+                                                    <field name="TEXT">{"name": "Batterie Netz gesamt", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="create" id="0^Mi21UsGlHuCsF.{BE_">
+                                                    <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Einspeisung</field>
+                                                    <value name="VALUE">
+                                                      <block type="math_number" id="H,U~]IWVG7{,acrBT2L{">
+                                                        <field name="NUM">0</field>
+                                                      </block>
+                                                    </value>
+                                                    <value name="COMMON">
+                                                      <block type="text" id=".Sz5Sibh%bA7jy7ht_.-">
+                                                        <field name="TEXT">{"name": "Batterie Einspeisung", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="create" id="[[ALD91JNxW!.:oPS8b,">
+                                                        <field name="NAME">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Eigenverbrauch</field>
+                                                        <value name="VALUE">
+                                                          <block type="math_number" id="4*/~UN]MPgE/_PMHm0C?">
+                                                            <field name="NUM">0</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="COMMON">
+                                                          <block type="text" id="ldH#YbA-wlnkH$-6`h(g">
+                                                            <field name="TEXT">{"name": "Batterie Eigenverbrauch", "type": "number", "unit": "W", "role": "value", "read": true, "write": true}</field>
+                                                          </block>
+                                                        </value>
+                                                        <next>
+                                                          <block type="comment" id="b34XJZy@p3[tYg9~i77(">
+                                                            <field name="COMMENT">Netzbezug / Netzeinspeisung</field>
+                                                            <next>
+                                                              <block type="on" id="R=TcB:Y;oW+@!R21r;.c">
+                                                                <field name="OID">0_userdata.0.enphase.livedata.meters.grid.agg_p_mw</field>
+                                                                <field name="CONDITION">any</field>
+                                                                <field name="ACK_CONDITION"></field>
+                                                                <statement name="STATEMENT">
+                                                                  <block type="update" id=",Smtm*YKzeEoxCw%Y$$}">
+                                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                    <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Energienetz</field>
+                                                                    <field name="WITH_DELAY">FALSE</field>
+                                                                    <value name="VALUE">
+                                                                      <block type="math_round" id="`:SgM1(S!e7wO$x#rdA7">
+                                                                        <field name="OP">ROUNDUP</field>
+                                                                        <value name="NUM">
+                                                                          <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                            <field name="NUM">3.1</field>
+                                                                          </shadow>
+                                                                          <block type="math_arithmetic" id="fGHNrBIh0Rb4C1Y1a[rY">
+                                                                            <field name="OP">DIVIDE</field>
+                                                                            <value name="A">
+                                                                              <shadow type="math_number" id="%dB3b}^r!H:LX7[0PytL">
+                                                                                <field name="NUM">1</field>
+                                                                              </shadow>
+                                                                              <block type="on_source" id=",b5/]n=AWf?^Ow=8yf^?">
+                                                                                <field name="ATTR">state.val</field>
+                                                                              </block>
+                                                                            </value>
+                                                                            <value name="B">
+                                                                              <shadow type="math_number" id="3O3;3qa}(|{)h0Z+?8B?">
+                                                                                <field name="NUM">1</field>
+                                                                              </shadow>
+                                                                              <block type="math_number" id="QP84}[6.N0:{p**V+VhE">
+                                                                                <field name="NUM">1000</field>
+                                                                              </block>
+                                                                            </value>
+                                                                          </block>
+                                                                        </value>
+                                                                      </block>
+                                                                    </value>
+                                                                    <next>
+                                                                      <block type="update" id=":Am_Gm[7mE|w]#]*i_(*">
+                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Netzbezug_ohne_Einspeisung</field>
+                                                                        <field name="WITH_DELAY">FALSE</field>
+                                                                        <value name="VALUE">
+                                                                          <block type="math_round" id="1WQ]FtxW*Rr[{i/vpEr~">
+                                                                            <field name="OP">ROUNDUP</field>
+                                                                            <value name="NUM">
+                                                                              <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                <field name="NUM">3.1</field>
+                                                                              </shadow>
+                                                                              <block type="math_arithmetic" id="V6]7*W;hmF]Fh=H]ov$D">
+                                                                                <field name="OP">DIVIDE</field>
+                                                                                <value name="A">
+                                                                                  <shadow type="math_number" id="%dB3b}^r!H:LX7[0PytL">
+                                                                                    <field name="NUM">1</field>
+                                                                                  </shadow>
+                                                                                  <block type="on_source" id="iVlAXB/ie7[Z+4P$#g(A">
+                                                                                    <field name="ATTR">state.val</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                                <value name="B">
+                                                                                  <shadow type="math_number" id="3O3;3qa}(|{)h0Z+?8B?">
+                                                                                    <field name="NUM">1</field>
+                                                                                  </shadow>
+                                                                                  <block type="math_number" id="F^B_8!nAS[2AWfxJ}[t7">
+                                                                                    <field name="NUM">1000</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                              </block>
+                                                                            </value>
+                                                                          </block>
+                                                                        </value>
+                                                                      </block>
+                                                                    </next>
+                                                                  </block>
+                                                                </statement>
+                                                                <next>
+                                                                  <block type="comment" id="(oz0QsPxo%1,Hcawpks.">
+                                                                    <field name="COMMENT">Netzeinspeisung negiert</field>
+                                                                    <next>
+                                                                      <block type="on" id="o!/9@gfrBge5q!FXL_aq">
+                                                                        <field name="OID">0_userdata.0.enphase.livedata.meters.grid.agg_p_mw</field>
+                                                                        <field name="CONDITION">any</field>
+                                                                        <field name="ACK_CONDITION"></field>
+                                                                        <statement name="STATEMENT">
+                                                                          <block type="controls_if" id="R!lRI5?P:IpDL/YpJ6mc">
+                                                                            <mutation else="1"></mutation>
+                                                                            <value name="IF0">
+                                                                              <block type="logic_compare" id="92KNC^=Hu_c4o!15yeJ*">
+                                                                                <field name="OP">GT</field>
+                                                                                <value name="A">
+                                                                                  <block type="get_value" id="H*HRgODY9:4F_H2?s]2*">
+                                                                                    <field name="ATTR">val</field>
+                                                                                    <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                                <value name="B">
+                                                                                  <block type="math_number" id="A**xn9B,cbBzS6eq1Xa0">
+                                                                                    <field name="NUM">0</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                              </block>
+                                                                            </value>
+                                                                            <statement name="DO0">
+                                                                              <block type="update" id="/]@j_??kR~lK`?GljvLk">
+                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Einspeisung</field>
+                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                <value name="VALUE">
+                                                                                  <block type="math_arithmetic" id=",wij]CcH[K|9{zF.($Ne">
+                                                                                    <field name="OP">MULTIPLY</field>
+                                                                                    <value name="A">
+                                                                                      <shadow type="math_number" id="t|.]8o6qOD#zZXUS{tmn">
+                                                                                        <field name="NUM">1</field>
+                                                                                      </shadow>
+                                                                                      <block type="get_value" id="R92$P`uocO;{95ac+S^E">
+                                                                                        <field name="ATTR">val</field>
+                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Energienetz</field>
+                                                                                      </block>
+                                                                                    </value>
+                                                                                    <value name="B">
+                                                                                      <shadow type="math_number" id="iwr9hg2mr@d9YW-Gz_TZ">
+                                                                                        <field name="NUM">1</field>
+                                                                                      </shadow>
+                                                                                      <block type="math_number" id="@K{D^A]w8mzwrK*~dh7|">
+                                                                                        <field name="NUM">-1</field>
+                                                                                      </block>
+                                                                                    </value>
+                                                                                  </block>
+                                                                                </value>
+                                                                              </block>
+                                                                            </statement>
+                                                                            <statement name="ELSE">
+                                                                              <block type="update" id="{^EgD^wDw$p*s%uAVi+B">
+                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Einspeisung</field>
+                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                <value name="VALUE">
+                                                                                  <block type="math_number" id="-0gPy-bv:cv@giTA}fr:">
+                                                                                    <field name="NUM">0</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                              </block>
+                                                                            </statement>
+                                                                          </block>
+                                                                        </statement>
+                                                                        <next>
+                                                                          <block type="comment" id="z.XJ|8h6gD-i^Dk255KS">
+                                                                            <field name="COMMENT">Hausverbrauch</field>
+                                                                            <next>
+                                                                              <block type="on" id="F4|LHxJ-9e3}FbqgM*%0">
+                                                                                <field name="OID">0_userdata.0.enphase.livedata.meters.load.agg_p_mw</field>
+                                                                                <field name="CONDITION">any</field>
+                                                                                <field name="ACK_CONDITION"></field>
+                                                                                <statement name="STATEMENT">
+                                                                                  <block type="update" id="sX/%.U3(d@0FH;[c-7Z$">
+                                                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                    <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Hausverbrauch</field>
+                                                                                    <field name="WITH_DELAY">FALSE</field>
+                                                                                    <value name="VALUE">
+                                                                                      <block type="math_round" id=":i2J#BlN1uy4Jye~K!IR">
+                                                                                        <field name="OP">ROUNDUP</field>
+                                                                                        <value name="NUM">
+                                                                                          <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                            <field name="NUM">3.1</field>
+                                                                                          </shadow>
+                                                                                          <block type="math_arithmetic" id="*e~+quHSP.z$azvq~}F0">
+                                                                                            <field name="OP">DIVIDE</field>
+                                                                                            <value name="A">
+                                                                                              <shadow type="math_number" id="M`Yh{e~{r5:_-:9P^:JW">
+                                                                                                <field name="NUM">1</field>
+                                                                                              </shadow>
+                                                                                              <block type="on_source" id="phJx!7L#U!a.]5=76AZf">
+                                                                                                <field name="ATTR">state.val</field>
+                                                                                              </block>
+                                                                                            </value>
+                                                                                            <value name="B">
+                                                                                              <shadow type="math_number" id="MQBq|1jXHJ#%,1..gxvY">
+                                                                                                <field name="NUM">1</field>
+                                                                                              </shadow>
+                                                                                              <block type="math_number" id="3:i,RAn2:9TkS3H_=-J#">
+                                                                                                <field name="NUM">1000</field>
+                                                                                              </block>
+                                                                                            </value>
+                                                                                          </block>
+                                                                                        </value>
+                                                                                      </block>
+                                                                                    </value>
+                                                                                  </block>
+                                                                                </statement>
+                                                                                <next>
+                                                                                  <block type="comment" id="`*;dUWj=!LDNpbkLc))M">
+                                                                                    <field name="COMMENT">PV Erzeugnung</field>
+                                                                                    <next>
+                                                                                      <block type="on" id="iT)3o|gf6HB.%eCN$@zP">
+                                                                                        <field name="OID">0_userdata.0.enphase.livedata.meters.pv.agg_p_mw</field>
+                                                                                        <field name="CONDITION">any</field>
+                                                                                        <field name="ACK_CONDITION"></field>
+                                                                                        <statement name="STATEMENT">
+                                                                                          <block type="controls_if" id="l^zE[P~R)a!2t|:jiM(|">
+                                                                                            <mutation else="1"></mutation>
+                                                                                            <value name="IF0">
+                                                                                              <block type="logic_compare" id="nh3/v4+,91w5I[3IadS$">
+                                                                                                <field name="OP">GT</field>
+                                                                                                <value name="A">
+                                                                                                  <block type="on_source" id="8T=N6GJN8KUjykUuNW?P">
+                                                                                                    <field name="ATTR">state.val</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                                <value name="B">
+                                                                                                  <block type="math_number" id="x)}j2:d+Is%sN@z_6g,~">
+                                                                                                    <field name="NUM">0</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                              </block>
+                                                                                            </value>
+                                                                                            <statement name="DO0">
+                                                                                              <block type="update" id="$5xwgaIa3ULu9MP@`DUx">
+                                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+                                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                                <value name="VALUE">
+                                                                                                  <block type="math_round" id="{:U/C2)dpiqCyXsRX%2}">
+                                                                                                    <field name="OP">ROUNDUP</field>
+                                                                                                    <value name="NUM">
+                                                                                                      <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                                        <field name="NUM">3.1</field>
+                                                                                                      </shadow>
+                                                                                                      <block type="math_arithmetic" id="KdjcX,q(-3l`vCx2(o~l">
+                                                                                                        <field name="OP">DIVIDE</field>
+                                                                                                        <value name="A">
+                                                                                                          <shadow type="math_number" id="Z;YmcS)C![ri*hWck9-#">
+                                                                                                            <field name="NUM">1</field>
+                                                                                                          </shadow>
+                                                                                                          <block type="on_source" id="ydT%+`wmTw+}+t/sF=C~">
+                                                                                                            <field name="ATTR">state.val</field>
+                                                                                                          </block>
+                                                                                                        </value>
+                                                                                                        <value name="B">
+                                                                                                          <shadow type="math_number" id="BGWnp9qn*ZZM4o|#M[tX">
+                                                                                                            <field name="NUM">1</field>
+                                                                                                          </shadow>
+                                                                                                          <block type="math_number" id="LrV1n3ml@ZTfS0C$j9@b">
+                                                                                                            <field name="NUM">1000</field>
+                                                                                                          </block>
+                                                                                                        </value>
+                                                                                                      </block>
+                                                                                                    </value>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                              </block>
+                                                                                            </statement>
+                                                                                            <statement name="ELSE">
+                                                                                              <block type="update" id="w_ky5IC/WO/2W,dnzB5A">
+                                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+                                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                                <value name="VALUE">
+                                                                                                  <block type="math_number" id="m;ZDZySI%b2~}UZEDIso">
+                                                                                                    <field name="NUM">0</field>
+                                                                                                  </block>
+                                                                                                </value>
+                                                                                              </block>
+                                                                                            </statement>
+                                                                                          </block>
+                                                                                        </statement>
+                                                                                        <next>
+                                                                                          <block type="comment" id="4]s2;oO[A.DKS^feZs*l">
+                                                                                            <field name="COMMENT">Batterieladung über PV</field>
+                                                                                            <next>
+                                                                                              <block type="on" id="}*xtxiY-j7g,_jBEDV?^">
+                                                                                                <field name="OID">0_userdata.0.enphase.livedata.meters.storage.agg_p_mw</field>
+                                                                                                <field name="CONDITION">any</field>
+                                                                                                <field name="ACK_CONDITION"></field>
+                                                                                                <statement name="STATEMENT">
+                                                                                                  <block type="controls_if" id="Z+Le9t!]wro?Aiyjq9yT">
+                                                                                                    <mutation else="1"></mutation>
+                                                                                                    <value name="IF0">
+                                                                                                      <block type="logic_compare" id="ye0=tBqFC3,,.^@ywMv3">
+                                                                                                        <field name="OP">GT</field>
+                                                                                                        <value name="A">
+                                                                                                          <block type="get_value" id="U#-I`pnZzIDQ/1JJ|4I{">
+                                                                                                            <field name="ATTR">val</field>
+                                                                                                            <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+                                                                                                          </block>
+                                                                                                        </value>
+                                                                                                        <value name="B">
+                                                                                                          <block type="math_number" id="b;}lR*{qn8YNnYK5(,$m">
+                                                                                                            <field name="NUM">0</field>
+                                                                                                          </block>
+                                                                                                        </value>
+                                                                                                      </block>
+                                                                                                    </value>
+                                                                                                    <statement name="DO0">
+                                                                                                      <block type="update" id="moZ7/vz`Ex*wXp+S%OxU">
+                                                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_PV</field>
+                                                                                                        <field name="WITH_DELAY">FALSE</field>
+                                                                                                        <value name="VALUE">
+                                                                                                          <block type="math_round" id="/eg]`f){,*d1F*!nHB7k">
+                                                                                                            <field name="OP">ROUNDUP</field>
+                                                                                                            <value name="NUM">
+                                                                                                              <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                                                <field name="NUM">3.1</field>
+                                                                                                              </shadow>
+                                                                                                              <block type="math_arithmetic" id="6t5]{-=r?*[|^C_yl8U]">
+                                                                                                                <field name="OP">DIVIDE</field>
+                                                                                                                <value name="A">
+                                                                                                                  <shadow type="math_number" id="zz2:K;m)qi6{]K#~fG2M">
+                                                                                                                    <field name="NUM">1</field>
+                                                                                                                  </shadow>
+                                                                                                                  <block type="on_source" id="r/fj8*GRX+DEAB?kB.I*">
+                                                                                                                    <field name="ATTR">state.val</field>
+                                                                                                                  </block>
+                                                                                                                </value>
+                                                                                                                <value name="B">
+                                                                                                                  <shadow type="math_number" id="*FZQBwEx0/OxA1k=g+eS">
+                                                                                                                    <field name="NUM">1</field>
+                                                                                                                  </shadow>
+                                                                                                                  <block type="math_number" id="-.qb;4Y|6v05uZ$5@o$0">
+                                                                                                                    <field name="NUM">1000</field>
+                                                                                                                  </block>
+                                                                                                                </value>
+                                                                                                              </block>
+                                                                                                            </value>
+                                                                                                          </block>
+                                                                                                        </value>
+                                                                                                      </block>
+                                                                                                    </statement>
+                                                                                                    <statement name="ELSE">
+                                                                                                      <block type="update" id="Wczg}72@veb-mhG7s*!b">
+                                                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_PV</field>
+                                                                                                        <field name="WITH_DELAY">FALSE</field>
+                                                                                                        <value name="VALUE">
+                                                                                                          <block type="math_number" id="l),T@!ne5;zU)D:=@gxm">
+                                                                                                            <field name="NUM">0</field>
+                                                                                                          </block>
+                                                                                                        </value>
+                                                                                                      </block>
+                                                                                                    </statement>
+                                                                                                  </block>
+                                                                                                </statement>
+                                                                                                <next>
+                                                                                                  <block type="comment" id="Ci}(~uQL=y.a5k~;ZJRC">
+                                                                                                    <field name="COMMENT">Batterie Eigenverbrauch</field>
+                                                                                                    <next>
+                                                                                                      <block type="on" id=".ftf(ks:n?jlQW7{QbfI">
+                                                                                                        <field name="OID">0_userdata.0.enphase.livedata.meters.storage.agg_p_mw</field>
+                                                                                                        <field name="CONDITION">any</field>
+                                                                                                        <field name="ACK_CONDITION"></field>
+                                                                                                        <statement name="STATEMENT">
+                                                                                                          <block type="update" id="1Ek@Ld0k%0Mz#x#9LC({">
+                                                                                                            <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                            <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Eigenverbrauch</field>
+                                                                                                            <field name="WITH_DELAY">FALSE</field>
+                                                                                                            <value name="VALUE">
+                                                                                                              <block type="math_round" id="eeH:@M.MP@((T[C^O{qP">
+                                                                                                                <field name="OP">ROUNDUP</field>
+                                                                                                                <value name="NUM">
+                                                                                                                  <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                                                    <field name="NUM">3.1</field>
+                                                                                                                  </shadow>
+                                                                                                                  <block type="math_arithmetic" id="DrW_.;3ED~7qV?5zl#Sr">
+                                                                                                                    <field name="OP">DIVIDE</field>
+                                                                                                                    <value name="A">
+                                                                                                                      <shadow type="math_number" id="zz2:K;m)qi6{]K#~fG2M">
+                                                                                                                        <field name="NUM">1</field>
+                                                                                                                      </shadow>
+                                                                                                                      <block type="on_source" id="BL1JGJ:+%L=I;4NL?zsV">
+                                                                                                                        <field name="ATTR">state.val</field>
+                                                                                                                      </block>
+                                                                                                                    </value>
+                                                                                                                    <value name="B">
+                                                                                                                      <shadow type="math_number" id="*FZQBwEx0/OxA1k=g+eS">
+                                                                                                                        <field name="NUM">1</field>
+                                                                                                                      </shadow>
+                                                                                                                      <block type="math_number" id="..lWof[ekOiU~KQ$b@_z">
+                                                                                                                        <field name="NUM">1000</field>
+                                                                                                                      </block>
+                                                                                                                    </value>
+                                                                                                                  </block>
+                                                                                                                </value>
+                                                                                                              </block>
+                                                                                                            </value>
+                                                                                                            <next>
+                                                                                                              <block type="update" id="R0.]Ji-I)USF_IdoA+AM">
+                                                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_nur_Entladung</field>
+                                                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                                                <value name="VALUE">
+                                                                                                                  <block type="math_round" id="K[hTID9Zd?9b~HXXU2c)">
+                                                                                                                    <field name="OP">ROUNDUP</field>
+                                                                                                                    <value name="NUM">
+                                                                                                                      <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                                                        <field name="NUM">3.1</field>
+                                                                                                                      </shadow>
+                                                                                                                      <block type="math_arithmetic" id="i)mZ;NsE4%KMcWNRe-qA">
+                                                                                                                        <field name="OP">DIVIDE</field>
+                                                                                                                        <value name="A">
+                                                                                                                          <shadow type="math_number" id="zz2:K;m)qi6{]K#~fG2M">
+                                                                                                                            <field name="NUM">1</field>
+                                                                                                                          </shadow>
+                                                                                                                          <block type="on_source" id="rog!@vu:BUw@Vg][g_s-">
+                                                                                                                            <field name="ATTR">state.val</field>
+                                                                                                                          </block>
+                                                                                                                        </value>
+                                                                                                                        <value name="B">
+                                                                                                                          <shadow type="math_number" id="*FZQBwEx0/OxA1k=g+eS">
+                                                                                                                            <field name="NUM">1</field>
+                                                                                                                          </shadow>
+                                                                                                                          <block type="math_number" id="=B6I[z+GTuc%s9HjeCp.">
+                                                                                                                            <field name="NUM">1000</field>
+                                                                                                                          </block>
+                                                                                                                        </value>
+                                                                                                                      </block>
+                                                                                                                    </value>
+                                                                                                                  </block>
+                                                                                                                </value>
+                                                                                                              </block>
+                                                                                                            </next>
+                                                                                                          </block>
+                                                                                                        </statement>
+                                                                                                        <next>
+                                                                                                          <block type="comment" id="vRvyUxzeAknF8-y?1y0B">
+                                                                                                            <field name="COMMENT">Batterieladung über Netz</field>
+                                                                                                            <next>
+                                                                                                              <block type="on" id="=*hn}Nh%cbF,,8MeTD]^">
+                                                                                                                <field name="OID">0_userdata.0.enphase.livedata.meters.storage.agg_p_mw</field>
+                                                                                                                <field name="CONDITION">any</field>
+                                                                                                                <field name="ACK_CONDITION"></field>
+                                                                                                                <statement name="STATEMENT">
+                                                                                                                  <block type="controls_if" id="EH:,]-n4sq!W5GWX,m|m">
+                                                                                                                    <mutation else="1"></mutation>
+                                                                                                                    <value name="IF0">
+                                                                                                                      <block type="logic_multi_and" id="lW?R`+GrZ@=NB^1N/Cen">
+                                                                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" items="2"></mutation>
+                                                                                                                        <value name="AND0">
+                                                                                                                          <block type="logic_compare" id="=Lvy-Uh?XG6D@v1[fH7J">
+                                                                                                                            <field name="OP">LT</field>
+                                                                                                                            <value name="A">
+                                                                                                                              <block type="get_value" id="w+;2Z=7!oi:C[|b+pAO!">
+                                                                                                                                <field name="ATTR">val</field>
+                                                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+                                                                                                                              </block>
+                                                                                                                            </value>
+                                                                                                                            <value name="B">
+                                                                                                                              <block type="math_number" id="hvg[h3Ahp62?asD)A62y">
+                                                                                                                                <field name="NUM">1</field>
+                                                                                                                              </block>
+                                                                                                                            </value>
+                                                                                                                          </block>
+                                                                                                                        </value>
+                                                                                                                        <value name="AND1">
+                                                                                                                          <block type="logic_compare" id="BRtu[S[p!ssG=2nXo8c)">
+                                                                                                                            <field name="OP">LT</field>
+                                                                                                                            <value name="A">
+                                                                                                                              <block type="get_value" id="`l13.Y11VCD%BgA^a${y">
+                                                                                                                                <field name="ATTR">val</field>
+                                                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Eigenverbrauch</field>
+                                                                                                                              </block>
+                                                                                                                            </value>
+                                                                                                                            <value name="B">
+                                                                                                                              <block type="math_number" id="T#B_8-Whfw2/@Pax@HSO">
+                                                                                                                                <field name="NUM">0</field>
+                                                                                                                              </block>
+                                                                                                                            </value>
+                                                                                                                          </block>
+                                                                                                                        </value>
+                                                                                                                      </block>
+                                                                                                                    </value>
+                                                                                                                    <statement name="DO0">
+                                                                                                                      <block type="update" id="E}[(Oer7{z~U99E]}Yg8">
+                                                                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_Netz</field>
+                                                                                                                        <field name="WITH_DELAY">FALSE</field>
+                                                                                                                        <value name="VALUE">
+                                                                                                                          <block type="math_round" id="MuU[;fK/1Y9aLyNVtU75">
+                                                                                                                            <field name="OP">ROUNDUP</field>
+                                                                                                                            <value name="NUM">
+                                                                                                                              <shadow type="math_number" id="XpeV6CfDLHT^!F~E[=!7">
+                                                                                                                                <field name="NUM">3.1</field>
+                                                                                                                              </shadow>
+                                                                                                                              <block type="math_arithmetic" id="f`t{sxRGwz0].eAhs^Lp">
+                                                                                                                                <field name="OP">DIVIDE</field>
+                                                                                                                                <value name="A">
+                                                                                                                                  <shadow type="math_number" id="zz2:K;m)qi6{]K#~fG2M">
+                                                                                                                                    <field name="NUM">1</field>
+                                                                                                                                  </shadow>
+                                                                                                                                  <block type="on_source" id="8SG6UKL:;PK9pJmzo!#+">
+                                                                                                                                    <field name="ATTR">state.val</field>
+                                                                                                                                  </block>
+                                                                                                                                </value>
+                                                                                                                                <value name="B">
+                                                                                                                                  <shadow type="math_number" id="*FZQBwEx0/OxA1k=g+eS">
+                                                                                                                                    <field name="NUM">1</field>
+                                                                                                                                  </shadow>
+                                                                                                                                  <block type="math_number" id="08aprkxhJ(S+Epf:((;j">
+                                                                                                                                    <field name="NUM">1000</field>
+                                                                                                                                  </block>
+                                                                                                                                </value>
+                                                                                                                              </block>
+                                                                                                                            </value>
+                                                                                                                          </block>
+                                                                                                                        </value>
+                                                                                                                      </block>
+                                                                                                                    </statement>
+                                                                                                                    <statement name="ELSE">
+                                                                                                                      <block type="update" id="GC}I02Vvv]W2Qwz(Q1Q4">
+                                                                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_Netz</field>
+                                                                                                                        <field name="WITH_DELAY">FALSE</field>
+                                                                                                                        <value name="VALUE">
+                                                                                                                          <block type="math_number" id="5,,H-17)2^Z0MDN^r=6-">
+                                                                                                                            <field name="NUM">0</field>
+                                                                                                                          </block>
+                                                                                                                        </value>
+                                                                                                                      </block>
+                                                                                                                    </statement>
+                                                                                                                  </block>
+                                                                                                                </statement>
+                                                                                                                <next>
+                                                                                                                  <block type="comment" id=")+j/rdrw_?8@eq8v9ZCJ">
+                                                                                                                    <field name="COMMENT">Batterie Netzeinspeisung</field>
+                                                                                                                    <next>
+                                                                                                                      <block type="on" id="@^J}E`J,eF[p88x3@)R~">
+                                                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Energienetz</field>
+                                                                                                                        <field name="CONDITION">any</field>
+                                                                                                                        <field name="ACK_CONDITION"></field>
+                                                                                                                        <statement name="STATEMENT">
+                                                                                                                          <block type="controls_if" id="V|c1tWUOT+8:QuZ`!,H)">
+                                                                                                                            <mutation else="1"></mutation>
+                                                                                                                            <value name="IF0">
+                                                                                                                              <block type="logic_multi_and" id="=KcG/8jovF.B~aDV%-f^">
+                                                                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" items="2"></mutation>
+                                                                                                                                <value name="AND0">
+                                                                                                                                  <block type="logic_compare" id="2zioA7V=.):tLA{d)@7q">
+                                                                                                                                    <field name="OP">LT</field>
+                                                                                                                                    <value name="A">
+                                                                                                                                      <block type="get_value" id="{@Dh.,9$-ffuh-7*/WX:">
+                                                                                                                                        <field name="ATTR">val</field>
+                                                                                                                                        <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.PV-Erzeugung</field>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                    <value name="B">
+                                                                                                                                      <block type="math_number" id="q%}PR8,Zz/J*--zC0B78">
+                                                                                                                                        <field name="NUM">1</field>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                  </block>
+                                                                                                                                </value>
+                                                                                                                                <value name="AND1">
+                                                                                                                                  <block type="logic_compare" id="tZWZgq#FLQRb]]3+EF0U">
+                                                                                                                                    <field name="OP">LT</field>
+                                                                                                                                    <value name="A">
+                                                                                                                                      <block type="on_source" id=";!|_5s7C[dW2G9YK=p|:">
+                                                                                                                                        <field name="ATTR">state.val</field>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                    <value name="B">
+                                                                                                                                      <block type="math_number" id="~eL=-y4L+Zu/+qNUr#no">
+                                                                                                                                        <field name="NUM">0</field>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                  </block>
+                                                                                                                                </value>
+                                                                                                                              </block>
+                                                                                                                            </value>
+                                                                                                                            <statement name="DO0">
+                                                                                                                              <block type="update" id="haTT(QWr_$U!5x^QJi[,">
+                                                                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Einspeisung</field>
+                                                                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                                                                <value name="VALUE">
+                                                                                                                                  <block type="math_arithmetic" id="5b/^SFE,,N~i#R`?hRms">
+                                                                                                                                    <field name="OP">MULTIPLY</field>
+                                                                                                                                    <value name="A">
+                                                                                                                                      <shadow type="math_number" id="t|.]8o6qOD#zZXUS{tmn">
+                                                                                                                                        <field name="NUM">1</field>
+                                                                                                                                      </shadow>
+                                                                                                                                      <block type="on_source" id="4!IyP4Ha`A#jlkbA5lBZ">
+                                                                                                                                        <field name="ATTR">state.val</field>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                    <value name="B">
+                                                                                                                                      <shadow type="math_number" id="iwr9hg2mr@d9YW-Gz_TZ">
+                                                                                                                                        <field name="NUM">1</field>
+                                                                                                                                      </shadow>
+                                                                                                                                      <block type="math_number" id="/y44l`eJ3ReZcj;kPXZ?">
+                                                                                                                                        <field name="NUM">-1</field>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                  </block>
+                                                                                                                                </value>
+                                                                                                                              </block>
+                                                                                                                            </statement>
+                                                                                                                            <statement name="ELSE">
+                                                                                                                              <block type="update" id="Xm7@K;6NKB@3Cp##D5;h">
+                                                                                                                                <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                                <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Einspeisung</field>
+                                                                                                                                <field name="WITH_DELAY">FALSE</field>
+                                                                                                                                <value name="VALUE">
+                                                                                                                                  <block type="math_number" id="SqR.*8V`hJIugw[Ry?+O">
+                                                                                                                                    <field name="NUM">0</field>
+                                                                                                                                  </block>
+                                                                                                                                </value>
+                                                                                                                              </block>
+                                                                                                                            </statement>
+                                                                                                                          </block>
+                                                                                                                        </statement>
+                                                                                                                        <next>
+                                                                                                                          <block type="comment" id="K6+js$fu%A[`-=y!bKU4">
+                                                                                                                            <field name="COMMENT">Batterie Netzbezug / Einspeisung</field>
+                                                                                                                            <next>
+                                                                                                                              <block type="on" id="Odpmlsk?AOC(xp@rs,-,">
+                                                                                                                                <field name="OID">0_userdata.0.enphase.livedata.meters.storage.agg_p_mw</field>
+                                                                                                                                <field name="CONDITION">any</field>
+                                                                                                                                <field name="ACK_CONDITION"></field>
+                                                                                                                                <statement name="STATEMENT">
+                                                                                                                                  <block type="update" id="%{Kfj,`XYX|AJV(m5}@=">
+                                                                                                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                                    <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Netz_gesamt</field>
+                                                                                                                                    <field name="WITH_DELAY">FALSE</field>
+                                                                                                                                    <value name="VALUE">
+                                                                                                                                      <block type="logic_multi_or" id="D*oB1RnVhQ{(L)~iarPr">
+                                                                                                                                        <mutation xmlns="http://www.w3.org/1999/xhtml" items="2"></mutation>
+                                                                                                                                        <value name="OR0">
+                                                                                                                                          <block type="get_value" id="E6aezjYKj2#^|Z*+S|]j">
+                                                                                                                                            <field name="ATTR">val</field>
+                                                                                                                                            <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterie_Einspeisung</field>
+                                                                                                                                          </block>
+                                                                                                                                        </value>
+                                                                                                                                        <value name="OR1">
+                                                                                                                                          <block type="get_value" id=")@FRm9dq5(rIKc6d,V6n">
+                                                                                                                                            <field name="ATTR">val</field>
+                                                                                                                                            <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batterieladung_über_Netz</field>
+                                                                                                                                          </block>
+                                                                                                                                        </value>
+                                                                                                                                      </block>
+                                                                                                                                    </value>
+                                                                                                                                  </block>
+                                                                                                                                </statement>
+                                                                                                                                <next>
+                                                                                                                                  <block type="comment" id="1rPj2U$Mym_}FRlbfjbj">
+                                                                                                                                    <field name="COMMENT">Batteriekapazität</field>
+                                                                                                                                    <next>
+                                                                                                                                      <block type="on" id="^#q+~or)i4nq{7LEc_[!">
+                                                                                                                                        <field name="OID">0_userdata.0.enphase.livedata.meters.soc</field>
+                                                                                                                                        <field name="CONDITION">any</field>
+                                                                                                                                        <field name="ACK_CONDITION"></field>
+                                                                                                                                        <statement name="STATEMENT">
+                                                                                                                                          <block type="update" id="/PV#v$$.`*2*H1L#C?Pb">
+                                                                                                                                            <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                                            <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.Batteriekapazität</field>
+                                                                                                                                            <field name="WITH_DELAY">FALSE</field>
+                                                                                                                                            <value name="VALUE">
+                                                                                                                                              <block type="on_source" id="goZCXBnXJKbY.Rz{AdtQ">
+                                                                                                                                                <field name="ATTR">state.val</field>
+                                                                                                                                              </block>
+                                                                                                                                            </value>
+                                                                                                                                          </block>
+                                                                                                                                        </statement>
+                                                                                                                                        <next>
+                                                                                                                                          <block type="on" id="=:oa|i`x0]Z8e]}E%dym">
+                                                                                                                                            <field name="OID">0_userdata.0.enphase.livedata.connection.sc_stream</field>
+                                                                                                                                            <field name="CONDITION">any</field>
+                                                                                                                                            <field name="ACK_CONDITION"></field>
+                                                                                                                                            <statement name="STATEMENT">
+                                                                                                                                              <block type="controls_if" id="imh0Qsr)~(FNTMj`Hk|[">
+                                                                                                                                                <mutation else="1"></mutation>
+                                                                                                                                                <value name="IF0">
+                                                                                                                                                  <block type="logic_compare" id=":ZvdTK1DUB^M7Y/sf]uS">
+                                                                                                                                                    <field name="OP">EQ</field>
+                                                                                                                                                    <value name="A">
+                                                                                                                                                      <block type="on_source" id="(?`1Jghi7+F(,WY54D=p">
+                                                                                                                                                        <field name="ATTR">state.val</field>
+                                                                                                                                                      </block>
+                                                                                                                                                    </value>
+                                                                                                                                                    <value name="B">
+                                                                                                                                                      <block type="text" id="Px1o=AP@$QgaF:g}sj4l">
+                                                                                                                                                        <field name="TEXT">enabled</field>
+                                                                                                                                                      </block>
+                                                                                                                                                    </value>
+                                                                                                                                                  </block>
+                                                                                                                                                </value>
+                                                                                                                                                <statement name="DO0">
+                                                                                                                                                  <block type="update" id="pu]iQWT+^{AB@|i,Cj3e">
+                                                                                                                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                                                    <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.SC_Stream_Status</field>
+                                                                                                                                                    <field name="WITH_DELAY">FALSE</field>
+                                                                                                                                                    <value name="VALUE">
+                                                                                                                                                      <block type="logic_boolean" id="/iVU$iJm|3iV3;EON$l5">
+                                                                                                                                                        <field name="BOOL">TRUE</field>
+                                                                                                                                                      </block>
+                                                                                                                                                    </value>
+                                                                                                                                                  </block>
+                                                                                                                                                </statement>
+                                                                                                                                                <statement name="ELSE">
+                                                                                                                                                  <block type="update" id="].]`aPo3QH=Fr`-(vihk">
+                                                                                                                                                    <mutation xmlns="http://www.w3.org/1999/xhtml" delay_input="false"></mutation>
+                                                                                                                                                    <field name="OID">0_userdata.0.Enphase-Werte_durch_1000.SC_Stream_Status</field>
+                                                                                                                                                    <field name="WITH_DELAY">FALSE</field>
+                                                                                                                                                    <value name="VALUE">
+                                                                                                                                                      <block type="logic_boolean" id="}j;x}NY(%qJfb%S8}E@)">
+                                                                                                                                                        <field name="BOOL">FALSE</field>
+                                                                                                                                                      </block>
+                                                                                                                                                    </value>
+                                                                                                                                                  </block>
+                                                                                                                                                </statement>
+                                                                                                                                              </block>
+                                                                                                                                            </statement>
+                                                                                                                                          </block>
+                                                                                                                                        </next>
+                                                                                                                                      </block>
+                                                                                                                                    </next>
+                                                                                                                                  </block>
+                                                                                                                                </next>
+                                                                                                                              </block>
+                                                                                                                            </next>
+                                                                                                                          </block>
+                                                                                                                        </next>
+                                                                                                                      </block>
+                                                                                                                    </next>
+                                                                                                                  </block>
+                                                                                                                </next>
+                                                                                                              </block>
+                                                                                                            </next>
+                                                                                                          </block>
+                                                                                                        </next>
+                                                                                                      </block>
+                                                                                                    </next>
+                                                                                                  </block>
+                                                                                                </next>
+                                                                                              </block>
+                                                                                            </next>
+                                                                                          </block>
+                                                                                        </next>
+                                                                                      </block>
+                                                                                    </next>
+                                                                                  </block>
+                                                                                </next>
+                                                                              </block>
+                                                                            </next>
+                                                                          </block>
+                                                                        </next>
+                                                                      </block>
+                                                                    </next>
+                                                                  </block>
+                                                                </next>
+                                                              </block>
+                                                            </next>
+                                                          </block>
+                                                        </next>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </next>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </next>
+  </block>
+</xml>
