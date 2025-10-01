@@ -102,7 +102,7 @@ let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change
 
 ---
 
-### Datapoint Configuration
+## Datapoint Configuration
 
 The script automatically creates all datapoints under `0_userdata.0.enphase.` by default.
 If you want to use a different path, you can adjust it with the following parameter:
@@ -113,6 +113,14 @@ let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
 Example:
 <img width="1091" height="335" alt="grafik" src="https://github.com/user-attachments/assets/da84c156-9711-46d8-a964-1a1aaa8ea75c" />
 
+---
+
+## API reference
+
+(1) https://enphase.com/download/iq-gateway-local-apis-or-ui-access-using-token <br>
+(2) <a href="https://enphase.com/download/iq-gateway-access-using-local-apis-or-local-ui-token-based-authentication-tech-brief?_gl=1*1j1oh16*_up*MQ..*_ga*MTQwNDI5OTk5MC4xNzU5MzUxOTg4*_ga_YT9FNYJVCP*czE3NTkzNTE5ODckbzEkZzAkdDE3NTkzNTE5ODckajYwJGwwJGgw" target="_blank">https://enphase.com/download/iq-gateway-access-using-local-apis-or-local-ui-token-based-authentication-tech-brief</a><br>
+
+---
 
 ## Reference
 
