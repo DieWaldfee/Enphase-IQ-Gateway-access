@@ -232,7 +232,11 @@ async function IObSetState(id, obj, debug = 0) {
                setState(id + '.' + attr, value, true);
             } else {
                // It is a number or date
-               if (new Date(value).getTime() > 0 && Number(value) > MIN_VALID_TIMESTAMP && Number(value) < MAX_VALID_TIMESTAMP) {
+               if (
+                  new Date(value).getTime() > 0 &&
+                  Number(value) > MIN_VALID_TIMESTAMP &&
+                  Number(value) < MAX_VALID_TIMESTAMP
+               ) {
                   // value is a date
                   if (debug > 1) console.log('Updating date state: ' + id + '.' + attr + ' with value: ' + value);
                   if (debug > 2)
@@ -260,7 +264,11 @@ async function IObSetState(id, obj, debug = 0) {
                createState(id + '.' + attr, value, false, { type: 'string', read: true, write: true });
             } else {
                // It is a number or date
-               if (new Date(value).getTime() > 0 && Number(value) > MIN_VALID_TIMESTAMP && Number(value) < MAX_VALID_TIMESTAMP) {
+               if (
+                  new Date(value).getTime() > 0 &&
+                  Number(value) > MIN_VALID_TIMESTAMP &&
+                  Number(value) < MAX_VALID_TIMESTAMP
+               ) {
                   // value is a date
                   if (debug > 1) console.log('Creating date state: ' + id + '.' + attr + ' with value: ' + value);
                   if (debug > 2)
@@ -494,14 +502,6 @@ const cyclicSchedule = schedule(pollingCron, async () => {
             const livedataData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'livedata', livedataData);
          }
-         // 8. Get PV LIVEDATA STREAM STATUS update
-         const scStreamState = getState(dpPrefix + 'livedata.connection.sc_stream');
-         if (existsState(dpPrefix + 'livedata.connection.sc_stream') &&
-             scStreamState && scStreamState.val === 'disabled') {
-            // Start SC stream after disconnect
-            if (debug > 0) console.log('SC stream is disabled. Attempting to enable it...');
-            await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
-         }
       } else {
          // Slow down polling in case of errors
          console.log('Previous errors detected - skipping cycle. Error count: ' + error_cnt);
@@ -514,6 +514,19 @@ const cyclicSchedule = schedule(pollingCron, async () => {
 });
 
 // -------------------------------------------------------------------------------------------------------------------
+// automatic sc stream update
+// -------------------------------------------------------------------------------------------------------------------
+// sc stream update after state change in ioBroker to disabled
+// -------------------------------------------------------------------------------------------------------------------
+on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj) => {
+   let value = obj.state.val;
+   if ((obj.state ? obj.state.val : 'disabled') == 'disabled') {
+      if (debug > 0) console.log('SC stream is disabled. Attempting to enable it...');
+      await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
+   }
+});
+
+// -------------------------------------------------------------------------------------------------------------------
 // automatic token renewal
 // -------------------------------------------------------------------------------------------------------------------
 // Periodic token renewal. Default: Daily at midnight. Adjust as needed.
@@ -522,4 +535,3 @@ const tokenRenewalSchedule = schedule('0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
-
