@@ -33,37 +33,51 @@ const https = require('https');
 // -------------------------------------------------------------------------------------------------------------------
 // ENPHASE ENVOY/IQ GATEWAY LOADER Requires >=v7 of Envoy API (i.e. current token authentication method)
 // *** USER INPUT ***
-let debug = 0; // Debug level (0=none, 1=error, 2=info, 3=debug)
+let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
 
-let envoy_username = ''; // Add your Enphase Enlighten Cloud username (mandatory)
-let envoy_password = ''; // Add your Enphase Enlighten Cloud password (mandatory)
+let envoy_username = 'matthias.rauchschwalbe@gmx.net'; // Add your Enphase Enlighten Cloud username (mandatory)
+let envoy_password = 'Vh&=UD8gNd2]2kH'; // Add your Enphase Enlighten Cloud password (mandatory)
 
-let envoy_serial_no = ''; // Add serial no (12 digit) and IP of local Envoy (mandatory)
-let envoy_ip = ''; // Add IP of local Envoy (mandatory)
+let envoy_serial_no = '122344050474'; // Add serial no (12 digit) and IP of local Envoy (mandatory)
+let envoy_ip = '192.168.2.223'; // Add IP of local Envoy (mandatory)
 
 let bearer_token = ''; // Add existing Envoy token (optional, default='')
 // OPTIONAL: Add your existing Envoy token below (e.g. for testing purposes)
 // (Note: If you fill in your token here then automatic token renewal with envoy username/password is disabled)
-let pollingInterval = 1; // Polling interval in minutes (min: 1, max: 60; change as needed)
+let pollingCron = ''; // Polling interval in cron format (e.g. '*/5 * * * *' for every 5 minutes; change as needed)
+let lowPollingInterval = 15; // Polling interval in minutes (min: 0, max: 59; change as needed)
+let medPollingInterval = 5; // Polling interval in minutes (min: 0, max: 59; change as needed)
+let highPollingIntervalSec = 30; // Polling interval in seconds; valid x sec & 0 min (min: 10, max: 59; change as needed)
+let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x min (min: 1, max: 59; change as needed)
 
 // -------------------------------------------------------------------------------------------------------------------
 // initialization of variables
 // -------------------------------------------------------------------------------------------------------------------
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
+let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
+// endpoint for a single call
+let ivp_eh_devs = '/ivp/eh/devs'; // URL path to get EH devs from local Envoy
+// endpoint for low frequency calls
+let ivp_device_list = '/ivp/ensemble/device_list'; // URL path to get device list from local Envoy
+let ivp_meters_status = '/ivp/meters'; // URL path to get meters data from local Envoy
+// endpoint for med frequency calls
 let ivp_prod = '/ivp/meters/reports/production'; // URL path to get production data from local Envoy
 let ivp_cons = '/ivp/meters/reports/consumption'; // URL path to get consumption data from local Envoy
-let ivp_read = '/ivp/meters/readings'; // URL path to get meter readings from local Envoy
+let ivp_production = '/production.json'; // URL path to get production data (old URL, but includes "day" counter "whToday")
 let ivp_inverters = '/api/v1/production/inverters'; // URL path to get inverter data from local Envoy
+let ivp_production_v1 = '/api/v1/production'; // URL path to get production data from local Envoy
 let ivp_inventory = '/ivp/ensemble/inventory'; // URL path to get inventory data from local Envoy
+// endpoint for high frequency calls
+let ivp_read = '/ivp/meters/readings'; // URL path to get meter readings from local Envoy
+let ivp_grid_reading = '/ivp/meters/gridReading'; // URL path to get grid reading from local Envoy
+let ivp_pdm_energy = '/ivp/pdm/energy'; // URL path to get PDM energy data from local Envoy
 let ivp_livedata = '/ivp/livedata/status'; // URL path to get livedata from local Envoy
+// endpoint to access lifedata stream
 let ivp_livedata_stream = '/ivp/livedata/stream'; // URL path to get livedata stream from local Envoy
-let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
-let ivp_production = '/production.json'; // URL path to get production data from local Envoy
-//                                                      (old URL, but includes "day" counter "whToday")
-// unix timestamp -> seconds since 1970-01-01 :: 1685000000 ≈ Juni 2023 :: 4100000000 ≈ Januar 2100
-const MIN_VALID_TIMESTAMP = 1685000000;
-const MAX_VALID_TIMESTAMP = 4100000000;
+
+const MIN_VALID_TIMESTAMP = 1685000000; // unix timestamp -> seconds since 1970-01-01 :: 1685000000 ≈ Juni 2023
+const MAX_VALID_TIMESTAMP = 4100000000; // unix timestamp -> seconds since 1970-01-01 :: 4100000000 ≈ Januar 2100
 
 // -------------------------------------------------------------------------------------------------------------------
 // end this script if a mandatory variable is not set
@@ -78,7 +92,13 @@ function stopMyScript() {
       clearSchedule(tokenRenewalSchedule);
    } catch (error) {}
    try {
-      clearSchedule(cyclicSchedule);
+      clearSchedule(lowCyclicSchedule);
+   } catch (error) {}
+   try {
+      clearSchedule(medCyclicSchedule);
+   } catch (error) {}
+   try {
+      clearSchedule(highCyclicSchedule);
    } catch (error) {}
    stopScript(); // stop script
 }
@@ -357,7 +377,10 @@ async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug =
       path: envoy_path,
       method: 'GET',
       rejectUnauthorized: false, // Ignore invalid certificate
-      headers: { Authorization: `Bearer ${bearer_token}` },
+      headers: {
+         Authorization: `Bearer ${bearer_token}`,
+         Accept: 'application/json', // Request JSON response
+      },
    };
 
    if (debug > 0) console.log(log_msg + '...started');
@@ -424,7 +447,7 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
 }
 
 // -------------------------------------------------------------------------------------------------------------------
-// cyclic program loop
+// single and cyclic program loop
 // -------------------------------------------------------------------------------------------------------------------
 // This section sets up a scheduled cyclic loop to periodically fetch photovoltaic (PV) data from the
 // local Envoy device. The loop runs at a configurable interval and attempts to retrieve multiple types
@@ -432,10 +455,6 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
 // error count is incremented and polling is slowed down to avoid repeated failures. The loop also updates
 // or creates corresponding states in ioBroker for each data type fetched.
 // -------------------------------------------------------------------------------------------------------------------
-// Ensure pollingInterval stays within bounds
-if (pollingInterval < 1) pollingInterval = 1;
-if (pollingInterval > 30) pollingInterval = 30;
-let pollingCron = `*/${pollingInterval} * * * *`;
 /**
  * Safely parses a JSON string and returns an object, or an empty object on error.
  * @param {string} jsonStr
@@ -448,16 +467,72 @@ function safeParseJSON(jsonStr) {
       return {};
    }
 }
-// Main cyclic program loop
-const cyclicSchedule = schedule(pollingCron, async () => {
+// single requests of data
+// 1. Get PV EH DEVS
+if (await GetEnvoyData(envoy_ip, ivp_eh_devs, bearer_token, 'Get EH DEVS data : ', debug)) {
+   if (debug > 1) console.log('Processing eh devs data...');
+   const ehDevsData = safeParseJSON(http_resp_json);
+   await IObSetState(dpPrefix + 'eh_devs', ehDevsData);
+}
+// Main cyclic program loop low frequency
+// Ensure pollingInterval stays within bounds
+if (lowPollingInterval < 1) lowPollingInterval = 1;
+if (lowPollingInterval > 59) lowPollingInterval = 59;
+pollingCron = `28 */${lowPollingInterval} * * * *`; // every x minutes with 28 seconds delay
+// start cyclic polling schedule
+const lowCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0) console.log('Cyclic polling started. Polling interval: ' + pollingInterval + ' minutes');
+         if (debug > 0)
+            console.log(
+               'Cyclic polling started. Polling interval: ' +
+                  highPollingIntervalMin +
+                  ' minutes' +
+                  highPollingIntervalSec +
+                  ' seconds'
+            );
+         if (debug > 1) console.log('Resulting polling interval: ' + pollingCron);
          if (debug > 2) console.log('Current error count: ' + error_cnt);
          if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
-         // Reset error count before starting new polling cycle
-         // Variable 'error_cnt' counts Envoy errors to slow down polling in case of errors
-         error_cnt = 0;
+         //error_cnt = 0; // Reset error count before starting new polling cycle - done in high freq. loop
+         // A. Get PV DEVICE LIST
+         if (await GetEnvoyData(envoy_ip, ivp_device_list, bearer_token, 'Get DEVICE LIST data : ', debug)) {
+            if (debug > 1) console.log('Processing device list data...');
+            const deviceListData = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'device_list', deviceListData);
+         }
+         // B. status meters
+         if (await GetEnvoyData(envoy_ip, ivp_meters_status, bearer_token, 'Get Meters status data : ', debug)) {
+            if (debug > 1) console.log('Processing meters status data...');
+            const metersStatusData = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'meters.status', metersStatusData);
+         }
+      }
+   } catch (err) {
+      console.error('Error in low freq. scheduled polling loop: ' + err.message);
+   }
+});
+// Main cyclic program loop med frequency
+// Ensure pollingInterval stays within bounds
+if (medPollingInterval < 1) medPollingInterval = 1;
+if (medPollingInterval > 59) medPollingInterval = 59;
+pollingCron = `13 */${medPollingInterval} * * * *`; // every x minutes with 13 seconds delay
+// start cyclic polling schedule
+const medCyclicSchedule = schedule(pollingCron, async () => {
+   try {
+      if (error_cnt <= 0) {
+         if (debug > 0)
+            console.log(
+               'Cyclic polling started. Polling interval: ' +
+                  highPollingIntervalMin +
+                  ' minutes' +
+                  highPollingIntervalSec +
+                  ' seconds'
+            );
+         if (debug > 1) console.log('Resulting polling interval: ' + pollingCron);
+         if (debug > 2) console.log('Current error count: ' + error_cnt);
+         if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
+         //error_cnt = 0; // Reset error count before starting new polling cycle - done in high freq. loop
          // 1. Get PV METER PRODUCTION
          if (await GetEnvoyData(envoy_ip, ivp_prod, bearer_token, 'Get Prod. data: ', debug)) {
             if (debug > 1) console.log('Processing production data...');
@@ -470,13 +545,7 @@ const cyclicSchedule = schedule(pollingCron, async () => {
             const consData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'consumption', consData);
          }
-         // 3. Get PV METER READINGS
-         if (await GetEnvoyData(envoy_ip, ivp_read, bearer_token, 'Get Meter data: ', debug)) {
-            if (debug > 1) console.log('Processing meter readings data...');
-            const meterData = safeParseJSON(http_resp_json);
-            await IObSetState(dpPrefix + 'meters', meterData);
-         }
-         // 4. Get PV PRODUCTION.JSON
+         // 3. Get PV PRODUCTION.JSON
          if (await GetEnvoyData(envoy_ip, ivp_production, bearer_token, 'Get production.json data: ', debug)) {
             if (debug > 1) console.log('Processing production.json data...');
             // Note: This URL is deprecated but still includes the "whToday" counter
@@ -484,23 +553,90 @@ const cyclicSchedule = schedule(pollingCron, async () => {
             const prodStatData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'prod_stat', prodStatData);
          }
-         // 5. Get PV MICRO INVERTER
+         // 4. Get PV MICRO INVERTER
          if (await GetEnvoyData(envoy_ip, ivp_inverters, bearer_token, 'Get Inv. data : ', debug)) {
             if (debug > 1) console.log('Processing inverter data...');
             const inverterData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'inverter', inverterData);
          }
-         // 6. Get PV INVENTORY
+         // 5. Get PV INVENTORY
          if (await GetEnvoyData(envoy_ip, ivp_inventory, bearer_token, 'Get INVENTORY data : ', debug)) {
             if (debug > 1) console.log('Processing inventory data...');
             const inventoryData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'inventory', inventoryData);
          }
-         // 7. Get PV LIVEDATA
+         // 6. Get PV PRODUCTION V1
+         if (await GetEnvoyData(envoy_ip, ivp_production_v1, bearer_token, 'Get PRODUCTION V1 data : ', debug)) {
+            if (debug > 1) console.log('Processing PRODUCTION V1 data...');
+            const productionV1Data = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'production', productionV1Data);
+         }
+      }
+   } catch (err) {
+      console.error('Error in mid freq. scheduled polling loop: ' + err.message);
+   }
+});
+// Main cyclic program loop high frequency
+// Ensure pollingInterval stays within bounds
+if (highPollingIntervalSec < 0) highPollingIntervalSec = 0;
+if (highPollingIntervalSec > 59) highPollingIntervalSec = 59;
+if (highPollingIntervalMin < 0) highPollingIntervalMin = 0;
+if (highPollingIntervalMin > 59) highPollingIntervalMin = 59;
+if (highPollingIntervalSec == 0 && highPollingIntervalMin == 0) {
+   console.log('please choose either seconds or minutes as polling interval');
+   highPollingIntervalSec = 30; // minimum polling interval is 30 seconds
+}
+if (highPollingIntervalSec != 0 && highPollingIntervalMin != 0) {
+   console.log('please choose either seconds or minutes as polling interval');
+   highPollingIntervalSec = 0; // choose the minutes value
+}
+if (highPollingIntervalSec == 0) {
+   pollingCron = `0 */${highPollingIntervalMin} * * * *`; // every x minutes - no seconds
+}
+if (highPollingIntervalMin == 0) {
+   pollingCron = `*/${highPollingIntervalSec} * * * *`; // every x seconds - no minutes
+}
+// start cyclic polling schedule
+const highCyclicSchedule = schedule(pollingCron, async () => {
+   try {
+      if (error_cnt <= 0) {
+         if (debug > 0)
+            console.log(
+               'High cyclic polling started. Polling interval: ' +
+                  highPollingIntervalMin +
+                  ' minutes' +
+                  highPollingIntervalSec +
+                  ' seconds'
+            );
+         if (debug > 1) console.log('Resulting high cyclic polling interval: ' + pollingCron);
+         if (debug > 2) console.log('Current error count: ' + error_cnt);
+         if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
+         // Reset error count before starting new polling cycle
+         // Variable 'error_cnt' counts Envoy errors to slow down polling in case of errors
+         error_cnt = 0;
+         // 1. Get PV METER READINGS
+         if (await GetEnvoyData(envoy_ip, ivp_read, bearer_token, 'Get Meter data: ', debug)) {
+            if (debug > 1) console.log('Processing meter readings data...');
+            const meterData = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'meters', meterData);
+         }
+         // 2. Get PV LIVEDATA
          if (await GetEnvoyData(envoy_ip, ivp_livedata, bearer_token, 'Get LIVEDATA data : ', debug)) {
             if (debug > 1) console.log('Processing livedata data...');
             const livedataData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'livedata', livedataData);
+         }
+         // 3. Get PV METER Grid Reading
+         if (await GetEnvoyData(envoy_ip, ivp_grid_reading, bearer_token, 'Get Grid Reading data : ', debug)) {
+            if (debug > 1) console.log('Processing grid reading data...');
+            const gridReadingData = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'meters.gridReading', gridReadingData);
+         }
+         // 4. Get PV METER PDM Energy
+         if (await GetEnvoyData(envoy_ip, ivp_pdm_energy, bearer_token, 'Get PDM Energy data : ', debug)) {
+            if (debug > 1) console.log('Processing PDM Energy data...');
+            const pdmEnergyData = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'PDM.energy', pdmEnergyData);
          }
       } else {
          // Slow down polling in case of errors
@@ -509,7 +645,7 @@ const cyclicSchedule = schedule(pollingCron, async () => {
          error_cnt -= 1;
       }
    } catch (err) {
-      console.error('Error in scheduled polling loop: ' + err.message);
+      console.error('Error in high freq. scheduled polling loop: ' + err.message);
    }
 });
 
@@ -531,7 +667,7 @@ on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj)
 // -------------------------------------------------------------------------------------------------------------------
 // Periodic token renewal. Default: Daily at midnight. Adjust as needed.
 // -------------------------------------------------------------------------------------------------------------------
-const tokenRenewalSchedule = schedule('0 0 * * *', async () => {
+const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
