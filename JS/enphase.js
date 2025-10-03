@@ -35,11 +35,11 @@ const https = require('https');
 // *** USER INPUT ***
 let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
 
-let envoy_username = 'matthias.rauchschwalbe@gmx.net'; // Add your Enphase Enlighten Cloud username (mandatory)
-let envoy_password = 'Vh&=UD8gNd2]2kH'; // Add your Enphase Enlighten Cloud password (mandatory)
+let envoy_username = ''; // Add your Enphase Enlighten Cloud username (mandatory)
+let envoy_password = ''; // Add your Enphase Enlighten Cloud password (mandatory)
 
-let envoy_serial_no = '122344050474'; // Add serial no (12 digit) and IP of local Envoy (mandatory)
-let envoy_ip = '192.168.2.223'; // Add IP of local Envoy (mandatory)
+let envoy_serial_no = ''; // Add serial no (12 digit) and IP of local Envoy (mandatory)
+let envoy_ip = ''; // Add IP of local Envoy (mandatory)
 
 let bearer_token = ''; // Add existing Envoy token (optional, default='')
 // OPTIONAL: Add your existing Envoy token below (e.g. for testing purposes)
