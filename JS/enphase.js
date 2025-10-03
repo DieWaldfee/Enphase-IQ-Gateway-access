@@ -578,9 +578,8 @@ if (highPollingIntervalSec != 0 && highPollingIntervalMin != 0) {
 }
 if (highPollingIntervalSec == 0) {
    pollingCron = `0 */${highPollingIntervalMin} * * * *`; // every x minutes - no seconds
-}
-if (highPollingIntervalMin == 0) {
-   pollingCron = `*/${highPollingIntervalSec} * * * *`; // every x seconds - no minutes
+} else {
+   pollingCron = `*/${highPollingIntervalSec} * * * * *`; // every x seconds - no minutes
 }
 // start cyclic polling schedule
 const highCyclicSchedule = schedule(pollingCron, async () => {
@@ -657,4 +656,5 @@ const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
+
 
