@@ -20,6 +20,7 @@
 // Version 0.0.2 - lifedata added by steffe-s
 // Version ... - further development by steffe-s
 // Version 0.1.0 - complete transfer into plain javascript by Matthias Rauchschwalbe
+// Version V2.0.1 - additional datapoint and schedule split in low/mid/high frequency (Matthias Rauchschwalbe)
 // -------------------------------------------------------------------------------------------------------------------
 // Note: extracted values are in milliWatt (1/1000 W), so a value of 1000 equals 1 Watt
 
@@ -656,3 +657,4 @@ const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
+
