@@ -75,7 +75,6 @@ let ivp_pdm_energy = '/ivp/pdm/energy'; // URL path to get PDM energy data from 
 let ivp_livedata = '/ivp/livedata/status'; // URL path to get livedata from local Envoy
 // endpoint to access lifedata stream
 let ivp_livedata_stream = '/ivp/livedata/stream'; // URL path to get livedata stream from local Envoy
-
 const MIN_VALID_TIMESTAMP = 1685000000; // unix timestamp -> seconds since 1970-01-01 :: 1685000000 ≈ Juni 2023
 const MAX_VALID_TIMESTAMP = 4100000000; // unix timestamp -> seconds since 1970-01-01 :: 4100000000 ≈ Januar 2100
 
@@ -483,14 +482,7 @@ pollingCron = `28 */${lowPollingInterval} * * * *`; // every x minutes with 28 s
 const lowCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0)
-            console.log(
-               'Cyclic polling started. Polling interval: ' +
-                  highPollingIntervalMin +
-                  ' minutes' +
-                  highPollingIntervalSec +
-                  ' seconds'
-            );
+         if (debug > 0) console.log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes');
          if (debug > 1) console.log('Resulting polling interval: ' + pollingCron);
          if (debug > 2) console.log('Current error count: ' + error_cnt);
          if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
@@ -521,14 +513,7 @@ pollingCron = `13 */${medPollingInterval} * * * *`; // every x minutes with 13 s
 const medCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0)
-            console.log(
-               'Cyclic polling started. Polling interval: ' +
-                  highPollingIntervalMin +
-                  ' minutes' +
-                  highPollingIntervalSec +
-                  ' seconds'
-            );
+         if (debug > 0) console.log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes');
          if (debug > 1) console.log('Resulting polling interval: ' + pollingCron);
          if (debug > 2) console.log('Current error count: ' + error_cnt);
          if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
