@@ -67,51 +67,7 @@ Failure to comply may violate your agreement with Enphase.
 
 ## Installation
 
-1. Create a new, empty JavaScript in ioBroker.
-2. Copy the code in your Javascript.
-3. Fill in your own credentials and device information in the following lines:
-
-```javascript
-let envoy_username = '';   // Enphase Enlighten Cloud username (required)
-let envoy_password = '';   // Enphase Enlighten Cloud password (required)
-let envoy_serial_no = '';  // 12-digit serial number of your Envoy (required)
-let envoy_ip = '';         // IP address of your local Envoy (required)
-```
-
-3. Save and run – done.
-
-## Where to find the required information
-**Username & Password:** Use your login credentials from [https://enlighten.enphaseenergy.com](https://enlighten.enphaseenergy.com)<br>
-**Serial number:** In the Enphase app or web interface: under System → Devices → Gateway → SN<br>
-**IP address:** From your local network (e.g. in your router’s DHCP table) or by assigning a static IP to the Envoy device<br>
-
-(For reliable operation, make sure the IP address does not change: in your router settings, add a DHCP reservation and assign a fixed IP address to the Envoy device.)
-
-## optional configuration
-By default, only errors are written to the log. If you need more detailed information, increase the debug level above zero:
-
-```javascript
-let debug = 0; // Debug level (0 = none, 1 = error, 2 = info, 3 = debug)
-```
-
-If you want to adjust the update rate, you can change the polling interval from the default value of 1 minute to your preference:
-
-```javascript
-let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change as needed)
-```
-
----
-
-## Datapoint Configuration
-
-The script automatically creates all datapoints under `0_userdata.0.enphase.` by default.
-If you want to use a different path, you can adjust it with the following parameter:
-
-```javascript
-let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
-```
-Example:
-<img width="1091" height="335" alt="grafik" src="https://github.com/user-attachments/assets/da84c156-9711-46d8-a964-1a1aaa8ea75c" />
+You find a detailed installation guide under: https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/blob/developement/JS/README.md
 
 ---
 
