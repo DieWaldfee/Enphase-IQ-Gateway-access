@@ -827,7 +827,7 @@ async function getLoadControl() {
 // This block checks if the access token datapoint exists and is populated.
 // If the access token is available, it ensures the Fetch datapoint exists by fetching systems from the cloud.
 // It also fetches event types and creates the event_types datapoint.
-// If the access token is missing, it warns the user and stops the script.
+// If the access token is missing, it warns the user and stops the script
 if (existsState(dpAccess)) {
    if (debug > 0) console.log('Access Token datapoint already exists.');
    if (getState(dpAccess).val != '') {
@@ -841,14 +841,13 @@ if (existsState(dpAccess)) {
       // Access token is empty, prompt user to authenticate and stop script
       console.warn(
          'Access Token is empty. Please authenticate using ' +
-            getState(dbServerURI).val +
+            getState(dpServerURI).val +
             ':' +
             Port +
             ' or modify Server URL in datapoint ' +
-            dbServerURI +
+            dpServerURI +
             ', if you use another computer than the ioBroker to authenticate.'
       );
-      stopMyScript();
    }
 }
 
