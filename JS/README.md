@@ -24,16 +24,13 @@ Below is a summary of notable scripts and their intended functionality:
 
 ---
 
-## install the scripts
+## Install the scripts
 
 Just download the scripts an add them to your iobroker as javascript.
 
 ---
 
-## configuration
-
-### enphase.js
-
+## Configuration enphase.js
 
 1. Create a new, empty JavaScript in ioBroker.
 2. Copy the code in your Javascript.
@@ -48,14 +45,14 @@ let envoy_ip = '';         // IP address of your local Envoy (required)
 
 3. Save and run – done.
 
-#### Where to find the required information
+### Where to find the required information
 **Username & Password:** Use your login credentials from [https://enlighten.enphaseenergy.com](https://enlighten.enphaseenergy.com)<br>
 **Serial number:** In the Enphase app or web interface: under System → Devices → Gateway → SN<br>
 **IP address:** From your local network (e.g. in your router’s DHCP table) or by assigning a static IP to the Envoy device<br>
 
 (For reliable operation, make sure the IP address does not change: in your router settings, add a DHCP reservation and assign a fixed IP address to the Envoy device.)
 
-#### optional configuration
+### optional configuration
 By default, only errors are written to the log. If you need more detailed information, increase the debug level above zero:
 
 ```javascript
@@ -68,20 +65,9 @@ If you want to adjust the update rate, you can change the polling interval from 
 let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change as needed)
 ```
 
-### enphase_cloud.js
-
-tbd
-
-
-
-
 ---
 
-
-
-## Datapoint Configuration
-
-### enphase.js
+## Datapoint configuration enphase.js
 
 The script automatically creates all datapoints under `0_userdata.0.enphase.` by default.
 If you want to use a different path, you can adjust it with the following parameter:
@@ -91,5 +77,22 @@ let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
 ```
 Example:
 <img width="1091" height="335" alt="grafik" src="https://github.com/user-attachments/assets/da84c156-9711-46d8-a964-1a1aaa8ea75c" />
+
+---
+
+## Configuration enphase_cloud.js
+
+1. Create a new, empty JavaScript in ioBroker.
+2. Copy the code in your Javascript.
+3. Before you start the script you need an enphase developer account. This will grant access to the cloud data.<br>
+    Create an account at https://developer-v4.enphase.com/ with your credentials. These credentials you only need to log 
+    on yourself on the webpage. For the communication with the enphase_cloud.js is another step needed - see below.
+   
+
+
+
+
+---
+
 
 
