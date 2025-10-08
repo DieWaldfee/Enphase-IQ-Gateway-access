@@ -67,7 +67,7 @@ Failure to comply may violate your agreement with Enphase.
 
 ## Installation
 
-You find a detailed installation guide under: https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/blob/developement/JS/README.md
+You find a detailed installation guide under: https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/tree/developement/JS
 
 ---
 
