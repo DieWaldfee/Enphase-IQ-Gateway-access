@@ -142,9 +142,9 @@ the following data in the according datapoints:
 
 <img width="455" height="83" alt="grafik" src="https://github.com/user-attachments/assets/d4e5aed9-3ff1-444c-87b8-55e04b0b4da5" />
 
-<img width="1123" height="272" alt="grafik" src="https://github.com/user-attachments/assets/d5081102-0af3-47bd-ab77-b638836aebbc" />
+<img width="550" height="135" alt="grafik" src="https://github.com/user-attachments/assets/d5081102-0af3-47bd-ab77-b638836aebbc" />
 
-Normal operation:
+Normal operation:<br>
 In standard all active events and alamrs will be requested at midnight each day. Hpurly the request of the device status will be updated.
 
 
