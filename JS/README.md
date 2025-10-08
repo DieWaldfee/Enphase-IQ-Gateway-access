@@ -115,23 +115,43 @@ the following data in the according datapoints:
 - server_URI: 0_userdata.0.enphase.config.cloud.config.server_URI
   Change here hocalhost to the IP of the ioBroker. Otherwise the generation of the access-token will only work on the desktop of your ioBroker.
    
-<img width="1653" height="506" alt="grafik" src="https://github.com/user-attachments/assets/9621a3f4-1cba-4bda-b4d8-37af639bc0d3" />
+  <img width="1653" height="506" alt="grafik" src="https://github.com/user-attachments/assets/9621a3f4-1cba-4bda-b4d8-37af639bc0d3" />
 
 
 6. start the script again. It will show with a worning because of an empty access-token.
- 
-  <img width="882" height="126" alt="grafik" src="https://github.com/user-attachments/assets/e93d79cf-ee5c-4c8a-a734-19bfb5a96739" />
+  <img width="440" height="65" alt="grafik" src="https://github.com/user-attachments/assets/e93d79cf-ee5c-4c8a-a734-19bfb5a96739" />
 
 7. open another tab on your browser with http://Your_IP_or_your_DNS_name_of_ioBroker:3080 and click on "Login with enphase".
+  <img width="220" height="65" alt="grafik" src="https://github.com/user-attachments/assets/3fe5e8c5-a3e4-4cf5-8368-2fd971fb1efd" />
 
-<img width="416" height="127" alt="grafik" src="https://github.com/user-attachments/assets/3fe5e8c5-a3e4-4cf5-8368-2fd971fb1efd" />
+8.) enter your username and password form https://developer-v4.enphase.com/
 
-   
+<img width="265" height="244" alt="grafik" src="https://github.com/user-attachments/assets/9f34a06b-5d10-45d4-8616-58a8eb6acd20" />
 
+9.) press "Allow Access"
 
+<img width="615" height="350" alt="grafik" src="https://github.com/user-attachments/assets/94b08b5e-f290-418a-b667-351c4b3cfd1e" />
+
+10.) Enphase opens the local callback-page. There automaticly the access-token and the refresh-token will be updated to the datapoints in ioBroker.
+
+<img width="315" height="175" alt="grafik" src="https://github.com/user-attachments/assets/e3524a00-4e65-4b41-8505-90032a57869f" />
+
+11.) now restart the script to normal operation - its done.
+  The script automaticly downloads all visible systems - this is normaly only one. The new datapoint are below 0_userdata.0.enphase.cloud.Fetch.
+  All systems_IDs are written in an array in the datapoint 0_userdata.0.enphase.cloud.systemIDs. The script will always iterate over all systems in that array. If you want to change this behavior change the array by deleting the unwanted systems from this array. if you have only one - everything is fine :-) 
+
+<img width="455" height="83" alt="grafik" src="https://github.com/user-attachments/assets/d4e5aed9-3ff1-444c-87b8-55e04b0b4da5" />
+
+<img width="1123" height="272" alt="grafik" src="https://github.com/user-attachments/assets/d5081102-0af3-47bd-ab77-b638836aebbc" />
+
+Normal operation:
+In standard all active events and alamrs will be requested at midnight each day. Hpurly the request of the device status will be updated.
 
 
 ---
 
+## Datapoint configuration enphase_cloud.js
+
+All datapoint are below 0_userdata.0.enphase.cloud and 0_userdata.0.enphase.config.cloud
 
 
