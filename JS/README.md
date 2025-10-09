@@ -42,6 +42,8 @@ let envoy_password = '';   // Enphase Enlighten Cloud password (required)
 let envoy_serial_no = '';  // 12-digit serial number of your Envoy (required)
 let envoy_ip = '';         // IP address of your local Envoy (required)
 ```
+WARNING: developement branch is actiualy untested fpr this script! Final Test will be at 10.10.2025! <br>
+UPDATE: credentials are now unter 0_userdata.enphase.config.local.credentials ... the 4 Parameters are there to adjust!
 
 3. Save and run – done.
 
