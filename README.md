@@ -73,8 +73,13 @@ You find a detailed installation guide under: https://github.com/DieWaldfee/Enph
 
 ## API reference
 
+### relevant for enphase_local.js
+
 (1) https://enphase.com/download/iq-gateway-local-apis-or-ui-access-using-token <br>
 (2) <a href="https://enphase.com/download/iq-gateway-access-using-local-apis-or-local-ui-token-based-authentication-tech-brief?_gl=1*1j1oh16*_up*MQ..*_ga*MTQwNDI5OTk5MC4xNzU5MzUxOTg4*_ga_YT9FNYJVCP*czE3NTkzNTE5ODckbzEkZzAkdDE3NTkzNTE5ODckajYwJGwwJGgw" target="_blank">https://enphase.com/download/iq-gateway-access-using-local-apis-or-local-ui-token-based-authentication-tech-brief</a><br>
+
+### relevant for enphase_cloud.js
+
 (3) https://developer-v4.enphase.com/docs.html
 
 ---
