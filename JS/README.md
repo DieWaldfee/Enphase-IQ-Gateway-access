@@ -10,7 +10,7 @@ related to solar energy monitoring.
 
 Below is a summary of notable scripts and their intended functionality:
 
-- **enphase.js**  
+- **enphase_local.js**  
   Provides the connetion to your local Enphase IQ Gateway. It fetchs eg. grid, production and consumption data, lifestream data.
   These data are gathered just local and do not need an cloud connection. Just the accesstoken is generated on the enphase website.
 
@@ -30,7 +30,7 @@ Just download the scripts an add them to your iobroker as javascript.
 
 ---
 
-## Configuration enphase.js
+## Configuration enphase_local.js
 
 1. Create a new, empty JavaScript in ioBroker.
 2. Copy the code in your Javascript.
