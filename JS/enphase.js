@@ -20,7 +20,7 @@
 // Version 0.0.2 - lifedata added by steffe-s
 // Version ... - further development by steffe-s
 // Version 0.1.0 - complete transfer into plain javascript by Matthias Rauchschwalbe
-// Version V2.0.1 - additional datapoint and schedule split in low/mid/high frequency (Matthias Rauchschwalbe)
+// Version now monitored by GitHub - see stable release
 // -------------------------------------------------------------------------------------------------------------------
 // Note: extracted values are in milliWatt (1/1000 W), so a value of 1000 equals 1 Watt
 
@@ -35,16 +35,7 @@ const https = require('https');
 // ENPHASE ENVOY/IQ GATEWAY LOADER Requires >=v7 of Envoy API (i.e. current token authentication method)
 // *** USER INPUT ***
 let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
-
-let envoy_username = ''; // Add your Enphase Enlighten Cloud username (mandatory)
-let envoy_password = ''; // Add your Enphase Enlighten Cloud password (mandatory)
-
-let envoy_serial_no = ''; // Add serial no (12 digit) and IP of local Envoy (mandatory)
-let envoy_ip = ''; // Add IP of local Envoy (mandatory)
-
-let bearer_token = ''; // Add existing Envoy token (optional, default='')
-// OPTIONAL: Add your existing Envoy token below (e.g. for testing purposes)
-// (Note: If you fill in your token here then automatic token renewal with envoy username/password is disabled)
+let bearer_token = ''; // Add existing Envoy token (optional, default='') will be created automatically if empty
 let pollingCron = ''; // Polling interval in cron format (e.g. '*/5 * * * *' for every 5 minutes; change as needed)
 let lowPollingInterval = 15; // Polling interval in minutes (min: 0, max: 59; change as needed)
 let medPollingInterval = 5; // Polling interval in minutes (min: 0, max: 59; change as needed)
@@ -57,6 +48,9 @@ let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x 
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
 let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
+// credentials for enphase IQ Gateway
+const dpBasicConfigPath = '0_userdata.0.enphase.config.local.'; // datapoint path to store the values
+const dpCredentialsPath = dpBasicConfigPath + 'credentials.'; // datapoint path to store user credentials
 // endpoint for a single call
 let ivp_eh_devs = '/ivp/eh/devs'; // URL path to get EH devs from local Envoy
 // endpoint for low frequency calls
@@ -78,6 +72,93 @@ let ivp_livedata = '/ivp/livedata/status'; // URL path to get livedata from loca
 let ivp_livedata_stream = '/ivp/livedata/stream'; // URL path to get livedata stream from local Envoy
 const MIN_VALID_TIMESTAMP = 1685000000; // unix timestamp -> seconds since 1970-01-01 :: 1685000000 ≈ Juni 2023
 const MAX_VALID_TIMESTAMP = 4100000000; // unix timestamp -> seconds since 1970-01-01 :: 4100000000 ≈ Januar 2100
+
+// -------------------------------------------------------------------------------------------------------------------
+// create datapoints for credentials if not existing
+// -------------------------------------------------------------------------------------------------------------------
+// Create credentials datapoints if not existing, and wait for creation to finish
+async function ensureCredentialsStates() {
+   if (!existsState(dpCredentialsPath + 'username')) {
+      await createStateAsync(dpCredentialsPath + 'username', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+      });
+   }
+   if (!existsState(dpCredentialsPath + 'password')) {
+      await createStateAsync(dpCredentialsPath + 'password', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+      });
+   }
+   if (!existsState(dpCredentialsPath + 'serial_no')) {
+      await createStateAsync(dpCredentialsPath + 'serial_no', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+      });
+   }
+   if (!existsState(dpCredentialsPath + 'gateway_ip')) {
+      await createStateAsync(dpCredentialsPath + 'gateway_ip', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+      });
+   }
+}
+await ensureCredentialsStates();
+if (debug > 0) console.log('credentials, serial_no and gateway_ip datapoints created');
+
+// -------------------------------------------------------------------------------------------------------------------
+// read credentials from iobroker datapoints
+// -------------------------------------------------------------------------------------------------------------------
+let envoy_username = ''; // Add your Enphase Enlighten Cloud username (mandatory)
+let envoy_password = ''; // Add your Enphase Enlighten Cloud password (mandatory)
+let envoy_serial_no = ''; // Add serial no (12 digit) and IP of local Envoy (mandatory)
+let envoy_ip = ''; // Add IP of local Envoy (mandatory)
+try {
+   getState(dpCredentialsPath + 'username', (err, state) => {
+      if (state && state.val) {
+         envoy_username = state.val;
+      }
+   });
+   getState(dpCredentialsPath + 'password', (err, state) => {
+      if (state && state.val) {
+         envoy_password = state.val;
+      }
+   });
+   getState(dpCredentialsPath + 'serial_no', (err, state) => {
+      if (state && state.val) {
+         envoy_serial_no = state.val;
+      }
+   });
+   getState(dpCredentialsPath + 'gateway_ip', (err, state) => {
+      if (state && state.val) {
+         envoy_ip = state.val;
+      }
+   });
+} catch (error) {
+   console.error('Error reading credentials from datapoints: ' + error.message);
+   stopMyScript();
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+// check credentials from iobroker datapoints
+// -------------------------------------------------------------------------------------------------------------------
+if (envoy_username === '' || envoy_password === '' || envoy_serial_no === '' || envoy_ip === '') {
+   console.error('⚠️ One or more Enphase credentials are not set – script stopped');
+   console.log('Please set the Enphase credentials in the corresponding datapoints under ' + dpCredentialsPath);
+   console.log('Mandatory datapoints are: username, password, serial_no (12 digit), ip (IPv4 address)');
+   console.log('The script created the necessary datapoints if they did not exist.');
+   console.log('After setting the credentials please restart this script.');
+   stopMyScript();
+   return; // prevent further execution (parallel call of schedules)
+}
 
 // -------------------------------------------------------------------------------------------------------------------
 // end this script if a mandatory variable is not set
@@ -656,5 +737,6 @@ const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
+
 
 
