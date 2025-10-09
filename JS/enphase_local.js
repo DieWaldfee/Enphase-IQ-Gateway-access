@@ -47,7 +47,7 @@ let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x 
 // -------------------------------------------------------------------------------------------------------------------
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
-let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
+let dpPrefix = '0_userdata.0.enphase.local.'; // Prefix for ioBroker datapoints
 // credentials for enphase IQ Gateway
 const dpBasicConfigPath = '0_userdata.0.enphase.config.local.'; // datapoint path to store the values
 const dpCredentialsPath = dpBasicConfigPath + 'credentials.'; // datapoint path to store user credentials
@@ -737,6 +737,7 @@ const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
+
 
 
 
