@@ -47,7 +47,7 @@ let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x 
 // -------------------------------------------------------------------------------------------------------------------
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
-let dpPrefix = '0_userdata.0.enphase.local.'; // Prefix for ioBroker datapoints
+let dpPrefix = '0_userdata.0.enphase.'; // Prefix for ioBroker datapoints
 // credentials for enphase IQ Gateway
 const dpBasicConfigPath = '0_userdata.0.enphase.config.local.'; // datapoint path to store the values
 const dpCredentialsPath = dpBasicConfigPath + 'credentials.'; // datapoint path to store user credentials
@@ -79,36 +79,16 @@ const MAX_VALID_TIMESTAMP = 4100000000; // unix timestamp -> seconds since 1970-
 // Create credentials datapoints if not existing, and wait for creation to finish
 async function ensureCredentialsStates() {
    if (!existsState(dpCredentialsPath + 'username')) {
-      await createStateAsync(dpCredentialsPath + 'username', '', {
-         type: 'string',
-         role: 'text',
-         read: true,
-         write: true,
-      });
+      await createStateAsync(dpCredentialsPath + 'username', '', {type: 'string', role: 'text', read: true, write: true });
    }
    if (!existsState(dpCredentialsPath + 'password')) {
-      await createStateAsync(dpCredentialsPath + 'password', '', {
-         type: 'string',
-         role: 'text',
-         read: true,
-         write: true,
-      });
+      await createStateAsync(dpCredentialsPath + 'password', '', {type: 'string', role: 'text', read: true, write: true });
    }
    if (!existsState(dpCredentialsPath + 'serial_no')) {
-      await createStateAsync(dpCredentialsPath + 'serial_no', '', {
-         type: 'string',
-         role: 'text',
-         read: true,
-         write: true,
-      });
+      await createStateAsync(dpCredentialsPath + 'serial_no', '', {type: 'string', role: 'text', read: true, write: true });
    }
    if (!existsState(dpCredentialsPath + 'gateway_ip')) {
-      await createStateAsync(dpCredentialsPath + 'gateway_ip', '', {
-         type: 'string',
-         role: 'text',
-         read: true,
-         write: true,
-      });
+      await createStateAsync(dpCredentialsPath + 'gateway_ip', '', {type: 'string', role: 'text', read: true, write: true });
    }
 }
 await ensureCredentialsStates();
@@ -122,26 +102,10 @@ let envoy_password = ''; // Add your Enphase Enlighten Cloud password (mandatory
 let envoy_serial_no = ''; // Add serial no (12 digit) and IP of local Envoy (mandatory)
 let envoy_ip = ''; // Add IP of local Envoy (mandatory)
 try {
-   getState(dpCredentialsPath + 'username', (err, state) => {
-      if (state && state.val) {
-         envoy_username = state.val;
-      }
-   });
-   getState(dpCredentialsPath + 'password', (err, state) => {
-      if (state && state.val) {
-         envoy_password = state.val;
-      }
-   });
-   getState(dpCredentialsPath + 'serial_no', (err, state) => {
-      if (state && state.val) {
-         envoy_serial_no = state.val;
-      }
-   });
-   getState(dpCredentialsPath + 'gateway_ip', (err, state) => {
-      if (state && state.val) {
-         envoy_ip = state.val;
-      }
-   });
+   envoy_username = getState(dpCredentialsPath + 'username').val;
+   envoy_password = getState(dpCredentialsPath + 'password').val;
+   envoy_serial_no = getState(dpCredentialsPath + 'serial_no').val;
+   envoy_ip = getState(dpCredentialsPath + 'gateway_ip').val;
 } catch (error) {
    console.error('Error reading credentials from datapoints: ' + error.message);
    stopMyScript();
@@ -737,7 +701,3 @@ const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
    if (debug > 0) console.log('Automatic token renewal started...');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
-
-
-
-
