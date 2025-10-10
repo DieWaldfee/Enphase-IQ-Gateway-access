@@ -34,18 +34,10 @@ Just download the scripts an add them to your iobroker as javascript.
 
 1. Create a new, empty JavaScript in ioBroker.
 2. Copy the code in your Javascript.
-3. Fill in your own credentials and device information in the following lines:
-
-```javascript
-let envoy_username = '';   // Enphase Enlighten Cloud username (required)
-let envoy_password = '';   // Enphase Enlighten Cloud password (required)
-let envoy_serial_no = '';  // 12-digit serial number of your Envoy (required)
-let envoy_ip = '';         // IP address of your local Envoy (required)
-```
-WARNING: developement branch is actiualy untested fpr this script! Final Test will be at 10.10.2025! <br>
-UPDATE: credentials are now unter 0_userdata.enphase.config.local.credentials ... the 4 Parameters are there to adjust!
-
-3. Save and run – done.
+3. start an stop the script - needed datapoints will be created.
+4. Fill in your own credentials and device information in the following datapoints:
+   <img width="600" height="200" alt="grafik" src="https://github.com/user-attachments/assets/c39f5cf2-7631-4bd7-be2e-c4323b370531" />
+5. start the script – done.
 
 ### Where to find the required information
 **Username & Password:** Use your login credentials from [https://enlighten.enphaseenergy.com](https://enlighten.enphaseenergy.com)<br>
