@@ -34,38 +34,26 @@ const MAX_VALID_TIMESTAMP = 4100000000; // unix timestamp -> seconds since 1970-
 // check datapoints for user credentials
 // -----------------------------------------------------------------------------------------------------------------------------------
 // Create credentials states if not existing
-if (!existsState(dpCredentialsPath + 'Client_ID')) {
-   createState(dpCredentialsPath + 'Client_ID', '', { read: true, write: true });
+// Helper to create state and wait for completion
+// Create credentials states if not existing
+async function ensureStateAsync(id, value, options = { read: true, write: true }) {
+   if (!existsState(id)) {
+      await createStateAsync(id, value, options);
+   }
 }
-if (!existsState(dpCredentialsPath + 'Client_Secret')) {
-   createState(dpCredentialsPath + 'Client_Secret', '', { read: true, write: true });
-}
-if (!existsState(dpApiKey)) {
-   createState(dpApiKey, '', { read: true, write: true });
-}
-if (!existsState(dpConfigPath + 'Port')) {
-   createState(dpConfigPath + 'Port', 3080, { read: true, write: true });
-}
-if (!existsState(dpAccess)) {
-   createState(dpAccess, '', { read: true, write: true });
-}
-if (!existsState(dpRefresh)) {
-   createState(dpRefresh, '', { read: true, write: true });
-}
-if (!existsState(dpExpire)) {
-   createState(dpExpire, '', { read: true, write: true });
-}
-if (!existsState(dpExpireTS)) {
-   createState(dpExpireTS, 0, { read: true, write: true });
-}
-if (!existsState(dbSystemIDs)) {
-   createState(dbSystemIDs, '', { read: true, write: true });
-}
-// Create config states if not existing
-if (!existsState(dpServerURI)) {
-   createState(dpServerURI, 'http://localhost', { read: true, write: true }); // Express server URI
-}
-if (debug >= 0) console.log('datapoints checked/created');
+await ensureStateAsync(dpCredentialsPath + 'Client_ID', '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpCredentialsPath + 'Client_Secret', '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpApiKey, '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpConfigPath + 'Port', 3080,  { type: 'number', role: 'value', read: true, write: true });
+await ensureStateAsync(dpAccess, '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpRefresh, '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpExpire, '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpExpireTS, 0,  { type: 'number', role: 'value', read: true, write: true });
+await ensureStateAsync(dbSystemIDs, '',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpServerURI, 'http://localhost',  { type: 'string', role: 'text', read: true, write: true });
+await setState(dpConfigPath + 'Port', getState(dpConfigPath + 'Port').val, true); // ensure acknowledgement is true without changing value
+await setState(dpServerURI, getState(dpServerURI).val, true); // ensure acknowledgement is true without changing value
+if (debug > 0) console.log('datapoints checked/created');
 
 // --------------------------------------------------
 // Werte aus ioBroker States lesen
@@ -508,27 +496,27 @@ async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
    // fetch systems from Enphase cloud
    const systems = await apiGet('systems', params);
    if (systems) {
-      if (debug >= 0) console.log('Successfully fetched systems. Saving data to ioBroker...');
+      if (debug > 0) console.log('Successfully fetched systems. Saving data to ioBroker...');
       const resp_json = safeParseJSON(systems);
-      if (debug >= 2) console.log('Parsed JSON:' + JSON.stringify(resp_json, null, 2));
+      if (debug > 2) console.log('Parsed JSON:' + JSON.stringify(resp_json, null, 2));
       await IObSetState(dpBasicPath + 'Fetch', resp_json, debug);
-      if (debug >= 0) console.log('Creating systems...');
+      if (debug > 0) console.log('Creating systems...');
       if (resp_json.systems && Array.isArray(resp_json.systems)) {
          // create system datapoint for each system found
          let systemString = '{';
          for (let i = 0; i < resp_json.systems.length; i++) {
             const systemId = resp_json.systems[i].system_id;
-            if (debug >= 2) console.log('System ID found:' + systemId);
+            if (debug > 2) console.log('System ID found:' + systemId);
             systemString += `"System_${systemId}": { "system_id": ${JSON.stringify(resp_json.systems[i].system_id)} },`;
          }
          systemString = systemString.slice(0, -1) + '}';
-         if (debug >= 1) console.log('Systems JSON string: ' + systemString);
+         if (debug > 1) console.log('Systems JSON string: ' + systemString);
          await IObSetState(dpBasicPath + 'Systems', safeParseJSON(systemString), debug);
          // create an iterable array of system IDs in ioBroker
          const systemIds = resp_json.systems.map((sys) => sys.system_id);
-         if (debug >= 1) console.log('System IDs array: ' + JSON.stringify(systemIds));
+         if (debug > 1) console.log('System IDs array: ' + JSON.stringify(systemIds));
          setState(dbSystemIDs, systemIds, true);
-         if (debug >= 0) console.log('Systems created.');
+         if (debug > 0) console.log('Systems created.');
       }
    } else {
       console.warn('No systems found or resp_json.systems is undefined');
