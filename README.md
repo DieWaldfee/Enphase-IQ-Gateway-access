@@ -23,6 +23,19 @@ Key points:
 
 ---
 
+## Change Log
+
+* V0.1.0  redesign in javascript. ressource reference (1) see below
+* V0.1.1  enevt handler added to sc_stream -> stay always online
+* V2.0.1  split cron events in hing, mid and low frequency. aim to minimize traffic
+* V2.0.2  Buxfix in high frequency cron
+* V3.0.0  cloud acess integrated and redesign ioBroker datapoints from local gateway
+* V3.1.0  actual work: summary and conclusion build from local and cloud data in 'enphase.summary'
+* V4.0.0  planed: redesign in typescript parallel to the javascript-version (free to choose js or ts) (2025 Q4)
+* V5.0.0  planed: redesign into ioBroker adapter (2026 Q2-Q3)
+
+---
+
 ## ⚠️ Disclaimer / Liability Notice
 
 This project is provided **as-is**, without any guarantees, warranties, or liabilities.
@@ -86,7 +99,7 @@ You find a detailed installation guide under: https://github.com/DieWaldfee/Enph
 
 ## Reference
 
-* Community discussion: [https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5](https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5)
+* Community discussion: (1) [https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5](https://forum.iobroker.net/topic/66908/enphase-envoy-iq-gateway-solar-blockly-skript/5)
 * Original code contributions from: **steffe-s** and **greoj**
 
 ---
