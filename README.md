@@ -70,6 +70,12 @@ Key points combining these data:
 
 ---
 
+## Installation
+
+You find a detailed installation guide under: https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/tree/developement/JS
+
+---
+
 ## ⚠️ Disclaimer / Liability Notice
 
 This project is provided **as-is**, without any guarantees, warranties, or liabilities.
@@ -109,12 +115,6 @@ This project:
 
 You are required to review and comply with Enphase’s official terms before using this code.
 Failure to comply may violate your agreement with Enphase.
-
----
-
-## Installation
-
-You find a detailed installation guide under: https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/tree/developement/JS
 
 ---
 
