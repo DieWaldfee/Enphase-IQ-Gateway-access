@@ -1,5 +1,22 @@
-let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
+/**
+ * Enphase Summary Script
+ *
+ * This script aggregates and synchronizes Enphase solar system data for ioBroker.
+ *
+ * Main functions:
+ * - Monitors and transfers battery State of Charge (SoC) and livedata connection status to summary states.
+ * - Collects production and status data from local and cloud inverters, matches them, and writes summary info.
+ * - Aggregates power data (active, apparent, reactive) for load, storage, grid, and PV across all phases.
+ * - Updates summary states automatically when relevant source states change.
+ *
+ * Designed for ioBroker automation, using async state creation and event-driven updates.
+ * Debug logging is available at multiple verbosity levels.
+ */
 
+//---------------------------------------------------------------------------------------------------
+// Configuration
+//---------------------------------------------------------------------------------------------------
+let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
 //basic path
 const rss_base_path = '0_userdata.0.enphase.';
 const rss_local = rss_base_path + 'local.';
@@ -10,28 +27,46 @@ const rss_SoC = rss_local + 'livedata.meters.soc';
 const rss_sc_stream = rss_local + 'livedata.connection.sc_stream';
 const rss_inverter = rss_local + 'inverter';
 const rss_systems_cloud = rss_cloud + 'Systems';
+const rss_livedata = rss_local + 'livedata';
 const rss_dbSystemIDs = rss_cloud + 'SystemIDs'; // datapoint path to store system IDs found by FetchSystems
 let rss_inverter_trigger = ''; //will be set later to inverter.0
+const rss_power_trigger = rss_livedata + '.meters.grid.agg_p_mw'; //trigger for power data update
 // destination path
 const dst_sc_stream = dst_summary + 'lifedataState';
 const dst_SoC = dst_summary + 'SoC';
 const dst_inverter = dst_summary + 'inverters';
 
-//helper
+// ---------------------------------------------------------------------------------------------------
+// Ensure summary base path exists - helper functions
+//---------------------------------------------------------------------------------------------------
+/**
+ * Ensures that a state with the given ID exists and is initialized.
+ * - If the state does not exist, it creates it asynchronously with the provided value and options.
+ * - If the state already exists, it simply updates its value.
+ * - Useful for managing state objects in a consistent way, especially when states may be created dynamically.
+ * - Logs actions when debug level is high.
+ *
+ * @param {string} id - The unique identifier for the state.
+ * @param {*} value - The initial value to set for the state.
+ * @param {object} options - Configuration for the state (e.g., read/write permissions, type).
+ */
 async function ensureStateAsync(id, value, options = { read: true, write: true }) {
    if (!existsState(id)) {
       await createStateAsync(id, value, options);
       if (debug > 1)
-         console.log(
-            `State ${id} created with initial value: ${JSON.stringify(value)} and options: ${JSON.stringify(options)}`
+         log(
+            `State ${id} created with initial value: ${JSON.stringify(value)} and options: ${JSON.stringify(options)}`,
+            'info'
          );
    } else {
-      if (debug > 1) console.log(`State ${id} already exists - updating value`);
+      if (debug > 1) log(`State ${id} already exists - updating value`, 'info');
       setState(id, value, true);
    }
 }
-
+// ---------------------------------------------------------------------------------------------------
 // get SOC state and transfer to summary
+//---------------------------------------------------------------------------------------------------
+// check if SoC state exists and create summary state if true
 if (existsState(rss_SoC)) {
    ensureStateAsync(dst_SoC, getState(rss_SoC), {
       read: true,
@@ -44,16 +79,18 @@ if (existsState(rss_SoC)) {
       def: 0,
       desc: 'State of Charge (SoC) of the battery in %',
    });
-   if (debug > 1) console.log(`Monitoring SoC state at ${rss_SoC} and updating ${dst_SoC}`);
-   on({ id: rss_SoC, change: 'ne' }, function (obj) {
+   if (debug > 1) log(`Monitoring SoC state at ${rss_SoC} and updating ${dst_SoC}`, 'info');
+   on({ id: rss_SoC, change: 'any' }, function (obj) {
       setState(dst_SoC, obj.state.val, true);
-      if (debug > 2) console.log(`SoC updated: ${obj.state.val}%`);
+      if (debug > 2) log(`SoC updated: ${obj.state.val}%`, 'info');
    });
 }
 
-//get sc_stream state and transfer to summary
+//---------------------------------------------------------------------------------------------------
+// get sc_stream state and transfer to summary
+//---------------------------------------------------------------------------------------------------
 if (existsState(rss_sc_stream)) {
-   ensureStateAsync(dst_sc_stream, getState(rss_sc_stream), {
+   ensureStateAsync(dst_sc_stream, getState(rss_sc_stream) == 'enabled', {
       read: true,
       write: true,
       type: 'boolean',
@@ -61,28 +98,36 @@ if (existsState(rss_sc_stream)) {
       def: false,
       desc: 'Status of livedata connection (sc_stream) as switch',
    });
-   if (debug > 1) console.log(`Monitoring sc_stream state at ${rss_sc_stream} and updating ${dst_sc_stream}`);
-   on({ id: rss_sc_stream, change: 'ne' }, function (obj) {
+   if (debug > 1) log(`Monitoring sc_stream state at ${rss_sc_stream} and updating ${dst_sc_stream}`, 'info');
+   on({ id: rss_sc_stream, change: 'any' }, function (obj) {
       if (obj.state.val == 'enabled') {
          setState(dst_sc_stream, true, true);
       } else {
          setState(dst_sc_stream, false, true);
       }
-      if (debug > 2) console.log(`sc_stream updated: ${obj.state.val}`);
+      if (debug > 2) log(`sc_stream updated: ${obj.state.val}`, 'info');
    });
 }
 
-//get inverter production from local and micro inverter state from cloud if available
-//read production of all micro inverters and store in array
+//---------------------------------------------------------------------------------------------------
+// get inverter production and status and transfer to summary
+//---------------------------------------------------------------------------------------------------
+// get inverter production from local and micro inverter state from cloud if available
+// read production of all micro inverters and store in array
+// helper function to wait until state is created
 async function waitForState(id, interval = 500, maxAttempts = 20) {
    let attempts = 0;
+   // Check if id ends with a point
+   if (id.endsWith('.')) {
+      log(`State id "${id}" ends with a point. This may cause issues.`, 'warn');
+   }
    while (!existsState(id) && attempts < maxAttempts) {
-      if (debug > 1) console.log(`Waiting until state ${id} is created...`);
+      if (debug > 1) log(`Waiting until state ${id} is created...`, 'info');
       await new Promise((resolve) => setTimeout(resolve, interval));
       attempts++;
    }
    if (!existsState(id)) {
-      console.log(`State ${id} was not created after waiting.`);
+      log(`State ${id} was not created after waiting.`, 'info');
    }
 }
 async function inverterSummary() {
@@ -96,7 +141,7 @@ async function inverterSummary() {
          try {
             if (i == 0) {
                rss_inverter_trigger = rss_inverter + '.' + i + '.lastReportWatts';
-               if (debug > 1) console.log(`Inverter trigger set to ${rss_inverter_trigger}`);
+               if (debug > 1) log(`Inverter trigger set to ${rss_inverter_trigger}`, 'info');
             }
             serial = getState(rss_inverter + '.' + i + '.serialNumber').val;
             let lastReportWatts = 0;
@@ -104,23 +149,23 @@ async function inverterSummary() {
                lastReportWatts = getState(rss_inverter + '.' + i + '.lastReportWatts').val;
             } else {
                if (debug > 1)
-                  console.log(`Inverter ID ${i} serial number state exists but lastReportWatts state is missing`);
+                  log(`Inverter ID ${i} serial number state exists but lastReportWatts state is missing`, 'info');
             }
             micro_production.push({ serialNumber: serial, lastReportWatts: lastReportWatts });
             inverter.push(serial);
             if (debug > 2)
-               console.log(`Inverter ID ${i} has serial number ${serial}, lastReportWatts: ${lastReportWatts}.`);
+               log(`Inverter ID ${i} has serial number ${serial}, lastReportWatts: ${lastReportWatts}.`, 'info');
          } catch {
-            console.log(`Inverter ID ${i} does exist but serial number state is invalid or missing`);
+            log(`Inverter ID ${i} does exist but serial number state is invalid or missing`, 'error');
          }
       } else {
          notDoneYet = false;
-         if (debug > 1) console.log(`No more inverters found after ID ${i - 1}. Stopping search`);
+         if (debug > 1) log(`No more inverters found after ID ${i - 1}. Stopping search`, 'info');
       }
       i++;
    } while (notDoneYet);
-   if (debug > 2) console.log(`Found ${micro_production.length} inverters: ${JSON.stringify(micro_production)}`);
-   if (debug > 2) console.log(`List of inverters: ${inverter}`);
+   if (debug > 2) log(`Found ${micro_production.length} inverters: ${JSON.stringify(micro_production)}`, 'info');
+   if (debug > 2) log(`List of inverters: ${inverter}`, 'info');
    // read state of summary inverter and store it in array
    let status_inverter = [];
    notDoneYet = true;
@@ -130,13 +175,13 @@ async function inverterSummary() {
       systems = getState(rss_dbSystemIDs).val;
    } catch {
       systems = [];
-      if (debug > 0) console.log(`No systems found in ${rss_dbSystemIDs}. Please run FetchSystems first`);
+      if (debug > 0) log(`No systems found in ${rss_dbSystemIDs}. Please run FetchSystems first`, 'info');
    }
-   if (debug > 1) console.log('Systems known from Array: ' + JSON.stringify(systems));
+   if (debug > 1) log('Systems known from Array: ' + JSON.stringify(systems), 'info');
    for (let system in systems) {
-      if (debug > 2) console.log('System ID:' + systems[system]);
+      if (debug > 2) log('System ID:' + systems[system], 'info');
       if (existsState(rss_cloud + 'Systems.System_' + systems[system] + '.devices.devices.micros.0.status')) {
-         if (debug > 1) console.log(`Inverters found for system ${systems[system]}`);
+         if (debug > 1) log(`Inverters found for system ${systems[system]}`, 'info');
          //search for all inverters in the system and store status in array
          do {
             if (
@@ -163,37 +208,38 @@ async function inverterSummary() {
                      systemID: systems[system],
                   });
                   if (debug > 2)
-                     console.log(`System ${systems[system]} owns inverter ${i} with serial number: ${inv_serial}`);
+                     log(`System ${systems[system]} owns inverter ${i} with serial number: ${inv_serial}`, 'info');
                   i++;
                } catch {
-                  if (debug > 1) console.log(`Error while processing inverter ${i} for system ${systems[system]}`);
+                  if (debug > 1) log(`Error while processing inverter ${i} for system ${systems[system]}`, 'info');
                   notDoneYet = false;
                }
                if (i > 40) notDoneYet = false; //safety exit
             } else {
                notDoneYet = false;
                if (debug > 1)
-                  console.log(
-                     `No more inverters found for system ${systems[system]} after ID ${i - 1}. Stopping search`
+                  log(
+                     `No more inverters found for system ${systems[system]} after ID ${i - 1}. Stopping search`,
+                     'info'
                   );
             }
          } while (notDoneYet);
       } else {
-         if (debug > 1) console.log(`No inverter found for system ${systems[system]}`);
+         if (debug > 1) log(`No inverter found for system ${systems[system]}`, 'info');
       }
    }
    if (status_inverter.length == 0) {
-      if (debug > 0) console.log(`No inverter status found in any system. Please check cloud data`);
+      if (debug > 0) log(`No inverter status found in any system. Please check cloud data`, 'info');
    } else {
-      if (debug > 2) console.log(`Inverter status found: ${JSON.stringify(status_inverter)}`);
+      if (debug > 2) log(`Inverter status found: ${JSON.stringify(status_inverter)}`, 'info');
    }
    //sort arrays by serial number to ensure matching order
    micro_production.sort((a, b) => a.serialNumber.localeCompare(b.serialNumber));
-   if (debug > 2) console.log(`micro production after sort: ${JSON.stringify(micro_production)}`);
+   if (debug > 2) log(`micro production after sort: ${JSON.stringify(micro_production)}`, 'info');
    inverter.sort((a, b) => a.localeCompare(b));
-   if (debug > 2) console.log(`inverter list after sort: ${JSON.stringify(inverter)}`);
+   if (debug > 2) log(`inverter list after sort: ${JSON.stringify(inverter)}`, 'info');
    status_inverter.sort((a, b) => a.serialNumber.localeCompare(b.serialNumber));
-   if (debug > 2) console.log(`inverter status after sort: ${JSON.stringify(status_inverter)}`);
+   if (debug > 2) log(`inverter status after sort: ${JSON.stringify(status_inverter)}`, 'info');
    //match production and status of each inverter and write to summary
    let summary_inverter = [];
    for (let inv in micro_production) {
@@ -220,7 +266,7 @@ async function inverterSummary() {
          });
       }
    }
-   if (debug > 2) console.log(`Summary inverter data: ${JSON.stringify(summary_inverter)}`);
+   if (debug > 2) log(`Summary inverter data: ${JSON.stringify(summary_inverter)}`, 'info');
    // write summary inverter data to ioBroker datapoints
    //list of inverters in summary
    ensureStateAsync(dst_inverter + '.inverter_list', JSON.stringify(inverter), {
@@ -231,9 +277,6 @@ async function inverterSummary() {
       def: '',
       desc: 'List of inverter serial numbers found (may include local and cloud sources, JSON string)',
    });
-   //await waitForState(dst_inverter + '.inverter_list');
-   //setState(dst_inverter + '.inverter_list', JSON.stringify(inverter), true);
-
    //data for each inverter in summary
    for (let inv of summary_inverter) {
       //serial number
@@ -310,11 +353,206 @@ async function inverterSummary() {
 //monitoring inverter production
 await inverterSummary(); //initial run
 if (existsState(rss_inverter + '.0.serialNumber')) {
-   if (debug > 1) console.log(`Monitoring inverter production at ${rss_inverter} and updating ${dst_inverter}`);
-   if (debug > 2) console.log(`Using event trigger ${rss_inverter_trigger}`);
+   if (debug > 1) log(`Monitoring inverter production at ${rss_inverter} and updating ${dst_inverter}`, 'info');
+   if (debug > 2) log(`Using event trigger ${rss_inverter_trigger}`, 'info');
    on({ id: rss_inverter_trigger, change: 'any' }, function (obj) {
       //timeout 500ms to ensure all inverters are updated
-      setTimeout(() => {inverterSummary();}, 500);
-      if (debug > 2) console.log(`Inverter production updated`);
+      setTimeout(() => {
+         inverterSummary();
+      }, 500);
+      if (debug > 2) log(`Inverter production updated`, 'info');
+   });
+}
+
+// get storage, production and consumption data if available
+// read data of all storage devices and store in array
+async function powerSummary(id) {
+   if (debug > 1) log(`Reading data for id ${id}`, 'info');
+   if (debug > 2)
+      log(`Data ressource: ${JSON.stringify(rss_livedata + '.meters.' + String(id) + '.agg_p_mw')} `, 'info');
+   try {
+      if (existsState(rss_livedata + '.meters.' + String(id) + '.agg_p_mw')) {
+         //total: read and calculate data and convert to W, VA, VAR
+         //total: read and calculate data and convert to W, VA, VAR
+         let activePower = getState(rss_livedata + '.meters.' + String(id) + '.agg_p_mw').val / 1000;
+         let apparentPower = getState(rss_livedata + '.meters.' + String(id) + '.agg_s_mva').val / 1000;
+         let reactivePower = apparentPower * apparentPower - activePower * activePower;
+         if (reactivePower >= 0) {
+            reactivePower = Math.sqrt(reactivePower);
+         } else {
+            reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
+         }
+         //total: write data to summary
+         ensureStateAsync(dst_summary + String(id) + '.total.activePower_total', Math.round(activePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'W',
+            def: 0,
+            desc: 'Active Power (P) in W',
+         });
+         ensureStateAsync(
+            dst_summary + String(id) + '.total.apparentPower_total',
+            Math.round(apparentPower * 10) / 10,
+            {
+               read: true,
+               write: false,
+               type: 'number',
+               role: 'value',
+               unit: 'VA',
+               def: 0,
+               desc: 'Apparent Power (S) in VA',
+            }
+         );
+         ensureStateAsync(
+            dst_summary + String(id) + '.total.reactivePower_total',
+            Math.round(reactivePower * 10) / 10,
+            {
+               read: true,
+               write: false,
+               type: 'number',
+               role: 'value',
+               unit: 'VAR',
+               def: 0,
+               desc: 'Reactive Power (Q) in VAR',
+            }
+         );
+         // L1 (Phase A): read and calculate data and convert to W, VA, VAR
+         activePower = getState(rss_livedata + '.meters.' + String(id) + '.agg_p_ph_a_mw').val / 1000;
+         apparentPower = getState(rss_livedata + '.meters.' + String(id) + '.agg_s_ph_a_mva').val / 1000;
+         reactivePower = apparentPower * apparentPower - activePower * activePower;
+         if (reactivePower >= 0) {
+            reactivePower = Math.sqrt(reactivePower);
+         } else {
+            reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
+         }
+         //L1 (Phase A): write data to summary
+         ensureStateAsync(dst_summary + String(id) + '.L1.activePower_L1', Math.round(activePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'W',
+            def: 0,
+            desc: 'Active Power (P) in W',
+         });
+         ensureStateAsync(dst_summary + String(id) + '.L1.apparentPower_L1', Math.round(apparentPower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'VA',
+            def: 0,
+            desc: 'Apparent Power (S) in VA',
+         });
+         ensureStateAsync(dst_summary + String(id) + '.L1.reactivePower_L1', Math.round(reactivePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'VAR',
+            def: 0,
+            desc: 'Reactive Power (Q) in VAR',
+         });
+         // L2 (Phase B): read and calculate data and convert to W, VA, VAR
+         activePower = getState(rss_livedata + '.meters.' + String(id) + '.agg_p_ph_b_mw').val / 1000;
+         apparentPower = getState(rss_livedata + '.meters.' + String(id) + '.agg_s_ph_b_mva').val / 1000;
+         reactivePower = apparentPower * apparentPower - activePower * activePower;
+         if (reactivePower >= 0) {
+            reactivePower = Math.sqrt(reactivePower);
+         } else {
+            reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
+         }
+         //L2 (Phase B): write data to summary
+         ensureStateAsync(dst_summary + String(id) + '.L2.activePower_L2', Math.round(activePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'W',
+            def: 0,
+            desc: 'Active Power (P) in W',
+         });
+         ensureStateAsync(dst_summary + String(id) + '.L2.apparentPower_L2', Math.round(apparentPower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'VA',
+            def: 0,
+            desc: 'Apparent Power (S) in VA',
+         });
+         ensureStateAsync(dst_summary + String(id) + '.L2.reactivePower_L2', Math.round(reactivePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'VAR',
+            def: 0,
+            desc: 'Reactive Power (Q) in VAR',
+         });
+         // L3 (Phase C): read and calculate data and convert to W, VA, VAR
+         activePower = getState(rss_livedata + '.meters.' + String(id) + '.agg_p_ph_c_mw').val / 1000;
+         apparentPower = getState(rss_livedata + '.meters.' + String(id) + '.agg_s_ph_c_mva').val / 1000;
+         reactivePower = apparentPower * apparentPower - activePower * activePower;
+         if (reactivePower >= 0) {
+            reactivePower = Math.sqrt(reactivePower);
+         } else {
+            reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
+         }
+         //L3 (Phase C): write data to summary
+         ensureStateAsync(dst_summary + String(id) + '.L3.activePower_L3', Math.round(activePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'W',
+            def: 0,
+            desc: 'Active Power (P) in W',
+         });
+         ensureStateAsync(dst_summary + String(id) + '.L3.apparentPower_L3', Math.round(apparentPower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'VA',
+            def: 0,
+            desc: 'Apparent Power (S) in VA',
+         });
+         ensureStateAsync(dst_summary + String(id) + '.L3.reactivePower_L3', Math.round(reactivePower * 10) / 10, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            unit: 'VAR',
+            def: 0,
+            desc: 'Reactive Power (Q) in VAR',
+         });
+      } else {
+         if (debug > 0) log(`No data found in local livedata. Please check local data`, 'info');
+         return;
+      }
+   } catch {
+      log(`Error while accessing data for id ${id}`, 'error');
+      return;
+   }
+}
+
+//---------------------------------------------------------------------------------------------------
+// monitoring power data
+//---------------------------------------------------------------------------------------------------
+// monitoring power data and updating summary based on trigger state
+if (existsState(rss_power_trigger)) {
+   if (debug > 1) log(`Monitoring power measures at ${rss_power_trigger}`, 'info');
+   on({ id: rss_power_trigger, change: 'any' }, function (obj) {
+      //timeout 500ms to ensure all power data states are updated before summary calculation
+      setTimeout(async () => {
+         powerSummary('load');
+         powerSummary('storage');
+         powerSummary('grid');
+         powerSummary('pv');
+      }, 500);
+      if (debug > 2) log(`Power updated for ids: load, storage, grid, pv`, 'info');
    });
 }
