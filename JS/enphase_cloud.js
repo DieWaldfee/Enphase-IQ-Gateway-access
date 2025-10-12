@@ -41,16 +41,21 @@ async function ensureStateAsync(id, value, options = { read: true, write: true }
       await createStateAsync(id, value, options);
    }
 }
-await ensureStateAsync(dpCredentialsPath + 'Client_ID', '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpCredentialsPath + 'Client_Secret', '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpApiKey, '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpConfigPath + 'Port', 3080,  { type: 'number', role: 'value', read: true, write: true });
-await ensureStateAsync(dpAccess, '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpRefresh, '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpExpire, '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpExpireTS, 0,  { type: 'number', role: 'value', read: true, write: true });
-await ensureStateAsync(dbSystemIDs, '',  { type: 'string', role: 'text', read: true, write: true });
-await ensureStateAsync(dpServerURI, 'http://localhost',  { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpCredentialsPath + 'Client_ID', '', { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpCredentialsPath + 'Client_Secret', '', {
+   type: 'string',
+   role: 'text',
+   read: true,
+   write: true,
+});
+await ensureStateAsync(dpApiKey, '', { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpConfigPath + 'Port', 3080, { type: 'number', role: 'value', read: true, write: true });
+await ensureStateAsync(dpAccess, '', { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpRefresh, '', { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpExpire, '', { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpExpireTS, 0, { type: 'number', role: 'value', read: true, write: true });
+await ensureStateAsync(dbSystemIDs, '', { type: 'string', role: 'text', read: true, write: true });
+await ensureStateAsync(dpServerURI, 'http://localhost', { type: 'string', role: 'text', read: true, write: true });
 await setState(dpConfigPath + 'Port', getState(dpConfigPath + 'Port').val, true); // ensure acknowledgement is true without changing value
 await setState(dpServerURI, getState(dpServerURI).val, true); // ensure acknowledgement is true without changing value
 if (debug > 0) console.log('datapoints checked/created');
@@ -92,16 +97,16 @@ function stopMyScript() {
 // Validierung der Eingaben
 // -------------------------------------------------------------------------------------------------------------------
 // Überprüfen, ob alle erforderlichen Eingaben vorhanden sind
-if (!Client_ID) throw new Error('Client_ID is missing.');
-if (!Client_Secret) throw new Error('Client_Secret is missing.');
-if (!Api_Key) throw new Error('Api_Key is missing.');
-if (!serverURI) throw new Error('serverURI is missing.');
-if (!Port) throw new Error('Port is missing.');
+if (!Client_ID) throw new Error('Client_ID is missing');
+if (!Client_Secret) throw new Error('Client_Secret is missing');
+if (!Api_Key) throw new Error('Api_Key is missing');
+if (!serverURI) throw new Error('serverURI is missing');
+if (!Port) throw new Error('Port is missing');
 if (!serverURI.startsWith('http://') && !serverURI.startsWith('https://')) {
-   throw new Error('serverURI must start with http:// or https://.');
+   throw new Error('serverURI must start with http:// or https://');
 }
 if (typeof Port !== 'number' || Port < 1 || Port > 65535) {
-   throw new Error('Port must be a number between 1 and 65535.');
+   throw new Error('Port must be a number between 1 and 65535');
 }
 if (debug >= 0) console.log('Input validation passed');
 
@@ -137,7 +142,7 @@ if (debug >= 1) console.log('Express server homepage setup done');
 // Callback: Enphase redirects here with ?code=...
 app.get('/callback', async (req, res) => {
    const { code } = req.query;
-   if (!code) return res.send('No code received.');
+   if (!code) return res.send('No code received');
 
    const basic = Buffer.from(`${Client_ID}:${Client_Secret}`).toString('base64');
    const tokenUrl = `${TOKEN_URL}?grant_type=authorization_code&code=${encodeURIComponent(
@@ -153,7 +158,7 @@ app.get('/callback', async (req, res) => {
          },
       });
       const data = await resp.json();
-      if (debug >= 1) console.log('token renew request finished.');
+      if (debug >= 1) console.log('token renew request finished');
       if (debug >= 2) console.log('token renew response: ' + JSON.stringify(data));
       if (!resp.ok) {
          res.send('Fehler: ' + JSON.stringify(data));
@@ -162,7 +167,7 @@ app.get('/callback', async (req, res) => {
       // Save to ioBroker states
       setState(dpAccess, data.access_token, true);
       setState(dpRefresh, data.refresh_token, true);
-      if (debug >= 2) console.log('tokens saved to states.');
+      if (debug >= 2) console.log('tokens saved to states');
 
       // Calculate and store expiry time
       const expiresIn = data.expires_in;
@@ -181,7 +186,7 @@ app.get('/callback', async (req, res) => {
       setState(dpExpire, '', true);
       res.send('Exception: ' + e.message);
       console.error('Error during token request: ' + e.message);
-      console.error('Script stopped. Please re-authenticate by restarting the script.');
+      console.error('Script stopped. Please re-authenticate by restarting the script');
       stopMyScript();
    }
 });
@@ -225,8 +230,8 @@ async function refreshToken() {
       setState(dpRefresh, '', true);
       setState(dpExpire, '', true);
       console.error('Refresh error: ' + JSON.stringify(data));
-      console.error('Script stopped. Please re-authenticate.');
-      console.error('Script stopped. Please re-authenticate by restarting the script.');
+      console.error('Script stopped. Please re-authenticate');
+      console.error('Script stopped. Please re-authenticate by restarting the script');
       stopMyScript();
    }
 }
@@ -401,11 +406,11 @@ async function apiGet(endpoint, params = '') {
    const apiKey = getState(dpApiKey).val;
    // check for access token and api key
    if (!accessToken) {
-      console.error('❌ Kein Access Token vorhanden. Bitte Authentifizierung durchführen.');
+      console.error('❌ Kein Access Token vorhanden. Bitte Authentifizierung durchführen');
       return null;
    }
    if (!apiKey) {
-      console.error('❌ Kein API-Key vorhanden. Bitte in den Credentials-Datenpunkt eintragen.');
+      console.error('❌ Kein API-Key vorhanden. Bitte in den Credentials-Datenpunkt eintragen');
       return null;
    }
    // constructing requestUrl
@@ -516,7 +521,7 @@ async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
          const systemIds = resp_json.systems.map((sys) => sys.system_id);
          if (debug > 1) console.log('System IDs array: ' + JSON.stringify(systemIds));
          setState(dbSystemIDs, systemIds, true);
-         if (debug > 0) console.log('Systems created.');
+         if (debug > 0) console.log('Systems created');
       }
    } else {
       console.warn('No systems found or resp_json.systems is undefined');
@@ -668,7 +673,7 @@ async function getSystemsEvents(startTime = null, endTime = null) {
       // get events for each system and write to ioBroker
       await getAndWrite(params, 'events', 'events', debug);
    } else {
-      console.warn('Called getSystemsEvents without startTime [Epoch time format] - no action taken.');
+      console.warn('Called getSystemsEvents without startTime [Epoch time format] - no action taken');
    }
 }
 
@@ -740,7 +745,7 @@ async function getSystemsAlarms(startTime = null, endTime = null, cleared = fals
       // get alarms for each system and write to ioBroker
       await getAndWrite(params, 'alarms', 'alarms', debug);
    } else {
-      console.warn('called getSystemsAlarms without startTime [Epoch time format] - no action taken.');
+      console.warn('called getSystemsAlarms without startTime [Epoch time format] - no action taken');
    }
 }
 
@@ -817,7 +822,7 @@ async function getLoadControl() {
 // It also fetches event types and creates the event_types datapoint.
 // If the access token is missing, it warns the user and stops the script
 if (existsState(dpAccess)) {
-   if (debug > 0) console.log('Access Token datapoint already exists.');
+   if (debug > 0) console.log('Access Token datapoint already exists');
    if (getState(dpAccess).val != '') {
       // Access token is available
       if (!existsState(dpBasicPath + 'Fetch')) {
@@ -834,7 +839,7 @@ if (existsState(dpAccess)) {
             Port +
             ' or modify Server URL in datapoint ' +
             dpServerURI +
-            ', if you use another computer than the ioBroker to authenticate.'
+            ', if you use another computer than the ioBroker to authenticate'
       );
    }
 }
@@ -851,13 +856,13 @@ const oneDayAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 1; // 1 day ago
 let checkEventsAndAlarms = schedule('0 0 * * *', async () => {
    try {
       await getSystemsEvents(oneDaysAgo);
-      if (debug > 3) console.log('getSystemsEvents executed successfully.');
+      if (debug > 3) console.log('getSystemsEvents executed successfully');
    } catch (err) {
       console.error('Error in getSystemsEvents:', err.message);
    }
    try {
-      await getSystemsAlarms(oneDaysAgo, null, true);
-      if (debug > 3) console.log('getSystemsAlarms executed successfully.');
+      await getSystemsAlarms(oneDayAgo, null, true);
+      if (debug > 3) console.log('getSystemsAlarms executed successfully');
    } catch (err) {
       console.error('Error in getSystemsAlarms:', err.message);
    }
@@ -867,7 +872,7 @@ let checkEventsAndAlarms = schedule('0 0 * * *', async () => {
 let fetchDevices = schedule('0 */1 * * *', async () => {
    try {
       await getSystemsDevices();
-      if (debug > 3) console.log('getSystemsDevices executed successfully.');
+      if (debug > 3) console.log('getSystemsDevices executed successfully');
    } catch (err) {
       console.error('Error in getSystemsDevices:', err.message);
    }
