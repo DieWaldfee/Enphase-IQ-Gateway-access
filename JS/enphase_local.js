@@ -92,7 +92,7 @@ async function ensureCredentialsStates() {
    }
 }
 await ensureCredentialsStates();
-if (debug > 0) console.log('credentials, serial_no and gateway_ip datapoints created');
+if (debug > 0) log('credentials, serial_no and gateway_ip datapoints created', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // read credentials from iobroker datapoints
@@ -107,7 +107,7 @@ try {
    envoy_serial_no = getState(dpCredentialsPath + 'serial_no').val;
    envoy_ip = getState(dpCredentialsPath + 'gateway_ip').val;
 } catch (error) {
-   console.error('Error reading credentials from datapoints: ' + error.message);
+   log('Error reading credentials from datapoints: ' + error.message, 'error');
    stopMyScript();
 }
 
@@ -115,11 +115,11 @@ try {
 // check credentials from iobroker datapoints
 // -------------------------------------------------------------------------------------------------------------------
 if (envoy_username === '' || envoy_password === '' || envoy_serial_no === '' || envoy_ip === '') {
-   console.error('⚠️ One or more Enphase credentials are not set – script stopped');
-   console.log('Please set the Enphase credentials in the corresponding datapoints under ' + dpCredentialsPath);
-   console.log('Mandatory datapoints are: username, password, serial_no (12 digit), ip (IPv4 address)');
-   console.log('The script created the necessary datapoints if they did not exist.');
-   console.log('After setting the credentials please restart this script.');
+   log('⚠️ One or more Enphase credentials are not set – script stopped', 'error');
+   log('Please set the Enphase credentials in the corresponding datapoints under ' + dpCredentialsPath, 'info');
+   log('Mandatory datapoints are: username, password, serial_no (12 digit), ip (IPv4 address)', 'info');
+   log('The script created the necessary datapoints if they did not exist.', 'info');
+   log('After setting the credentials please restart this script.', 'info');
    stopMyScript();
    return; // prevent further execution (parallel call of schedules)
 }
@@ -149,45 +149,46 @@ function stopMyScript() {
 }
 
 if (envoy_username === null || envoy_username === undefined || envoy_username === '') {
-   console.error('⚠️ variable envoy_username not set – script stopped');
-   console.log('Please set the variable envoy_username to your Enphase Enlighten Cloud username.');
+   log('⚠️ variable envoy_username not set – script stopped', 'error');
+   log('Please set the variable envoy_username to your Enphase Enlighten Cloud username.', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_password === null || envoy_password === undefined || envoy_password === '') {
-   console.error('⚠️ variable envoy_password not set – script stopped');
-   console.log('Please set the variable envoy_password to your Enphase Enlighten Cloud password.');
+   log('⚠️ variable envoy_password not set – script stopped', 'error');
+   log('Please set the variable envoy_password to your Enphase Enlighten Cloud password.', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_serial_no === null || envoy_serial_no === undefined || envoy_serial_no === '') {
-   console.error('⚠️ variable envoy_serial_no not set – script stopped');
-   console.log('Please set the variable envoy_serial_no to the serial number of your Envoy device.');
+   log('⚠️ variable envoy_serial_no not set – script stopped', 'error');
+   log('Please set the variable envoy_serial_no to the serial number of your Envoy device.', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (!/^\d{12}$/.test(envoy_serial_no)) {
    //check, if exactly 12 digits
-   console.error('⚠️ envoy_serial_no must be exactly 12 digits – script stopped');
-   console.log(
-      'Please check the variable envoy_serial_no. It must contain exactly 12 digits (no letters, no special characters).'
+   log('⚠️ envoy_serial_no must be exactly 12 digits – script stopped', 'error');
+   log(
+      'Please check the variable envoy_serial_no. It must contain exactly 12 digits (no letters, no special characters).',
+      'info'
    );
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_ip === null || envoy_ip === undefined || envoy_ip === '') {
-   console.error('⚠️ variable envoy_ip not set – script stopped');
-   console.log('Please set the variable envoy_ip to the IP address of your Envoy device.');
+   log('⚠️ variable envoy_ip not set – script stopped', 'error');
+   log('Please set the variable envoy_ip to the IP address of your Envoy device.', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (!isValidIPv4(envoy_ip)) {
-   console.error('⚠️ envoy_ip is not a valid IPv4 address – script stopped');
-   console.log('Please check the variable envoy_ip. It must contain a valid IPv4 address (e.g. 192.168.1.1)');
+   log('⚠️ envoy_ip is not a valid IPv4 address – script stopped', 'error');
+   log('Please check the variable envoy_ip. It must contain a valid IPv4 address (e.g. 192.168.1.1)', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
-if (debug > 0) console.log('All mandatory variables are set. Proceeding...');
+if (debug > 0) log('All mandatory variables are set. Proceeding...', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // get bearer token
@@ -217,7 +218,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
       'user[password]': envoy_password,
    });
 
-   if (debug > 0) console.log('Renew token. 1. Login to enlighten.enphaseenergy.com to get session_id...');
+   if (debug > 0) log('Renew token. 1. Login to enlighten.enphaseenergy.com to get session_id...', 'info');
 
    try {
       const loginResponse = await fetch('https://enlighten.enphaseenergy.com/login/login.json', {
@@ -228,7 +229,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
          },
       });
       const responseData = await loginResponse.json();
-      if (debug > 1) console.log('Response from login: ' + JSON.stringify(responseData));
+      if (debug > 1) log('Response from login: ' + JSON.stringify(responseData), 'info');
 
       // Token request
       const tokenData = {
@@ -238,10 +239,10 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
       };
       // Check for invalid login
       if (responseData.message === 'Invalid') throw new Error('Invalid username or password');
-      if (debug > 1) console.log('Login successful. Session ID: ' + responseData.session_id);
-      if (debug > 2) console.log('Proceeding to token request with data: ' + JSON.stringify(tokenData));
+      if (debug > 1) log('Login successful. Session ID: ' + responseData.session_id, 'info');
+      if (debug > 2) log('Proceeding to token request with data: ' + JSON.stringify(tokenData), 'info');
 
-      if (debug > 0) console.log('2. Login to entrez.enphaseenergy.com to get new token...');
+      if (debug > 0) log('2. Login to entrez.enphaseenergy.com to get new token...', 'info');
       const tokenResponse = await fetch('https://entrez.enphaseenergy.com/tokens', {
          method: 'POST',
          body: JSON.stringify(tokenData),
@@ -250,10 +251,10 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
          },
       });
       const tokenRaw = await tokenResponse.text();
-      if (debug > 1) console.log('New token: ' + tokenRaw);
+      if (debug > 1) log('New token: ' + tokenRaw, 'info');
       return tokenRaw;
    } catch (error) {
-      console.error('Error token renewal: ' + error.message);
+      log('Error token renewal: ' + error.message, 'error');
       return '';
    }
 }
@@ -276,7 +277,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
  * @returns {Promise<void>} - Resolves when all states have been set or created.
  */
 async function IObSetState(id, obj, debug = 0) {
-   if (debug > 2) console.log('IObSetState called with id: ' + id + ' and obj: ' + JSON.stringify(obj));
+   if (debug > 2) log('IObSetState called with id: ' + id + ' and obj: ' + JSON.stringify(obj), 'info');
    // Loop through all attributes of the given object
    for (const i of Object.keys(obj)) {
       const value = obj[i]; // Get value of current attribute
@@ -285,7 +286,7 @@ async function IObSetState(id, obj, debug = 0) {
       if (typeof value == 'object') {
          // Nested object -> recursive call of IObSetState
          if (debug > 2)
-            console.log('Nested object found for attribute: ' + attr + ' with value: ' + JSON.stringify(value));
+            log('Nested object found for attribute: ' + attr + ' with value: ' + JSON.stringify(value), 'info');
          await IObSetState(id + '.' + attr, value, debug);
       } else {
          // Primitive value (string, number, date) -> create or update state in IOBroker
@@ -293,7 +294,7 @@ async function IObSetState(id, obj, debug = 0) {
             // Existing object => Update
             if (typeof value === 'string' || value instanceof String) {
                // value is a string
-               if (debug > 1) console.log('Updating string state: ' + id + '.' + attr + ' with value: ' + value);
+               if (debug > 1) log('Updating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                setState(id + '.' + attr, value, true);
             } else {
                // It is a number or date
@@ -303,21 +304,21 @@ async function IObSetState(id, obj, debug = 0) {
                   Number(value) < MAX_VALID_TIMESTAMP
                ) {
                   // value is a date
-                  if (debug > 1) console.log('Updating date state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Updating date state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   if (debug > 2)
-                     console.log(
+                     log(
                         'Updating additional human readable date state: ' +
                            id +
                            '.' +
                            attr +
                            '_str with value: ' +
-                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss')
+                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), 'info'
                      );
                   setState(id + '.' + attr, value, true); // unix timestamp
                   setState(id + '.' + attr + '_str', formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), true); // human readable date
                } else {
                   // value is a number
-                  if (debug > 1) console.log('Updating number state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Updating number state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   setState(id + '.' + attr, Number(value), true);
                }
             }
@@ -325,7 +326,7 @@ async function IObSetState(id, obj, debug = 0) {
             // New object => create
             if (typeof value === 'string' || value instanceof String) {
                // value is a string
-               if (debug > 1) console.log('Creating string state: ' + id + '.' + attr + ' with value: ' + value);
+               if (debug > 1) log('Creating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                createState(id + '.' + attr, value, false, { type: 'string', read: true, write: true });
             } else {
                // It is a number or date
@@ -335,15 +336,15 @@ async function IObSetState(id, obj, debug = 0) {
                   Number(value) < MAX_VALID_TIMESTAMP
                ) {
                   // value is a date
-                  if (debug > 1) console.log('Creating date state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Creating date state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   if (debug > 2)
-                     console.log(
+                     log(
                         'Creating additional human readable date state: ' +
                            id +
                            '.' +
                            attr +
                            '_str with value: ' +
-                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss')
+                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), 'info'
                      );
                   createState(id + '.' + attr, value, false, { type: 'number', read: true, write: true });
                   createState(id + '.' + attr + '_str', formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), false, {
@@ -353,7 +354,7 @@ async function IObSetState(id, obj, debug = 0) {
                   });
                } else {
                   // value is a number
-                  if (debug > 1) console.log('Creating number state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Creating number state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   createState(id + '.' + attr, value, false, { type: 'number', read: true, write: true }); // type set to 'number'; change to 'mixed' if mixed types are expected
                }
             }
@@ -428,13 +429,13 @@ async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug =
       },
    };
 
-   if (debug > 0) console.log(log_msg + '...started');
-   if (debug > 1) console.log('Query local Envoy IP: ' + envoy_ip + ' ...process started');
+   if (debug > 0) log(log_msg + '...started', 'info');
+   if (debug > 1) log('Query local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
    let jsonData;
    try {
       const response = await httpsRequestAsyncGet(options);
-      if (debug > 1) console.log('Query local Envoy IP: ' + envoy_ip);
-      if (debug > 2) console.log('Response from local Envoy: ' + response);
+      if (debug > 1) log('Query local Envoy IP: ' + envoy_ip, 'info');
+      if (debug > 2) log('Response from local Envoy: ' + response, 'info');
       jsonData = JSON.parse(response);
    } catch (error) {
       // Error handling for request failure or JSON parsing error -> stop script here
@@ -444,12 +445,12 @@ async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug =
    try {
       http_resp_json = JSON.stringify(jsonData, null, 2);
       error_cnt -= 1;
-      if (debug > 2) console.log('JSON data to be processed: ' + JSON.stringify(jsonData));
-      if (debug > 1) console.log(log_msg + 'ok');
+      if (debug > 2) log('JSON data to be processed: ' + JSON.stringify(jsonData), 'info');
+      if (debug > 1) log(log_msg + 'ok', 'info');
       return true;
    } catch (error) {
       error_cnt += 1;
-      console.error(log_msg + error.message + ' | Error cnt: ' + String(error_cnt));
+      log(log_msg + error.message + ' | Error cnt: ' + String(error_cnt), 'error');
       return false;
    }
 }
@@ -465,13 +466,13 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
       headers: { Authorization: `Bearer ${bearer_token}` },
    };
 
-   if (debug > 0) console.log(log_msg + '...started');
-   if (debug > 1) console.log('Query local Envoy IP: ' + envoy_ip + ' ...process started');
+   if (debug > 0) log(log_msg + '...started', 'info');
+   if (debug > 1) log('Query local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
    let jsonData;
    try {
       const response = await httpsRequestAsyncPost(options);
-      if (debug > 1) console.log('Query local Envoy IP: ' + envoy_ip);
-      if (debug > 2) console.log('Response from local Envoy: ' + response);
+      if (debug > 1) log('Query local Envoy IP: ' + envoy_ip, 'info');
+      if (debug > 2) log('Response from local Envoy: ' + response, 'info');
       jsonData = JSON.parse(response);
    } catch (error) {
       // Error handling for request failure or JSON parsing error -> stop script here
@@ -481,12 +482,12 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
    try {
       http_resp_json = JSON.stringify(jsonData, null, 2);
       error_cnt -= 1;
-      if (debug > 2) console.log('JSON data to be processed: ' + JSON.stringify(jsonData));
-      if (debug > 1) console.log(log_msg + 'ok');
+      if (debug > 2) log('JSON data to be processed: ' + JSON.stringify(jsonData), 'info');
+      if (debug > 1) log(log_msg + 'ok', 'info');
       return true;
    } catch (error) {
       error_cnt += 1;
-      console.error(log_msg + ': ' + error.message + ' | Error cnt: ' + String(error_cnt));
+      log(log_msg + ': ' + error.message + ' | Error cnt: ' + String(error_cnt), 'error');
       return false;
    }
 }
@@ -515,7 +516,7 @@ function safeParseJSON(jsonStr) {
 // single requests of data
 // 1. Get PV EH DEVS
 if (await GetEnvoyData(envoy_ip, ivp_eh_devs, bearer_token, 'Get EH DEVS data : ', debug)) {
-   if (debug > 1) console.log('Processing eh devs data...');
+   if (debug > 1) log('Processing eh devs data...', 'info');
    const ehDevsData = safeParseJSON(http_resp_json);
    await IObSetState(dpPrefix + 'eh_devs', ehDevsData);
 }
@@ -528,26 +529,26 @@ pollingCron = `28 */${lowPollingInterval} * * * *`; // every x minutes with 28 s
 const lowCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0) console.log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes');
-         if (debug > 1) console.log('Resulting polling interval: ' + pollingCron);
-         if (debug > 2) console.log('Current error count: ' + error_cnt);
-         if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
+         if (debug > 0) log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes', 'info');
+         if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
+         if (debug > 2) log('Current error count: ' + error_cnt, 'info');
+         if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
          //error_cnt = 0; // Reset error count before starting new polling cycle - done in high freq. loop
          // A. Get PV DEVICE LIST
          if (await GetEnvoyData(envoy_ip, ivp_device_list, bearer_token, 'Get DEVICE LIST data : ', debug)) {
-            if (debug > 1) console.log('Processing device list data...');
+            if (debug > 1) log('Processing device list data...', 'info');
             const deviceListData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'device_list', deviceListData);
          }
          // B. status meters
          if (await GetEnvoyData(envoy_ip, ivp_meters_status, bearer_token, 'Get Meters status data : ', debug)) {
-            if (debug > 1) console.log('Processing meters status data...');
+            if (debug > 1) log('Processing meters status data...', 'info');
             const metersStatusData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'meters.status', metersStatusData);
          }
       }
    } catch (err) {
-      console.error('Error in low freq. scheduled polling loop: ' + err.message);
+      log('Error in low freq. scheduled polling loop: ' + err.message, 'error');
    }
 });
 // Main cyclic program loop med frequency
@@ -559,26 +560,26 @@ pollingCron = `13 */${medPollingInterval} * * * *`; // every x minutes with 13 s
 const medCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0) console.log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes');
-         if (debug > 1) console.log('Resulting polling interval: ' + pollingCron);
-         if (debug > 2) console.log('Current error count: ' + error_cnt);
-         if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
+         if (debug > 0) log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes', 'info');
+         if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
+         if (debug > 2) log('Current error count: ' + error_cnt, 'info');
+         if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
          //error_cnt = 0; // Reset error count before starting new polling cycle - done in high freq. loop
          // 1. Get PV METER PRODUCTION
          if (await GetEnvoyData(envoy_ip, ivp_prod, bearer_token, 'Get Prod. data: ', debug)) {
-            if (debug > 1) console.log('Processing production data...');
+            if (debug > 1) log('Processing production data...', 'info');
             const prodData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'production', prodData);
          }
          // 2. Get PV METER CONSUMPTION
          if (await GetEnvoyData(envoy_ip, ivp_cons, bearer_token, 'Get Cons. data: ', debug)) {
-            if (debug > 1) console.log('Processing consumption data...');
+            if (debug > 1) log('Processing consumption data...', 'info');
             const consData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'consumption', consData);
          }
          // 3. Get PV PRODUCTION.JSON
          if (await GetEnvoyData(envoy_ip, ivp_production, bearer_token, 'Get production.json data: ', debug)) {
-            if (debug > 1) console.log('Processing production.json data...');
+            if (debug > 1) log('Processing production.json data...', 'info');
             // Note: This URL is deprecated but still includes the "whToday" counter
             // which is not included in the new "/ivp/meters/reports/production" URL
             const prodStatData = safeParseJSON(http_resp_json);
@@ -586,25 +587,25 @@ const medCyclicSchedule = schedule(pollingCron, async () => {
          }
          // 4. Get PV MICRO INVERTER
          if (await GetEnvoyData(envoy_ip, ivp_inverters, bearer_token, 'Get Inv. data : ', debug)) {
-            if (debug > 1) console.log('Processing inverter data...');
+            if (debug > 1) log('Processing inverter data...', 'info');
             const inverterData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'inverter', inverterData);
          }
          // 5. Get PV INVENTORY
          if (await GetEnvoyData(envoy_ip, ivp_inventory, bearer_token, 'Get INVENTORY data : ', debug)) {
-            if (debug > 1) console.log('Processing inventory data...');
+            if (debug > 1) log('Processing inventory data...', 'info');
             const inventoryData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'inventory', inventoryData);
          }
          // 6. Get PV PRODUCTION V1
          if (await GetEnvoyData(envoy_ip, ivp_production_v1, bearer_token, 'Get PRODUCTION V1 data : ', debug)) {
-            if (debug > 1) console.log('Processing PRODUCTION V1 data...');
+            if (debug > 1) log('Processing PRODUCTION V1 data...', 'info');
             const productionV1Data = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'production', productionV1Data);
          }
       }
    } catch (err) {
-      console.error('Error in mid freq. scheduled polling loop: ' + err.message);
+      log('Error in mid freq. scheduled polling loop: ' + err.message, 'error');
    }
 });
 // Main cyclic program loop high frequency
@@ -614,11 +615,11 @@ if (highPollingIntervalSec > 59) highPollingIntervalSec = 59;
 if (highPollingIntervalMin < 0) highPollingIntervalMin = 0;
 if (highPollingIntervalMin > 59) highPollingIntervalMin = 59;
 if (highPollingIntervalSec == 0 && highPollingIntervalMin == 0) {
-   console.log('please choose either seconds or minutes as polling interval');
+   log('please choose either seconds or minutes as polling interval', 'info');
    highPollingIntervalSec = 30; // minimum polling interval is 30 seconds
 }
 if (highPollingIntervalSec != 0 && highPollingIntervalMin != 0) {
-   console.log('please choose either seconds or minutes as polling interval');
+   log('please choose either seconds or minutes as polling interval', 'info');
    highPollingIntervalSec = 0; // choose the minutes value
 }
 if (highPollingIntervalSec == 0) {
@@ -631,51 +632,52 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
          if (debug > 0)
-            console.log(
+            log(
                'High cyclic polling started. Polling interval: ' +
                   highPollingIntervalMin +
                   ' minutes' +
                   highPollingIntervalSec +
-                  ' seconds'
+                  ' seconds',
+               'info'
             );
-         if (debug > 1) console.log('Resulting high cyclic polling interval: ' + pollingCron);
-         if (debug > 2) console.log('Current error count: ' + error_cnt);
-         if (debug > 1) console.log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started');
+         if (debug > 1) log('Resulting high cyclic polling interval: ' + pollingCron, 'info');
+         if (debug > 2) log('Current error count: ' + error_cnt, 'info');
+         if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
          // Reset error count before starting new polling cycle
          // Variable 'error_cnt' counts Envoy errors to slow down polling in case of errors
          error_cnt = 0;
          // 1. Get PV METER READINGS
          if (await GetEnvoyData(envoy_ip, ivp_read, bearer_token, 'Get Meter data: ', debug)) {
-            if (debug > 1) console.log('Processing meter readings data...');
+            if (debug > 1) log('Processing meter readings data...', 'info');
             const meterData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'meters', meterData);
          }
          // 2. Get PV LIVEDATA
          if (await GetEnvoyData(envoy_ip, ivp_livedata, bearer_token, 'Get LIVEDATA data : ', debug)) {
-            if (debug > 1) console.log('Processing livedata data...');
+            if (debug > 1) log('Processing livedata data...', 'info');
             const livedataData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'livedata', livedataData);
          }
          // 3. Get PV METER Grid Reading
          if (await GetEnvoyData(envoy_ip, ivp_grid_reading, bearer_token, 'Get Grid Reading data : ', debug)) {
-            if (debug > 1) console.log('Processing grid reading data...');
+            if (debug > 1) log('Processing grid reading data...', 'info');
             const gridReadingData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'meters.gridReading', gridReadingData);
          }
          // 4. Get PV METER PDM Energy
          if (await GetEnvoyData(envoy_ip, ivp_pdm_energy, bearer_token, 'Get PDM Energy data : ', debug)) {
-            if (debug > 1) console.log('Processing PDM Energy data...');
+            if (debug > 1) log('Processing PDM Energy data...', 'info');
             const pdmEnergyData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'PDM.energy', pdmEnergyData);
          }
       } else {
          // Slow down polling in case of errors
-         console.log('Previous errors detected - skipping cycle. Error count: ' + error_cnt);
+         log('Previous errors detected - skipping cycle. Error count: ' + error_cnt, 'info');
          error_cnt = typeof error_cnt === 'number' ? error_cnt : 0;
          error_cnt -= 1;
       }
    } catch (err) {
-      console.error('Error in high freq. scheduled polling loop: ' + err.message);
+      log('Error in high freq. scheduled polling loop: ' + err.message, 'error');
    }
 });
 
@@ -687,7 +689,7 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
 on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj) => {
    let value = obj.state.val;
    if ((obj.state ? obj.state.val : 'disabled') == 'disabled') {
-      if (debug > 0) console.log('SC stream is disabled. Attempting to enable it...');
+      if (debug > 0) log('SC stream is disabled. Attempting to enable it...', 'info');
       await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
    }
 });
@@ -698,6 +700,6 @@ on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj)
 // Periodic token renewal. Default: Daily at midnight. Adjust as needed.
 // -------------------------------------------------------------------------------------------------------------------
 const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
-   if (debug > 0) console.log('Automatic token renewal started...');
+   if (debug > 0) log('Automatic token renewal started...', 'info');
    bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
 });
