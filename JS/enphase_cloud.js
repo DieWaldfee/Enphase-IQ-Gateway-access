@@ -58,7 +58,7 @@ await ensureStateAsync(dbSystemIDs, '', { type: 'string', role: 'text', read: tr
 await ensureStateAsync(dpServerURI, 'http://localhost', { type: 'string', role: 'text', read: true, write: true });
 await setState(dpConfigPath + 'Port', getState(dpConfigPath + 'Port').val, true); // ensure acknowledgement is true without changing value
 await setState(dpServerURI, getState(dpServerURI).val, true); // ensure acknowledgement is true without changing value
-if (debug > 0) console.log('datapoints checked/created');
+if (debug > 0) log('datapoints checked/created', 'info');
 
 // --------------------------------------------------
 // Werte aus ioBroker States lesen
@@ -77,7 +77,7 @@ try {
    serverURI = getState(dpServerURI).val;
    redirect_URI = serverURI + ':' + Port + '/callback';
 } catch (err) {
-   console.error('Error reading states: ' + err.message);
+   log('Error reading states: ' + err.message, 'error');
 }
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ if (!serverURI.startsWith('http://') && !serverURI.startsWith('https://')) {
 if (typeof Port !== 'number' || Port < 1 || Port > 65535) {
    throw new Error('Port must be a number between 1 and 65535');
 }
-if (debug >= 0) console.log('Input validation passed');
+if (debug >= 0) log('Input validation passed', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // Enphase specific values and server setup
@@ -138,7 +138,7 @@ app.get('/', (req, res) => {
               <small>After login, you will be redirected back to ioBroker.<br>
               The access token will be automatically saved in the ioBroker objects.</small></p>`);
 });
-if (debug >= 1) console.log('Express server homepage setup done');
+if (debug >= 1) log('Express server homepage setup done', 'info');
 // Callback: Enphase redirects here with ?code=...
 app.get('/callback', async (req, res) => {
    const { code } = req.query;
@@ -158,8 +158,8 @@ app.get('/callback', async (req, res) => {
          },
       });
       const data = await resp.json();
-      if (debug >= 1) console.log('token renew request finished');
-      if (debug >= 2) console.log('token renew response: ' + JSON.stringify(data));
+      if (debug >= 1) log('token renew request finished', 'info');
+      if (debug >= 2) log('token renew response: ' + JSON.stringify(data), 'info');
       if (!resp.ok) {
          res.send('Fehler: ' + JSON.stringify(data));
          return;
@@ -167,7 +167,7 @@ app.get('/callback', async (req, res) => {
       // Save to ioBroker states
       setState(dpAccess, data.access_token, true);
       setState(dpRefresh, data.refresh_token, true);
-      if (debug >= 2) console.log('tokens saved to states');
+      if (debug >= 2) log('tokens saved to states', 'info');
 
       // Calculate and store expiry time
       const expiresIn = data.expires_in;
@@ -175,7 +175,7 @@ app.get('/callback', async (req, res) => {
       const expiryTime = new Date(now + expiresIn * 1000);
       setState(dpExpire, expiryTime.toISOString(), true);
       setState(dpExpireTS, expiryTime.getTime(), true);
-      if (debug >= 0) console.log('Access token expires at: ' + expiryTime.toLocaleString());
+      if (debug >= 0) log('Access token expires at: ' + expiryTime.toLocaleString(), 'info');
 
       res.send(`<h3>Token saved ✅</h3>
               <p>Access token expires at:<br><b>${expiryTime.toLocaleString()}</b></p>
@@ -185,12 +185,12 @@ app.get('/callback', async (req, res) => {
       setState(dpRefresh, '', true);
       setState(dpExpire, '', true);
       res.send('Exception: ' + e.message);
-      console.error('Error during token request: ' + e.message);
-      console.error('Script stopped. Please re-authenticate by restarting the script');
+      log('Error during token request: ' + e.message, 'error');
+      log('Script stopped. Please re-authenticate by restarting the script', 'error');
       stopMyScript();
    }
 });
-if (debug >= 1) console.log('Express server callback done');
+if (debug >= 1) log('Express server callback done', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // Token Refresh Funktion
@@ -199,7 +199,7 @@ if (debug >= 1) console.log('Express server callback done');
 async function refreshToken() {
    const refreshToken = getState(dpRefresh).val;
    if (!refreshToken) {
-      console.error('No refresh token available');
+      log('No refresh token available', 'error');
       return;
    }
    const basic = Buffer.from(`${Client_ID}:${Client_Secret}`).toString('base64');
@@ -213,25 +213,25 @@ async function refreshToken() {
    if (resp.ok) {
       setState(dpAccess, data.access_token, true);
       setState(dpRefresh, data.refresh_token, true);
-      console.log('Token successfully renewed');
+      log('Token successfully renewed', 'info');
       // Ablaufzeit berechnen und speichern
       if (data.expires_in) {
          const now = Date.now();
          const expiryTime = new Date(now + data.expires_in * 1000);
          setState(dpExpire, expiryTime.toISOString(), true);
-         console.log('Access token expires at:', expiryTime.toLocaleString());
+         log('Access token expires at: ' + expiryTime.toLocaleString(), 'info');
       } else {
          setState(dpExpire, '', true);
-         console.warn('No expires_in field in token response');
+         log('No expires_in field in token response', 'warn');
       }
-      if (debug >= 2) console.log('token renew response: ' + getState(dpExpire).val);
+      if (debug >= 2) log('token renew response: ' + getState(dpExpire).val, 'info');
    } else {
       setState(dpAccess, '', true);
       setState(dpRefresh, '', true);
       setState(dpExpire, '', true);
-      console.error('Refresh error: ' + JSON.stringify(data));
-      console.error('Script stopped. Please re-authenticate');
-      console.error('Script stopped. Please re-authenticate by restarting the script');
+      log('Refresh error: ' + JSON.stringify(data), 'error');
+      log('Script stopped. Please re-authenticate', 'error');
+      log('Script stopped. Please re-authenticate by restarting the script', 'error');
       stopMyScript();
    }
 }
@@ -247,7 +247,7 @@ let tokenRenewalSchedule = schedule('0 */6 * * *', refreshToken);
 // -------------------------------------------------------------------------------------------------------------------
 server = app.listen(Port, () => {
    open(`${serverURI}:${Port}/`);
-   console.log('Enphase OAuth server is running at ' + serverURI + ':' + Port);
+   log('Enphase OAuth server is running at ' + serverURI + ':' + Port, 'info');
 });
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -259,14 +259,14 @@ onStop(
       try {
          if (server) {
             server.close(() => {
-               console.log('Enphase OAuth server stopped');
+               log('Enphase OAuth server stopped', 'info');
                callback();
             });
          } else {
             callback();
          }
       } catch (err) {
-         console.error('Error stopping the server: ' + err.message);
+         log('Error stopping the server: ' + err.message, 'error');
          callback();
       }
    },
@@ -293,7 +293,7 @@ onStop(
 async function IObSetState(id, obj, debug = 0) {
    // Null oder undefined auf oberster Ebene abfangen
    if (obj === null || obj === undefined) {
-      if (debug > 1) console.log('Writing null/undefined object for id: ' + id);
+      if (debug > 1) log('Writing null/undefined object for id: ' + id, 'info');
       if (existsState(id)) {
          setState(id, null, true);
       } else {
@@ -301,7 +301,7 @@ async function IObSetState(id, obj, debug = 0) {
       }
       return;
    }
-   if (debug > 2) console.log('IObSetState called with id: ' + id + ' and obj: ' + JSON.stringify(obj));
+   if (debug > 2) log('IObSetState called with id: ' + id + ' and obj: ' + JSON.stringify(obj), 'info');
    // Loop through all attributes of the given object
    for (const i of Object.keys(obj)) {
       const value = obj[i]; // Get value of current attribute
@@ -310,7 +310,7 @@ async function IObSetState(id, obj, debug = 0) {
       if (typeof value == 'object') {
          // Nested object -> recursive call of IObSetState
          if (debug > 2)
-            console.log('Nested object found for attribute: ' + attr + ' with value: ' + JSON.stringify(value));
+            log('Nested object found for attribute: ' + attr + ' with value: ' + JSON.stringify(value), 'info');
          await IObSetState(id + '.' + attr, value, debug);
       } else {
          // Primitive value (string, number, date) -> create or update state in IOBroker
@@ -318,7 +318,7 @@ async function IObSetState(id, obj, debug = 0) {
             // Existing object => Update
             if (typeof value === 'string' || value instanceof String) {
                // value is a string
-               if (debug > 1) console.log('Updating string state: ' + id + '.' + attr + ' with value: ' + value);
+               if (debug > 1) log('Updating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                setState(id + '.' + attr, value, true);
             } else {
                // It is a number or date
@@ -328,21 +328,21 @@ async function IObSetState(id, obj, debug = 0) {
                   Number(value) < MAX_VALID_TIMESTAMP
                ) {
                   // value is a date
-                  if (debug > 1) console.log('Updating date state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Updating date state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   if (debug > 2)
-                     console.log(
+                     log(
                         'Updating additional human readable date state: ' +
                            id +
                            '.' +
                            attr +
                            '_str with value: ' +
-                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss')
+                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), 'info'
                      );
                   setState(id + '.' + attr, value, true); // unix timestamp
                   setState(id + '.' + attr + '_str', formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), true); // human readable date
                } else {
                   // value is a number
-                  if (debug > 1) console.log('Updating number state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Updating number state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   setState(id + '.' + attr, Number(value), true);
                }
             }
@@ -350,7 +350,7 @@ async function IObSetState(id, obj, debug = 0) {
             // New object => create
             if (typeof value === 'string' || value instanceof String) {
                // value is a string
-               if (debug > 1) console.log('Creating string state: ' + id + '.' + attr + ' with value: ' + value);
+               if (debug > 1) log('Creating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                createState(id + '.' + attr, value, false, { type: 'string', read: true, write: true });
             } else {
                // It is a number or date
@@ -360,15 +360,15 @@ async function IObSetState(id, obj, debug = 0) {
                   Number(value) < MAX_VALID_TIMESTAMP
                ) {
                   // value is a date
-                  if (debug > 1) console.log('Creating date state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Creating date state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   if (debug > 2)
-                     console.log(
+                     log(
                         'Creating additional human readable date state: ' +
                            id +
                            '.' +
                            attr +
                            '_str with value: ' +
-                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss')
+                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), 'info'
                      );
                   createState(id + '.' + attr, value, false, { type: 'number', read: true, write: true });
                   createState(id + '.' + attr + '_str', formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), false, {
@@ -378,7 +378,7 @@ async function IObSetState(id, obj, debug = 0) {
                   });
                } else {
                   // value is a number
-                  if (debug > 1) console.log('Creating number state: ' + id + '.' + attr + ' with value: ' + value);
+                  if (debug > 1) log('Creating number state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                   createState(id + '.' + attr, value, false, { type: 'number', read: true, write: true }); // type set to 'number'; change to 'mixed' if mixed types are expected
                }
             }
@@ -395,7 +395,7 @@ function safeParseJSON(jsonStr) {
    try {
       return JSON.parse(jsonStr);
    } catch (e) {
-      console.warn('Invalid JSON:', e.message);
+      log('Invalid JSON:', e.message, 'warn');
       return null;
    }
 }
@@ -406,16 +406,16 @@ async function apiGet(endpoint, params = '') {
    const apiKey = getState(dpApiKey).val;
    // check for access token and api key
    if (!accessToken) {
-      console.error('❌ Kein Access Token vorhanden. Bitte Authentifizierung durchführen');
+      log('❌ Kein Access Token vorhanden. Bitte Authentifizierung durchführen', 'error');
       return null;
    }
    if (!apiKey) {
-      console.error('❌ Kein API-Key vorhanden. Bitte in den Credentials-Datenpunkt eintragen');
+      log('❌ Kein API-Key vorhanden. Bitte in den Credentials-Datenpunkt eintragen', 'error');
       return null;
    }
    // constructing requestUrl
    const url = baseUrl + endpoint + `?key=${apiKey}` + params;
-   if (debug >= 2) console.log(`🔍 GET ${endpoint} → URL: ${url}`);
+   if (debug >= 2) log(`🔍 GET ${endpoint} → URL: ${url}`, 'info');
    try {
       const response = await fetch(url, {
          method: 'GET',
@@ -428,15 +428,15 @@ async function apiGet(endpoint, params = '') {
       // check response status
       if (!response.ok) {
          const text = await response.text();
-         console.error(`💥 Fehler bei GET ${endpoint} → Status ${response.status}: ${text}`);
+         log(`💥 Fehler bei GET ${endpoint} → Status ${response.status}: ${text}`, 'error');
          return null;
       }
       // output response text
-      if (debug >= 2) console.log(`✅ GET ${endpoint} erfolgreich.`);
-      if (debug >= 3) console.log(await response.text());
+      if (debug >= 2) log(`✅ GET ${endpoint} erfolgreich.`, 'info');
+      if (debug >= 3) log(await response.text(), 'info');
       return await response.text();
    } catch (err) {
-      console.error(`💥 Ausnahme bei GET ${endpoint}: ${err.message}`);
+      log(`💥 Ausnahme bei GET ${endpoint}: ${err.message}`, 'error');
       return null;
    }
 }
@@ -447,15 +447,15 @@ async function apiGet(endpoint, params = '') {
 async function getAndWrite(params, endPoint, title, debug = 0) {
    // get the systems array from IOBroker
    const systems = getState(dbSystemIDs).val;
-   if (debug > 1) console.log('Systems known from Array: ' + JSON.stringify(systems));
+   if (debug > 1) log('Systems known from Array: ' + JSON.stringify(systems), 'info');
    //interation through all systems found
    for (let system in systems) {
-      if (debug > 2) console.log('System ID:' + systems[system]);
+      if (debug > 2) log('System ID:' + systems[system], 'info');
       const alarms = await apiGet(`systems/${systems[system]}/${endPoint}`, params);
       const resp_json = safeParseJSON(alarms);
-      if (debug > 2) console.log('Parsed JSON:' + JSON.stringify(resp_json, null, 2));
+      if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
       await IObSetState(dpBasicPath + `Systems.System_${systems[system]}.${title}`, resp_json, debug);
-      if (debug > 1) console.log(`System ${systems[system]} ${title} saved.`);
+      if (debug > 1) log(`System ${systems[system]} ${title} saved.`, 'info');
    }
 }
 
@@ -487,44 +487,44 @@ async function getAndWrite(params, endPoint, title, debug = 0) {
  * @returns {Promise<void>} Resolves when all operations are complete.
  */
 async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
-   if (debug > 0) console.log('Fetch systems from cloud...');
+   if (debug > 0) log('Fetch systems from cloud...', 'info');
    // validate input parameters
    if (page < 1) page = 1; // min page = 1
    if (size < 1) size = 10; // min size = 1
    if (size > 100) size = 100; // max size = 100
    if (!sort_by) sort_by = 'id'; // default sort_by = id
    if (sort_by !== 'id' && sort_by !== '-id' && sort_by !== 'name' && sort_by !== '-name') {
-      console.warn(`Invalid sort_by value: ${sort_by}. Defaulting to 'id'.`);
+      log(`Invalid sort_by value: ${sort_by}. Defaulting to 'id'.`, 'warn');
       sort_by = 'id';
    }
    const params = `&page=${page}&size=${size}&sort_by=${encodeURIComponent(sort_by)}`;
    // fetch systems from Enphase cloud
    const systems = await apiGet('systems', params);
    if (systems) {
-      if (debug > 0) console.log('Successfully fetched systems. Saving data to ioBroker...');
+      if (debug > 0) log('Successfully fetched systems. Saving data to ioBroker...', 'info');
       const resp_json = safeParseJSON(systems);
-      if (debug > 2) console.log('Parsed JSON:' + JSON.stringify(resp_json, null, 2));
+      if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
       await IObSetState(dpBasicPath + 'Fetch', resp_json, debug);
-      if (debug > 0) console.log('Creating systems...');
+      if (debug > 0) log('Creating systems...', 'info');
       if (resp_json.systems && Array.isArray(resp_json.systems)) {
          // create system datapoint for each system found
          let systemString = '{';
          for (let i = 0; i < resp_json.systems.length; i++) {
             const systemId = resp_json.systems[i].system_id;
-            if (debug > 2) console.log('System ID found:' + systemId);
+            if (debug > 2) log('System ID found:' + systemId, 'info');
             systemString += `"System_${systemId}": { "system_id": ${JSON.stringify(resp_json.systems[i].system_id)} },`;
          }
          systemString = systemString.slice(0, -1) + '}';
-         if (debug > 1) console.log('Systems JSON string: ' + systemString);
+         if (debug > 1) log('Systems JSON string: ' + systemString, 'info');
          await IObSetState(dpBasicPath + 'Systems', safeParseJSON(systemString), debug);
          // create an iterable array of system IDs in ioBroker
          const systemIds = resp_json.systems.map((sys) => sys.system_id);
-         if (debug > 1) console.log('System IDs array: ' + JSON.stringify(systemIds));
+         if (debug > 1) log('System IDs array: ' + JSON.stringify(systemIds), 'info');
          setState(dbSystemIDs, systemIds, true);
-         if (debug > 0) console.log('Systems created');
+         if (debug > 0) log('Systems created', 'info');
       }
    } else {
-      console.warn('No systems found or resp_json.systems is undefined');
+      log('No systems found or resp_json.systems is undefined', 'warn');
    }
 }
 
@@ -549,7 +549,7 @@ async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
  * @returns {Promise<void>} Resolves when all system summaries have been processed and stored.
  */
 async function getSystemsSummary() {
-   if (debug > 0) console.log('Getting summary for each system in systemIDs...');
+   if (debug > 0) log('Getting summary for each system in systemIDs...', 'info');
    await getAndWrite('', 'summary', 'summary', debug);
 }
 
@@ -573,7 +573,7 @@ async function getSystemsSummary() {
  * @returns {Promise<void>} Resolves when all system devices have been processed and stored.
  */
 async function getSystemsDevices() {
-   if (debug > 0) console.log('Getting devices for each system in systemIDs...');
+   if (debug > 0) log('Getting devices for each system in systemIDs...', 'info');
    await getAndWrite('', 'devices', 'devices', debug);
 }
 
@@ -593,21 +593,21 @@ async function getSystemsDevices() {
  * @returns {Promise<string|null>} The system ID if found, otherwise null.
  */
 async function retrieveSystemID(serialNumber) {
-   if (debug > 0) console.log(`Retrieving system ID for serial number: ${serialNumber}`);
+   if (debug > 0) log(`Retrieving system ID for serial number: ${serialNumber}`, 'info');
    const systemID = await apiGet(`systems/retrieve_system_id`, `&serial_num=${serialNumber}`);
 
    if (systemID) {
       const resp_json = safeParseJSON(systemID);
       if (debug > 1) {
          if (resp_json && resp_json.system_id) {
-            console.log(`Found system ID ${resp_json.system_id} for serial number ${serialNumber}`);
+            log(`Found system ID ${resp_json.system_id} for serial number ${serialNumber}`, 'info');
          } else {
-            console.log(`Received response for serial number ${serialNumber}: ${JSON.stringify(resp_json)}`);
+            log(`Received response for serial number ${serialNumber}: ${JSON.stringify(resp_json)}`, 'warn');
          }
       }
       return resp_json && resp_json.system_id ? resp_json.system_id : systemID;
    }
-   if (debug > 0) console.log(`No system found for serial number: ${serialNumber}`);
+   if (debug > 0) log(`No system found for serial number: ${serialNumber}`, 'warn');
    return null;
 }
 
@@ -648,32 +648,28 @@ async function retrieveSystemID(serialNumber) {
  */
 async function getSystemsEvents(startTime = null, endTime = null) {
    if (startTime) {
-      if (debug > 0) console.log(`Getting systems events from startTime ${startTime} for each system in systemIDs...`);
+      if (debug > 0) log(`Getting systems events from startTime ${startTime} for each system in systemIDs...`, 'info');
       // define endTime as now in epoch seconds
       if (!endTime) {
          endTime = Math.floor(Date.now() / 1000); // current time in epoch seconds
       } else {
          if (typeof endTime !== 'number' || endTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-            console.warn(
-               `Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken.`
-            );
+            log(`Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken.`, 'warn');
             return;
          }
       }
-      if (debug > 0) console.log(`Using endTime ${endTime}`);
+      if (debug > 0) log(`Using endTime ${endTime}`, 'info');
       // Check if startTime is a valid epoch time (number, > 0, reasonable range)
       if (typeof startTime !== 'number' || startTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-         console.warn(
-            `Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken.`
-         );
+         log(`Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken.`, 'warn');
          return;
       }
       const params = `&start_time=${startTime}&end_time=${endTime}`;
-      if (debug > 1) console.log(`Using params: ${params}`);
+      if (debug > 1) log(`Using params: ${params}`, 'info');
       // get events for each system and write to ioBroker
       await getAndWrite(params, 'events', 'events', debug);
    } else {
-      console.warn('Called getSystemsEvents without startTime [Epoch time format] - no action taken');
+      log('Called getSystemsEvents without startTime [Epoch time format] - no action taken', 'warn');
    }
 }
 
@@ -713,39 +709,35 @@ async function getSystemsEvents(startTime = null, endTime = null) {
  */
 async function getSystemsAlarms(startTime = null, endTime = null, cleared = false) {
    if (startTime) {
-      if (debug > 0) console.log(`getting systems alarms until startTime ${startTime} for each system in systemIDs...`);
+      if (debug > 0) log(`getting systems alarms until startTime ${startTime} for each system in systemIDs...`, 'info');
       // define endTime as now in epoch seconds
       if (!endTime) {
          endTime = Math.floor(Date.now() / 1000); // current time in epoch seconds
       } else {
          if (typeof endTime !== 'number' || endTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-            console.warn(
-               `Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken.`
-            );
+            log(`Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken.`, 'warn');
             return;
          }
       }
-      if (debug > 0) console.log(`using endTime ${endTime}`);
+      if (debug > 0) log(`using endTime ${endTime}`, 'info');
       // Check if startTime is a valid epoch time (number, > 0, reasonable range)
       if (typeof startTime !== 'number' || startTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-         console.warn(
-            `Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken.`
-         );
+         log(`Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken.`, 'warn');
          return;
       }
       let clearedParam = 'false';
       if (cleared) {
-         if (debug > 1) console.log('including cleared alarms');
+         if (debug > 1) log('including cleared alarms', 'info');
          clearedParam = 'true';
       } else {
-         if (debug > 1) console.log('only active alarms');
+         if (debug > 1) log('only active alarms', 'info');
       }
       const params = `&start_time=${startTime}&end_time=${endTime}&cleared=${clearedParam}`;
-      if (debug > 1) console.log(`using params: ${params}`);
+      if (debug > 1) log(`using params: ${params}`, 'info');
       // get alarms for each system and write to ioBroker
       await getAndWrite(params, 'alarms', 'alarms', debug);
    } else {
-      console.warn('called getSystemsAlarms without startTime [Epoch time format] - no action taken');
+      log('called getSystemsAlarms without startTime [Epoch time format] - no action taken', 'warn');
    }
 }
 
@@ -774,43 +766,43 @@ async function getSystemsAlarms(startTime = null, endTime = null, cleared = fals
 async function getEventTypes(event_type_id = null) {
    let params = '';
    if (event_type_id && Number.isInteger(event_type_id) && event_type_id > 0) {
-      if (debug > 1) console.log(`event_type_id provided: ${event_type_id}`);
+      if (debug > 1) log(`event_type_id provided: ${event_type_id}`, 'info');
       params = `&event_type_id=${event_type_id}`;
    }
-   if (debug > 0) console.log(`Fetching event types from Enphase cloud...`);
+   if (debug > 0) log(`Fetching event types from Enphase cloud...`, 'info');
    const eventType = await apiGet('systems/event_types', params);
    const resp_json = safeParseJSON(eventType);
-   if (debug > 2) console.log('Parsed JSON:' + JSON.stringify(resp_json, null, 2));
+   if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
    await IObSetState(dpBasicPath + 'Systems', resp_json, debug);
-   if (debug > 1) console.log(`Event types saved to ioBroker.`);
+   if (debug > 1) log(`Event types saved to ioBroker.`, 'info');
 }
 
 // -------------------------------------------------------------------------------------------------------------------
 // get ebattery settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getBatterySettings() {
-   if (debug > 0) console.log('Getting battery settings for each system in systemIDs...');
+   if (debug > 0) log('Getting battery settings for each system in systemIDs...', 'info');
    await getAndWrite('', 'battery_settings', 'config.battery_settings', debug);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // get storm guard settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getStormGuard() {
-   if (debug > 0) console.log('Getting storm guard settings for each system in systemIDs...');
+   if (debug > 0) log('Getting storm guard settings for each system in systemIDs...', 'info');
    await getAndWrite('', 'storm_guard', 'config.storm_guard', debug);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // get grid status settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getGridStatus() {
-   if (debug > 0) console.log('Getting grid status settings for each system in systemIDs...');
+   if (debug > 0) log('Getting grid status settings for each system in systemIDs...', 'info');
    await getAndWrite('', 'grid_status', 'config.grid_status', debug);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // get load control settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getLoadControl() {
-   if (debug > 0) console.log('Getting load control settings for each system in systemIDs...');
+   if (debug > 0) log('Getting load control settings for each system in systemIDs...', 'info');
    await getAndWrite('', 'load_control', 'config.load_control', debug);
 }
 
@@ -822,24 +814,24 @@ async function getLoadControl() {
 // It also fetches event types and creates the event_types datapoint.
 // If the access token is missing, it warns the user and stops the script
 if (existsState(dpAccess)) {
-   if (debug > 0) console.log('Access Token datapoint already exists');
+   if (debug > 0) log('Access Token datapoint already exists', 'info');
    if (getState(dpAccess).val != '') {
       // Access token is available
       if (!existsState(dpBasicPath + 'Fetch')) {
-         if (debug > 0) console.log('Fetch datapoint does not exist. Creating by fetching systems from cloud...');
+         if (debug > 0) log('Fetch datapoint does not exist. Creating by fetching systems from cloud...', 'info');
          await fetchSystems(1, 10, 'id'); // get available systems from cloud and create Fetch and Systems datapoints
          await getEventTypes(); // get event types and create event_types datapoint
       }
    } else {
       // Access token is empty, prompt user to authenticate and stop script
-      console.warn(
+      log(
          'Access Token is empty. Please authenticate using ' +
             getState(dpServerURI).val +
             ':' +
             Port +
             ' or modify Server URL in datapoint ' +
             dpServerURI +
-            ', if you use another computer than the ioBroker to authenticate'
+            ', if you use another computer than the ioBroker to authenticate', 'warn'
       );
    }
 }
@@ -856,15 +848,15 @@ const oneDayAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 1; // 1 day ago
 let checkEventsAndAlarms = schedule('0 0 * * *', async () => {
    try {
       await getSystemsEvents(oneDaysAgo);
-      if (debug > 3) console.log('getSystemsEvents executed successfully');
+      if (debug > 3) log('getSystemsEvents executed successfully', 'info');
    } catch (err) {
-      console.error('Error in getSystemsEvents:', err.message);
+      log('Error in getSystemsEvents:', err.message, 'error');
    }
    try {
       await getSystemsAlarms(oneDayAgo, null, true);
-      if (debug > 3) console.log('getSystemsAlarms executed successfully');
+      if (debug > 3) log('getSystemsAlarms executed successfully', 'info');
    } catch (err) {
-      console.error('Error in getSystemsAlarms:', err.message);
+      log('Error in getSystemsAlarms:', err.message, 'error');
    }
 });
 // Get devices every hour
@@ -872,8 +864,8 @@ let checkEventsAndAlarms = schedule('0 0 * * *', async () => {
 let fetchDevices = schedule('0 */1 * * *', async () => {
    try {
       await getSystemsDevices();
-      if (debug > 3) console.log('getSystemsDevices executed successfully');
+      if (debug > 3) log('getSystemsDevices executed successfully', 'info');
    } catch (err) {
-      console.error('Error in getSystemsDevices:', err.message);
+      log('Error in getSystemsDevices:', err.message, 'error');
    }
 });
