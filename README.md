@@ -64,7 +64,9 @@ Key points combining these data:
 * V2.0.1  split cron events in hing, mid and low frequency. aim to minimize traffic
 * V2.0.2  Buxfix in high frequency cron
 * V3.0.0  cloud acess integrated and redesign ioBroker datapoints from local gateway
-* V3.1.0  actual work: summary and conclusion build from local and cloud data in 'enphase.summary'
+* V3.1.0  summary and conclusion build from local and cloud data in 'enphase.summary'
+* V3.1.1  Bugfix
+* V3.1.2  comments added
 * V4.0.0  planed: redesign in typescript parallel to the javascript-version (free to choose js or ts) (2025 Q4)
 * V5.0.0  planed: redesign into ioBroker adapter (2026 Q2-Q3)
 
