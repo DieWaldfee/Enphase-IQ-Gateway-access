@@ -63,10 +63,20 @@ async function ensureStateAsync(id, value, options = { read: true, write: true }
       setState(id, value, true);
    }
 }
+
 // ---------------------------------------------------------------------------------------------------
 // get SOC state and transfer to summary
 //---------------------------------------------------------------------------------------------------
-// check if SoC state exists and create summary state if true
+/**
+ * Monitors the battery State of Charge (SoC) and mirrors it to a summary state.
+ * - Checks if the source SoC state (rss_SoC) exists.
+ * - If it exists, ensures that the target summary state (dst_SoC) is created or updated with proper attributes.
+ * - Subscribes to changes of the source state and keeps the summary state synchronized automatically.
+ * - Generates debug logs depending on the configured debug level.
+ *
+ * @constant {string} rss_SoC - ID of the source state providing the battery SoC.
+ * @constant {string} dst_SoC - ID of the target summary state that mirrors the SoC value.
+ */
 if (existsState(rss_SoC)) {
    ensureStateAsync(dst_SoC, getState(rss_SoC), {
       read: true,
@@ -89,6 +99,17 @@ if (existsState(rss_SoC)) {
 //---------------------------------------------------------------------------------------------------
 // get sc_stream state and transfer to summary
 //---------------------------------------------------------------------------------------------------
+/**
+ * Monitors the live data connection status (sc_stream) and mirrors it to a summary state.
+ * - Checks if the source state (rss_sc_stream) exists.
+ * - If it exists, ensures that the target summary state (dst_sc_stream) is created or updated as a boolean switch.
+ * - Converts the source string value ("enabled"/other) into a boolean representation (true/false).
+ * - Keeps the summary state synchronized automatically whenever the source changes.
+ * - Generates debug logs depending on the configured debug level.
+ *
+ * @constant {string} rss_sc_stream - ID of the source state providing the live data connection status.
+ * @constant {string} dst_sc_stream - ID of the target summary state that mirrors the connection status.
+ */
 if (existsState(rss_sc_stream)) {
    ensureStateAsync(dst_sc_stream, getState(rss_sc_stream) == 'enabled', {
       read: true,
@@ -114,7 +135,20 @@ if (existsState(rss_sc_stream)) {
 //---------------------------------------------------------------------------------------------------
 // get inverter production from local and micro inverter state from cloud if available
 // read production of all micro inverters and store in array
-// helper function to wait until state is created
+/**
+ * Asynchronously waits until a specific ioBroker state exists.
+ * - Repeatedly checks whether the state with the given ID has been created.
+ * - Waits for the defined interval between checks, up to a maximum number of attempts.
+ * - Logs progress and warnings when debug mode is active.
+ * - Useful for ensuring dependent states are available before accessing or linking them.
+ *
+ * @async
+ * @function waitForState
+ * @param {string} id - The ID of the state to wait for.
+ * @param {number} [interval=500] - The interval (in ms) between existence checks.
+ * @param {number} [maxAttempts=20] - The maximum number of attempts before giving up.
+ * @returns {Promise<void>} Resolves when the state exists or when the maximum attempts are reached.
+ */
 async function waitForState(id, interval = 500, maxAttempts = 20) {
    let attempts = 0;
    // Check if id ends with a point
@@ -130,6 +164,18 @@ async function waitForState(id, interval = 500, maxAttempts = 20) {
       log(`State ${id} was not created after waiting.`, 'info');
    }
 }
+/**
+ * Collects and merges inverter data from local (Envoy) and cloud sources into a unified summary.
+ * - Scans for all locally reported inverters and their last known production values.
+ * - Retrieves inverter status information from the cloud (for all known system IDs).
+ * - Matches local production data with cloud status data using the inverter serial number.
+ * - Creates or updates corresponding summary datapoints under the inverter summary path in ioBroker.
+ * - Produces detailed debug logs depending on the configured debug level.
+ *
+ * @async
+ * @function inverterSummary
+ * @returns {Promise<void>} Resolves when all inverter data has been processed and summary states created.
+ */
 async function inverterSummary() {
    let micro_production = [];
    let inverter = [];
@@ -350,7 +396,19 @@ async function inverterSummary() {
       });
    }
 }
-//monitoring inverter production
+/**
+ * Sets up automatic monitoring for inverter production data.
+ * - Executes an initial inverter summary generation at startup.
+ * - Checks if at least one inverter serial number exists to validate readiness.
+ * - Subscribes to changes of the defined inverter trigger state (rss_inverter_trigger).
+ * - On any change, waits briefly (500 ms) to allow all inverter states to update, 
+ *   then re-runs the inverter summary function to refresh aggregated data.
+ * - Produces debug logs according to the configured debug level.
+ *
+ * @async
+ * @function monitorInverterProduction
+ * @returns {Promise<void>} Resolves after the initial inverter summary is created and monitoring is active.
+ */
 await inverterSummary(); //initial run
 if (existsState(rss_inverter + '.0.serialNumber')) {
    if (debug > 1) log(`Monitoring inverter production at ${rss_inverter} and updating ${dst_inverter}`, 'info');
@@ -364,8 +422,22 @@ if (existsState(rss_inverter + '.0.serialNumber')) {
    });
 }
 
-// get storage, production and consumption data if available
-// read data of all storage devices and store in array
+// ---------------------------------------------------------------------------------------------------
+// Read and summarize power data for storage, production, and consumption
+// ---------------------------------------------------------------------------------------------------
+/**
+ * Reads live power data for a given device ID from Enphase livedata and writes summarized values to ioBroker states.
+ * - Retrieves total and per-phase (L1–L3) active, apparent, and reactive power values.
+ * - Converts Enphase values (MW, MVA) into standard units (W, VA, VAR).
+ * - Calculates reactive power from apparent and active power, with safeguards against rounding errors.
+ * - Writes results to summary states using ensureStateAsync().
+ * - Handles missing data and logs detailed information according to debug level.
+ *
+ * @async
+ * @function powerSummary
+ * @param {string|number} id - Identifier of the meter or storage device to process.
+ * @returns {Promise<void>} Resolves when all summary states have been updated or exits on error.
+ */
 async function powerSummary(id) {
    if (debug > 1) log(`Reading data for id ${id}`, 'info');
    if (debug > 2)
@@ -539,10 +611,15 @@ async function powerSummary(id) {
    }
 }
 
-//---------------------------------------------------------------------------------------------------
-// monitoring power data
-//---------------------------------------------------------------------------------------------------
-// monitoring power data and updating summary based on trigger state
+// ---------------------------------------------------------------------------------------------------
+// Monitor and update power summary
+// ---------------------------------------------------------------------------------------------------
+/**
+ * Sets up a listener for power data changes using a trigger state.
+ * - Waits briefly to ensure all power data is updated before recalculating.
+ * - Calls powerSummary() for load, storage, grid, and PV data sources.
+ * - Logs activity depending on debug level.
+ */
 if (existsState(rss_power_trigger)) {
    if (debug > 1) log(`Monitoring power measures at ${rss_power_trigger}`, 'info');
    on({ id: rss_power_trigger, change: 'any' }, function (obj) {
