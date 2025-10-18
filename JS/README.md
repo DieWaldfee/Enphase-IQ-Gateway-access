@@ -63,6 +63,38 @@ let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change
 
 ---
 
+## Dependencies
+
+**enphase_local.js**:
+- `node-fetch`
+
+**enphase_cloud.js**:
+- `node-fetch`
+- `express`
+- `open`
+
+**enphase_summary.js**:
+- nothing needed
+
+how to check:
+
+```console
+cd /opt/iobroker
+npm ls <modulname>
+```
+You will get the installed version like `└── node-fetch@3.3.2` or an error like `└── (empty)` or `npm ERR! missing: node-fetch@*,...`
+
+how to install missing modules/libs:
+
+```console
+cd /opt/iobroker
+npm install node-fetch --save
+npm install express --save
+npm install open --save
+```
+
+---
+
 ## Datapoint configuration enphase.js
 
 The script automatically creates all datapoints under `0_userdata.0.enphase.` by default.
