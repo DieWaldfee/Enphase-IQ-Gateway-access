@@ -1,7 +1,7 @@
-// ioBroker Skript: Enphase Cloud OAuth2 Flow
-// Dieses Skript startet einen kleinen Webserver in ioBroker,
-// um den Enphase-Authorization-Code-Flow auszuführen und
-// den Bearer-Token in ioBroker-Objekten abzulegen.
+// ioBroker Script: Enphase Cloud OAuth2 Flow
+// This script starts a small web server in ioBroker
+// to perform the Enphase Authorization Code Flow and
+// store the Bearer token in ioBroker objects.
 
 const fetch = require('node-fetch');
 const express = require('express');
@@ -10,6 +10,27 @@ const path = require('path');
 const open = require('open');
 const { get } = require('http');
 const { clear } = require('console');
+
+// -------------------------------------------------------------------------------------------------------------------
+// Check if required modules are loaded correctly (node-fetch, express, open)
+// -------------------------------------------------------------------------------------------------------------------
+if (typeof fetch !== 'function') {
+   log('Module node-fetch is not loaded as a function. Script stopped.', 'error');
+   stopMyScript();
+   return;
+}
+// Check if express is loaded correctly
+if (typeof express !== 'function') {
+   log('Module express is not loaded as a function. Script stopped.', 'error');
+   stopMyScript();
+   return;
+}
+// Check if open is loaded correctly
+if (typeof open !== 'function') {
+   log('Module open is not loaded as a function. Script stopped.', 'error');
+   stopMyScript();
+   return;
+}
 
 // -------------------------------------------------------------------------------------------------------------------
 // user configurable variables :: please adjust to your needs
