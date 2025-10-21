@@ -79,7 +79,7 @@ let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change
 how to check:
 
 ```console
-cd /opt/iobroker
+cd /opt/iobroker/node_modules/iobroker.javascript
 npm ls <modulname>
 ```
 You will get the installed version like `└── node-fetch@3.3.2` or an error like `└── (empty)` or `npm ERR! missing: node-fetch@*,...`
@@ -93,6 +93,8 @@ npm install express --save
 npm install open --save
 iobroker fix
 ```
+
+Why in the subfolder? -> the installed modules are only avaiable for the javascript adapter. This prevents mismatch with other adapters. 
 
 ---
 
