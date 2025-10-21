@@ -94,7 +94,9 @@ npm install open --save
 iobroker fix
 ```
 
-Why in the subfolder? -> the installed modules are only avaiable for the javascript adapter. This prevents mismatch with other adapters. 
+**Why install in the subfolder?**
+- The modules are installed only for the JavaScript adapter.
+- This isolation prevents version conflicts with other adapters and keeps dependencies clean.
 
 ---
 
