@@ -87,10 +87,11 @@ You will get the installed version like `└── node-fetch@3.3.2` or an error
 how to install missing modules/libs:
 
 ```console
-cd /opt/iobroker
+cd /opt/iobroker/node_modules/iobroker.javascript
 npm install node-fetch --save
 npm install express --save
 npm install open --save
+iobroker fix
 ```
 
 ---
