@@ -467,13 +467,30 @@ async function apiGet(endpoint, params = '') {
 // -------------------------------------------------------------------------------------------------------------------
 async function getAndWrite(params, endPoint, title, debug = 0) {
    // get the systems array from IOBroker
-   const systems = getState(dbSystemIDs).val;
+   const rawSystems = getState(dbSystemIDs)?.val;
+   let systems = [];
+   if (rawSystems == null || rawSystems === '') {
+      systems = [];
+   } else if (Array.isArray(rawSystems)) {
+      systems = rawSystems;
+   } else if (typeof rawSystems === 'string') {
+      const s = rawSystems.trim();
+      try {
+         const parsed = JSON.parse(s); // try JSON array first
+         systems = Array.isArray(parsed) ? parsed : [String(parsed)];
+      } catch (e) {
+         // fallback to comma separated
+         systems = s.length ? s.split(',').map(x => x.trim()).filter(Boolean) : [];
+      }
+   } else {
+      systems = [String(rawSystems)];
+   }
    if (debug > 1) log('Systems known from Array: ' + JSON.stringify(systems), 'info');
    //interation through all systems found
    for (let system in systems) {
       if (debug > 2) log('System ID:' + systems[system], 'info');
-      const alarms = await apiGet(`systems/${systems[system]}/${endPoint}`, params);
-      const resp_json = safeParseJSON(alarms);
+      const cloudData = await apiGet(`systems/${systems[system]}/${endPoint}`, params);
+      const resp_json = safeParseJSON(cloudData);
       if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
       await IObSetState(dpBasicPath + `Systems.System_${systems[system]}.${title}`, resp_json, debug);
       if (debug > 1) log(`System ${systems[system]} ${title} saved.`, 'info');
