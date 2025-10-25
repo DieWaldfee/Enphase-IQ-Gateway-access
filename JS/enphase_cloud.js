@@ -541,7 +541,7 @@ async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
          // create an iterable array of system IDs in ioBroker
          const systemIds = resp_json.systems.map((sys) => sys.system_id);
          if (debug > 1) log('System IDs array: ' + JSON.stringify(systemIds), 'info');
-         setState(dbSystemIDs, systemIds, true);
+         setState(dbSystemIDs, systemIds.join(','), true);
          if (debug > 0) log('Systems created', 'info');
       }
    } else {
@@ -868,7 +868,7 @@ if (existsState(dpAccess)) {
 const oneDayAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 1; // 1 day ago
 let checkEventsAndAlarms = schedule('0 0 * * *', async () => {
    try {
-      await getSystemsEvents(oneDaysAgo);
+      await getSystemsEvents(oneDayAgo);
       if (debug > 3) log('getSystemsEvents executed successfully', 'info');
    } catch (err) {
       log('Error in getSystemsEvents:', err.message, 'error');
