@@ -345,7 +345,7 @@ async function inverterSummary() {
       read: true,
       write: false,
       type: 'string',
-      role: 'value',
+      role: 'json',
       def: '',
       desc: 'List of inverter serial numbers found (may include local and cloud sources, JSON string)',
    });
@@ -684,6 +684,7 @@ async function batterySummary() {
    let notDoneYet = true;
    let i = 0;
    let serial;
+   let totalBatteryCapacity = 0;
    do {
       if (existsState(rss_battery + '.' + i + '.serial_num')) {
          try {
@@ -710,9 +711,11 @@ async function batterySummary() {
             if (existsState(rss_battery + '.' + i + '.encharge_capacity')) {
                encharge_capacity = getState(rss_battery + '.' + i + '.encharge_capacity').val;
             } else {
+               encharge_capacity = 0;
                if (debug > 1)
                   log(`Battery ID ${i} serial number state exists but encharge_capacity state is missing`, 'info');
             }
+            totalBatteryCapacity += encharge_capacity;
             let led_status = 0;
             if (existsState(rss_battery + '.' + i + '.led_status')) {
                led_status = getState(rss_battery + '.' + i + '.led_status').val;
@@ -885,9 +888,19 @@ async function batterySummary() {
       read: true,
       write: false,
       type: 'string',
-      role: 'value',
+      role: 'json',
       def: '',
       desc: 'List of battery serial numbers found (may include local and cloud sources, JSON string)',
+   });
+   //total capacity of all batteries
+   ensureStateAsync(dst_battery + '.total_capacity_Wh', Number(totalBatteryCapacity), {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      unit: 'Wh',
+      def: 0,
+      desc: 'Total capacity of all batteries',
    });
    //data for each battery in summary
    for (let bat of summary_battery) {
