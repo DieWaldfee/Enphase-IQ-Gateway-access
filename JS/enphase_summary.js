@@ -338,7 +338,7 @@ async function inverterSummary() {
             serialNumber: prod.serialNumber,
             production: prod.lastReportWatts,
             status: 'unknown',
-            active: 0,
+            active: false,
             id: 'unknown',
             systemID: 'unknown',
          });
@@ -377,12 +377,12 @@ async function inverterSummary() {
          desc: 'production data of the inverter',
       });
       // active state
-      ensureStateAsync(dst_inverter + '.' + inv.serialNumber + '.active', Number(inv.active), {
+      ensureStateAsync(dst_inverter + '.' + inv.serialNumber + '.active', inv.active, {
          read: true,
          write: false,
-         type: 'number',
+         type: 'boolean',
          role: 'value',
-         def: 0,
+         def: false,
          desc: 'active state of the inverter',
       });
       // inverters id
@@ -965,12 +965,12 @@ async function batterySummary() {
          desc: 'percent full data of the battery',
       });
       // active state
-      ensureStateAsync(dst_battery + '.' + bat.serialNumber + '.active', Number(bat.active), {
+      ensureStateAsync(dst_battery + '.' + bat.serialNumber + '.active', bat.active, {
          read: true,
          write: false,
-         type: 'number',
+         type: 'boolean',
          role: 'value',
-         def: 0,
+         def: false,
          desc: 'active state of the battery',
       });
       // inverters id
@@ -1171,12 +1171,12 @@ async function gatewaySummary() {
          desc: 'serial number of the gateway',
       });
       // active state
-      ensureStateAsync(dst_gateway + '.' + gw.serialNumber + '.active', Number(gw.active), {
+      ensureStateAsync(dst_gateway + '.' + gw.serialNumber + '.active', gw.active, {
          read: true,
          write: false,
-         type: 'number',
+         type: 'boolean',
          role: 'value',
-         def: 0,
+         def: false,
          desc: 'active state of the gateway',
       });
       // gateway id
