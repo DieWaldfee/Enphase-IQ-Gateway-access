@@ -277,6 +277,16 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
  * @returns {Promise<void>} - Resolves when all states have been set or created.
  */
 async function IObSetState(id, obj, debug = 0) {
+   // Null oder undefined auf oberster Ebene abfangen
+   if (obj === null || obj === undefined) {
+      if (debug > 1) log('Writing null/undefined object for id: ' + id, 'info');
+      if (existsState(id)) {
+         setState(id, null, true);
+      } else {
+         createState(id, null, false, { type: 'mixed', read: true, write: true });
+      }
+      return;
+   }
    if (debug > 2) log('IObSetState called with id: ' + id + ' and obj: ' + JSON.stringify(obj), 'info');
    // Loop through all attributes of the given object
    for (const i of Object.keys(obj)) {
@@ -295,6 +305,10 @@ async function IObSetState(id, obj, debug = 0) {
             if (typeof value === 'string' || value instanceof String) {
                // value is a string
                if (debug > 1) log('Updating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
+               setState(id + '.' + attr, value, true);
+            } else if (typeof value === 'boolean') {
+               // value is a boolean
+               if (debug > 1) log('Updating boolean state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                setState(id + '.' + attr, value, true);
             } else {
                // It is a number or date
@@ -328,6 +342,10 @@ async function IObSetState(id, obj, debug = 0) {
                // value is a string
                if (debug > 1) log('Creating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                createState(id + '.' + attr, value, false, { type: 'string', read: true, write: true });
+            } else if (typeof value === 'boolean') {
+               // value is a boolean
+               if (debug > 1) log('Creating boolean state: ' + id + '.' + attr + ' with value: ' + value, 'info');
+               createState(id + '.' + attr, value, false, { type: 'boolean', read: true, write: true });
             } else {
                // It is a number or date
                if (
