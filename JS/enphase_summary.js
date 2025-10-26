@@ -93,7 +93,7 @@ if (existsState(rss_SoC)) {
       def: 0,
       desc: 'State of Charge (SoC) of the battery in %',
    });
-   if (debug > 1) log(`Monitoring SoC state at ${rss_SoC} and updating ${dst_SoC}`, 'info');
+   if (debug > 1) log(`Monitoring SoC state at ${rss_SoC} and updating ${dst_SoC} now`, 'info');
    on({ id: rss_SoC, change: 'any' }, function (obj) {
       setState(dst_SoC, obj.state.val, true);
       if (debug > 2) log(`SoC updated: ${obj.state.val}%`, 'info');
@@ -123,7 +123,7 @@ if (existsState(rss_sc_stream)) {
       def: false,
       desc: 'Status of livedata connection (sc_stream) as switch',
    });
-   if (debug > 1) log(`Monitoring sc_stream state at ${rss_sc_stream} and updating ${dst_sc_stream}`, 'info');
+   if (debug > 1) log(`Monitoring sc_stream state at ${rss_sc_stream} and updating ${dst_sc_stream} now`, 'info');
    on({ id: rss_sc_stream, change: 'any' }, function (obj) {
       if (obj.state.val == 'enabled') {
          setState(dst_sc_stream, true, true);
@@ -191,7 +191,7 @@ async function inverterSummary() {
          try {
             if (i == 0) {
                rss_inverter_trigger = rss_inverter + '.' + i + '.lastReportWatts';
-               if (debug > 1) log(`Inverter trigger set to ${rss_inverter_trigger}`, 'info');
+               if (debug > 1) log(`Inverter trigger set to ${rss_inverter_trigger} now`, 'info');
             }
             serial = getState(rss_inverter + '.' + i + '.serialNumber').val;
             let lastReportWatts = 0;
@@ -443,8 +443,8 @@ async function inverterSummary() {
  */
 await inverterSummary(); //initial run
 if (existsState(rss_inverter + '.0.serialNumber')) {
-   if (debug > 1) log(`Monitoring inverter production at ${rss_inverter} and updating ${dst_inverter}`, 'info');
-   if (debug > 2) log(`Using event trigger ${rss_inverter_trigger}`, 'info');
+   if (debug > 1) log(`Monitoring inverter production at ${rss_inverter} and updating ${dst_inverter} now`, 'info');
+   if (debug > 2) log(`Using event trigger ${rss_inverter_trigger} to refresh inverter data`, 'info');
    on({ id: rss_inverter_trigger, change: 'any' }, function (obj) {
       //timeout 500ms to ensure all inverters are updated
       setTimeout(() => {
@@ -648,7 +648,7 @@ async function powerSummary(id) {
 //---------------------------------------------------------------------------------------------------
 // monitoring power data and updating summary based on trigger state
 if (existsState(rss_power_trigger)) {
-   if (debug > 1) log(`Monitoring power measures at ${rss_power_trigger}`, 'info');
+   if (debug > 1) log(`Monitoring power measures at ${rss_power_trigger} now`, 'info');
    on({ id: rss_power_trigger, change: 'any' }, function (obj) {
       //timeout 500ms to ensure all power data states are updated before summary calculation
       setTimeout(async () => {
@@ -696,7 +696,7 @@ async function batterySummary() {
          try {
             if (i == 0) {
                rss_battery_trigger = rss_battery + '.' + i + '.percentFull';
-               if (debug > 1) log(`Battery trigger set to ${rss_battery_trigger}`, 'info');
+               if (debug > 1) log(`Battery trigger set to ${rss_battery_trigger} now`, 'info');
             }
             serial = getState(rss_battery + '.' + i + '.serial_num').val;
             let percentFull = 0;
@@ -1025,8 +1025,8 @@ async function batterySummary() {
  */
 await batterySummary(); //initial run
 if (existsState(rss_battery + '.0.serial_num')) {
-   if (debug > 1) log(`Monitoring battery production at ${rss_battery} and updating ${dst_battery}`, 'info');
-   if (debug > 2) log(`Using event trigger ${rss_battery_trigger}`, 'info');
+   if (debug > 1) log(`Monitoring battery production at ${rss_battery} and updating ${dst_battery} now`, 'info');
+   if (debug > 2) log(`Using event trigger ${rss_battery_trigger} to refresh battery data`, 'info');
    on({ id: rss_battery_trigger, change: 'any' }, function (obj) {
       //timeout 500ms to ensure all batteries are updated
       setTimeout(() => {
@@ -1231,8 +1231,8 @@ async function gatewaySummary() {
  */
 await gatewaySummary(); //initial run
 if (existsState(rss_gateway_trigger)) {
-   if (debug > 1) log(`Monitoring gateway and updating ${dst_gateway}`, 'info');
-   if (debug > 2) log(`Using event trigger ${rss_gateway_trigger}`, 'info');
+   if (debug > 1) log(`Monitoring gateway and updating ${dst_gateway} now`, 'info');
+   if (debug > 2) log(`Using event trigger ${rss_gateway_trigger} to refresh gateway data`, 'info');
    on({ id: rss_gateway_trigger, change: 'any' }, function (obj) {
       //timeout 500ms to ensure all gateways are updated
       setTimeout(() => {
