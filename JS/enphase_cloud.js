@@ -10,6 +10,7 @@ const path = require('path');
 const open = require('open');
 const { get } = require('http');
 const { clear } = require('console');
+const { type } = require('os');
 
 // -------------------------------------------------------------------------------------------------------------------
 // Check if required modules are loaded correctly (node-fetch, express, open)
@@ -341,6 +342,10 @@ async function IObSetState(id, obj, debug = 0) {
                // value is a string
                if (debug > 1) log('Updating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                setState(id + '.' + attr, value, true);
+            } else if (typeof value === 'boolean') {
+               // value is a boolean
+               if (debug > 1) log('Updating boolean state: ' + id + '.' + attr + ' with value: ' + value, 'info');
+               setState(id + '.' + attr, value, true);
             } else {
                // It is a number or date
                if (
@@ -373,6 +378,10 @@ async function IObSetState(id, obj, debug = 0) {
                // value is a string
                if (debug > 1) log('Creating string state: ' + id + '.' + attr + ' with value: ' + value, 'info');
                createState(id + '.' + attr, value, false, { type: 'string', read: true, write: true });
+            } else if (typeof value === 'boolean') {
+               // value is a boolean
+               if (debug > 1) log('Creating boolean state: ' + id + '.' + attr + ' with value: ' + value, 'info');
+               createState(id + '.' + attr, value, false, { type: 'boolean', read: true, write: true });
             } else {
                // It is a number or date
                if (
