@@ -533,7 +533,6 @@ const lowCyclicSchedule = schedule(pollingCron, async () => {
          if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
-         //error_cnt = 0; // Reset error count before starting new polling cycle - done in high freq. loop
          // A. Get PV DEVICE LIST
          if (await GetEnvoyData(envoy_ip, ivp_device_list, bearer_token, 'Get DEVICE LIST data : ', debug)) {
             if (debug > 1) log('Processing device list data...', 'info');
@@ -564,7 +563,6 @@ const medCyclicSchedule = schedule(pollingCron, async () => {
          if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
-         //error_cnt = 0; // Reset error count before starting new polling cycle - done in high freq. loop
          // 1. Get PV METER PRODUCTION
          if (await GetEnvoyData(envoy_ip, ivp_prod, bearer_token, 'Get Prod. data: ', debug)) {
             if (debug > 1) log('Processing production data...', 'info');
