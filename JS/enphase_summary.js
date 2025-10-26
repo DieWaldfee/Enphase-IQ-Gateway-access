@@ -417,7 +417,7 @@ async function inverterSummary() {
          write: false,
          type: 'string',
          role: 'value',
-         def: false,
+         def: 'unknown',
          desc: 'Status switch of the inverter (true=normal, false=error)',
       });
    }
@@ -986,7 +986,7 @@ async function batterySummary() {
          write: false,
          type: 'string',
          role: 'value',
-         def: false,
+         def: 'unknown',
          desc: 'Status switch of the battery (true=normal, false=error)',
       });
    }
@@ -1186,7 +1186,7 @@ async function gatewaySummary() {
          write: false,
          type: 'string',
          role: 'value',
-         def: false,
+         def: 'unknown',
          desc: 'Status switch of the gateway (true=normal, false=error)',
       });
    }
