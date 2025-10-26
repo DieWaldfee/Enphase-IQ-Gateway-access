@@ -453,7 +453,7 @@ async function apiGet(endpoint, params = '') {
          return null;
       }
       // output response text
-      if (debug >= 2) log(`✅ GET ${endpoint} erfolgreich.`, 'info');
+      if (debug >= 2) log(`✅ GET ${endpoint} erfolgreich`, 'info');
       if (debug >= 3) log(await response.text(), 'info');
       return await response.text();
    } catch (err) {
@@ -493,7 +493,7 @@ async function getAndWrite(params, endPoint, title, debug = 0) {
       const resp_json = safeParseJSON(cloudData);
       if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
       await IObSetState(dpBasicPath + `Systems.System_${systems[system]}.${title}`, resp_json, debug);
-      if (debug > 1) log(`System ${systems[system]} ${title} saved.`, 'info');
+      if (debug > 1) log(`System ${systems[system]} ${title} saved`, 'info');
    }
 }
 
@@ -525,25 +525,25 @@ async function getAndWrite(params, endPoint, title, debug = 0) {
  * @returns {Promise<void>} Resolves when all operations are complete.
  */
 async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
-   if (debug > 0) log('Fetch systems from cloud...', 'info');
+   if (debug > 0) log('Fetch systems from cloud', 'info');
    // validate input parameters
    if (page < 1) page = 1; // min page = 1
    if (size < 1) size = 10; // min size = 1
    if (size > 100) size = 100; // max size = 100
    if (!sort_by) sort_by = 'id'; // default sort_by = id
    if (sort_by !== 'id' && sort_by !== '-id' && sort_by !== 'name' && sort_by !== '-name') {
-      log(`Invalid sort_by value: ${sort_by}. Defaulting to 'id'.`, 'warn');
+      log(`Invalid sort_by value: ${sort_by}. Defaulting to 'id'`, 'warn');
       sort_by = 'id';
    }
    const params = `&page=${page}&size=${size}&sort_by=${encodeURIComponent(sort_by)}`;
    // fetch systems from Enphase cloud
    const systems = await apiGet('systems', params);
    if (systems) {
-      if (debug > 0) log('Successfully fetched systems. Saving data to ioBroker...', 'info');
+      if (debug > 0) log('Successfully fetched systems. Saving data to ioBroker', 'info');
       const resp_json = safeParseJSON(systems);
       if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
       await IObSetState(dpBasicPath + 'Fetch', resp_json, debug);
-      if (debug > 0) log('Creating systems...', 'info');
+      if (debug > 0) log('Creating systems', 'info');
       if (resp_json.systems && Array.isArray(resp_json.systems)) {
          // create system datapoint for each system found
          let systemString = '{';
@@ -587,7 +587,7 @@ async function fetchSystems(page = 1, size = 10, sort_by = 'id') {
  * @returns {Promise<void>} Resolves when all system summaries have been processed and stored.
  */
 async function getSystemsSummary() {
-   if (debug > 0) log('Getting summary for each system in systemIDs...', 'info');
+   if (debug > 0) log('Getting summary for each system in systemIDs', 'info');
    await getAndWrite('', 'summary', 'summary', debug);
 }
 
@@ -611,7 +611,7 @@ async function getSystemsSummary() {
  * @returns {Promise<void>} Resolves when all system devices have been processed and stored.
  */
 async function getSystemsDevices() {
-   if (debug > 0) log('Getting devices for each system in systemIDs...', 'info');
+   if (debug > 0) log('Getting devices for each system in systemIDs', 'info');
    await getAndWrite('', 'devices', 'devices', debug);
 }
 
@@ -686,20 +686,20 @@ async function retrieveSystemID(serialNumber) {
  */
 async function getSystemsEvents(startTime = null, endTime = null) {
    if (startTime) {
-      if (debug > 0) log(`Getting systems events from startTime ${startTime} for each system in systemIDs...`, 'info');
+      if (debug > 0) log(`Getting systems events from startTime ${startTime} for each system in systemIDs`, 'info');
       // define endTime as now in epoch seconds
       if (!endTime) {
          endTime = Math.floor(Date.now() / 1000); // current time in epoch seconds
       } else {
          if (typeof endTime !== 'number' || endTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-            log(`Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken.`, 'warn');
+            log(`Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken`, 'warn');
             return;
          }
       }
       if (debug > 0) log(`Using endTime ${endTime}`, 'info');
       // Check if startTime is a valid epoch time (number, > 0, reasonable range)
       if (typeof startTime !== 'number' || startTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-         log(`Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken.`, 'warn');
+         log(`Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken`, 'warn');
          return;
       }
       const params = `&start_time=${startTime}&end_time=${endTime}`;
@@ -747,20 +747,20 @@ async function getSystemsEvents(startTime = null, endTime = null) {
  */
 async function getSystemsAlarms(startTime = null, endTime = null, cleared = false) {
    if (startTime) {
-      if (debug > 0) log(`getting systems alarms until startTime ${startTime} for each system in systemIDs...`, 'info');
+      if (debug > 0) log(`getting systems alarms until startTime ${startTime} for each system in systemIDs`, 'info');
       // define endTime as now in epoch seconds
       if (!endTime) {
          endTime = Math.floor(Date.now() / 1000); // current time in epoch seconds
       } else {
          if (typeof endTime !== 'number' || endTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-            log(`Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken.`, 'warn');
+            log(`Invalid endTime: ${endTime}. Must be a valid epoch time number and greater than startTime ${startTime}. No action taken`, 'warn');
             return;
          }
       }
       if (debug > 0) log(`using endTime ${endTime}`, 'info');
       // Check if startTime is a valid epoch time (number, > 0, reasonable range)
       if (typeof startTime !== 'number' || startTime < MIN_VALID_TIMESTAMP || startTime > endTime) {
-         log(`Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken.`, 'warn');
+         log(`Invalid startTime: ${startTime}. Must be a valid epoch time number and less than endTime ${endTime}. No action taken`, 'warn');
          return;
       }
       let clearedParam = 'false';
@@ -807,40 +807,40 @@ async function getEventTypes(event_type_id = null) {
       if (debug > 1) log(`event_type_id provided: ${event_type_id}`, 'info');
       params = `&event_type_id=${event_type_id}`;
    }
-   if (debug > 0) log(`Fetching event types from Enphase cloud...`, 'info');
+   if (debug > 0) log(`Fetching event types from Enphase cloud`, 'info');
    const eventType = await apiGet('systems/event_types', params);
    const resp_json = safeParseJSON(eventType);
    if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
    await IObSetState(dpBasicPath + 'Systems', resp_json, debug);
-   if (debug > 1) log(`Event types saved to ioBroker.`, 'info');
+   if (debug > 1) log(`Event types saved to ioBroker`, 'info');
 }
 
 // -------------------------------------------------------------------------------------------------------------------
 // get ebattery settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getBatterySettings() {
-   if (debug > 0) log('Getting battery settings for each system in systemIDs...', 'info');
+   if (debug > 0) log('Getting battery settings for each system in systemIDs', 'info');
    await getAndWrite('', 'battery_settings', 'config.battery_settings', debug);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // get storm guard settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getStormGuard() {
-   if (debug > 0) log('Getting storm guard settings for each system in systemIDs...', 'info');
+   if (debug > 0) log('Getting storm guard settings for each system in systemIDs', 'info');
    await getAndWrite('', 'storm_guard', 'config.storm_guard', debug);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // get grid status settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getGridStatus() {
-   if (debug > 0) log('Getting grid status settings for each system in systemIDs...', 'info');
+   if (debug > 0) log('Getting grid status settings for each system in systemIDs', 'info');
    await getAndWrite('', 'grid_status', 'config.grid_status', debug);
 }
 // -------------------------------------------------------------------------------------------------------------------
 // get load control settings for each system in systemIDs :: Method not allowed yet / not allowed for free accounts
 // -------------------------------------------------------------------------------------------------------------------
 async function getLoadControl() {
-   if (debug > 0) log('Getting load control settings for each system in systemIDs...', 'info');
+   if (debug > 0) log('Getting load control settings for each system in systemIDs', 'info');
    await getAndWrite('', 'load_control', 'config.load_control', debug);
 }
 
@@ -856,7 +856,7 @@ if (existsState(dpAccess)) {
    if (getState(dpAccess).val != '') {
       // Access token is available
       if (!existsState(dpBasicPath + 'Fetch')) {
-         if (debug > 0) log('Fetch datapoint does not exist. Creating by fetching systems from cloud...', 'info');
+         if (debug > 0) log('Fetch datapoint does not exist. Creating by fetching systems from cloud', 'info');
          await fetchSystems(1, 10, 'id'); // get available systems from cloud and create Fetch and Systems datapoints
          await getEventTypes(); // get event types and create event_types datapoint
       }
