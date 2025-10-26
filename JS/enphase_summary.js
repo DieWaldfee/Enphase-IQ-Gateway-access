@@ -157,15 +157,15 @@ async function waitForState(id, interval = 500, maxAttempts = 20) {
    let attempts = 0;
    // Check if id ends with a point
    if (id.endsWith('.')) {
-      log(`State id "${id}" ends with a point. This may cause issues.`, 'warn');
+      log(`State id "${id}" ends with a point. This may cause issues`, 'warn');
    }
    while (!existsState(id) && attempts < maxAttempts) {
-      if (debug > 1) log(`Waiting until state ${id} is created...`, 'info');
+      if (debug > 1) log(`Waiting until state ${id} is created`, 'info');
       await new Promise((resolve) => setTimeout(resolve, interval));
       attempts++;
    }
    if (!existsState(id)) {
-      log(`State ${id} was not created after waiting.`, 'info');
+      log(`State ${id} was not created after waiting`, 'info');
    }
 }
 /**
@@ -204,7 +204,7 @@ async function inverterSummary() {
             micro_production.push({ serialNumber: serial, lastReportWatts: lastReportWatts });
             inverter.push(serial);
             if (debug > 2)
-               log(`Inverter ID ${i} has serial number ${serial}, lastReportWatts: ${lastReportWatts}.`, 'info');
+               log(`Inverter ID ${i} has serial number ${serial}, lastReportWatts: ${lastReportWatts}`, 'info');
          } catch {
             log(`Inverter ID ${i} does exist but serial number state is invalid or missing`, 'error');
          }
@@ -238,8 +238,14 @@ async function inverterSummary() {
             if (debug > 1) log(`Found systems in ${rss_dbSystemIDs}: ${JSON.stringify(systems)}`, 'info');
          } catch (e) {
             // fallback to comma separated
-            systems = s.length ? s.split(',').map(x => x.trim()).filter(Boolean) : [];
-            if (debug > 1) log(`Found systems in ${rss_dbSystemIDs} (comma separated): ${JSON.stringify(systems)}`, 'info');
+            systems = s.length
+               ? s
+                    .split(',')
+                    .map((x) => x.trim())
+                    .filter(Boolean)
+               : [];
+            if (debug > 1)
+               log(`Found systems in ${rss_dbSystemIDs} (comma separated): ${JSON.stringify(systems)}`, 'info');
          }
       } else {
          systems = [String(rawSystems)];
@@ -732,7 +738,7 @@ async function batterySummary() {
             battery_sn.push(serial);
             if (debug > 2)
                log(
-                  `Battery ID ${i} has serial number ${serial}, percentFull: ${percentFull}, temperature: ${temperature}, encharge_capacity: ${encharge_capacity}, led_status: ${led_status}.`,
+                  `Battery ID ${i} has serial number ${serial}, percentFull: ${percentFull}, temperature: ${temperature}, encharge_capacity: ${encharge_capacity}, led_status: ${led_status}`,
                   'info'
                );
          } catch {
@@ -768,8 +774,14 @@ async function batterySummary() {
             if (debug > 1) log(`Found systems in ${rss_dbSystemIDs}: ${JSON.stringify(systems)}`, 'info');
          } catch (e) {
             // fallback to comma separated
-            systems = s.length ? s.split(',').map(x => x.trim()).filter(Boolean) : [];
-            if (debug > 1) log(`Found systems in ${rss_dbSystemIDs} (comma separated): ${JSON.stringify(systems)}`, 'info');
+            systems = s.length
+               ? s
+                    .split(',')
+                    .map((x) => x.trim())
+                    .filter(Boolean)
+               : [];
+            if (debug > 1)
+               log(`Found systems in ${rss_dbSystemIDs} (comma separated): ${JSON.stringify(systems)}`, 'info');
          }
       } else {
          systems = [String(rawSystems)];
@@ -1062,8 +1074,14 @@ async function gatewaySummary() {
             if (debug > 1) log(`Found systems in ${rss_dbSystemIDs}: ${JSON.stringify(systems)}`, 'info');
          } catch (e) {
             // fallback to comma separated
-            systems = s.length ? s.split(',').map(x => x.trim()).filter(Boolean) : [];
-            if (debug > 1) log(`Found systems in ${rss_dbSystemIDs} (comma separated): ${JSON.stringify(systems)}`, 'info');
+            systems = s.length
+               ? s
+                    .split(',')
+                    .map((x) => x.trim())
+                    .filter(Boolean)
+               : [];
+            if (debug > 1)
+               log(`Found systems in ${rss_dbSystemIDs} (comma separated): ${JSON.stringify(systems)}`, 'info');
          }
       } else {
          systems = [String(rawSystems)];
@@ -1221,5 +1239,199 @@ if (existsState(rss_gateway_trigger)) {
          gatewaySummary();
       }, 500);
       if (debug > 2) log(`Gateway status updated`, 'info');
+   });
+}
+
+//---------------------------------------------------------------------------------------------------
+// Batterieladung auf 100% bzw. auf lowest SoC berechnen
+//---------------------------------------------------------------------------------------------------
+async function calcBatteryChargeTime(loadPower) {
+   // get total battery capacity
+   let totalBatteryCapacity_Wh = 0;
+   try {
+      totalBatteryCapacity_Wh = getState(dst_battery + '.total_capacity_Wh').val;
+      if (debug > 2) log(`Current battery capacity: ${totalBatteryCapacity_Wh} Wh`, 'info');
+   } catch (error) {
+      totalBatteryCapacity_Wh = 0;
+      log(`Error in calcBatteryChargeTime getting totalBatteryCapacity_Wh: ${error}`, 'error');
+   }
+   // get SoC of all batteries
+   let totalSoC_percent = 0;
+   try {
+      totalSoC_percent = getState(dst_SoC).val;
+      if (debug > 2) log(`Current total SoC: ${totalSoC_percent} %`, 'info');
+   } catch (error) {
+      totalSoC_percent = 0;
+      log(`Error in calcBatteryChargeTime getting SoC: ${error}`, 'error');
+   }
+   // check loadPower
+   if (loadPower == null || loadPower == '') {
+      // Intentionally left blank: no action needed if loadPower is null or empty
+      if (debug > 0) log('loadPower is null or empty in calcBatteryChargeTime', 'warn');
+      loadPower = 0;
+   }
+   if (loadPower < 0) {
+      loadPower = 0;
+      if (debug > 0) log('loadPower is negative in calcBatteryChargeTime -> set to 0', 'warn');
+   }
+   // calculate time to full charge
+   let timeToFullCharge = 0;
+   if (totalBatteryCapacity_Wh > 0 && totalSoC_percent < 100 && loadPower > 0) {
+      const remainingCapacity = totalBatteryCapacity_Wh * (1 - totalSoC_percent / 100);
+      timeToFullCharge = (remainingCapacity / loadPower); // time in hours
+   }
+   if (debug > 2) log(`Time to full charge: ${timeToFullCharge} hours`, 'info');
+   return timeToFullCharge;
+}
+async function calcBatteryDischargeTime(loadPower) {
+   // set lowest SoC the discharge power is used for calculation
+   let lowestSoC = 5; // in percent - maybe readable from local or cloud data in future
+   // get total battery capacity
+   let totalBatteryCapacity_Wh = 0;
+   try {
+      totalBatteryCapacity_Wh = getState(dst_battery + '.total_capacity_Wh').val;
+      if (debug > 2) log(`Current battery capacity: ${totalBatteryCapacity_Wh} Wh`, 'info');
+   } catch (error) {
+      totalBatteryCapacity_Wh = 0;
+      log(`Error in calcBatteryDischargeTime getting totalBatteryCapacity_Wh: ${error}`, 'error');
+   }
+   // get SoC of all batteries
+   let totalSoC_percent = 0;
+   try {
+      totalSoC_percent = getState(dst_SoC).val;
+      if (debug > 2) log(`Current total SoC: ${totalSoC_percent} %`, 'info');
+   } catch (error) {
+      totalSoC_percent = 0;
+      log(`Error in calcBatteryDischargeTime getting SoC: ${error}`, 'error');
+   }
+   // check loadPower
+   if (loadPower == null || loadPower == '') {
+      // Intentionally left blank: no action needed if loadPower is null or empty
+      if (debug > 0) log('loadPower is null or empty in calcBatteryDischargeTime', 'warn');
+      loadPower = 0;
+   }
+   if (loadPower > 0) {
+      loadPower = 0;
+      if (debug > 0) log('loadPower is positive in calcBatteryDischargeTime -> set to 0', 'warn');
+   }
+   // calculate time to full discharge
+   let timeToFullDischarge = 0;
+   if (totalBatteryCapacity_Wh > 0 && totalSoC_percent > lowestSoC && loadPower < 0) {
+      const remainingCapacity = totalBatteryCapacity_Wh * (totalSoC_percent / 100 - lowestSoC / 100);
+      timeToFullDischarge = (remainingCapacity / loadPower) * (-1); // time in hours
+   }
+   if (debug > 2) log(`Time to full discharge: ${timeToFullDischarge} hours`, 'info');
+   return timeToFullDischarge;
+}
+// handler to recalculate battery charge/discharge time on load power change
+if (existsState(dst_summary + 'storage.total.activePower_total')) {
+   if (debug > 1) log(`Monitoring load power to recalculate battery charge/discharge time`, 'info');
+   if (debug > 2) log(`Using event trigger ${dst_summary + 'storage.total.activePower_total'}`, 'info');
+   on({ id: dst_summary + 'storage.total.activePower_total', change: 'any' }, async (obj) => {
+      let loadPower = obj.state.val * -1; // load power is negative in storage summary when charging
+      if (loadPower > 0) {
+         if (debug > 2) log(`Load power for battery charging: ${loadPower} W`, 'info');
+         // Recalculate battery charge time
+         let timeToFullCharge = await calcBatteryChargeTime(loadPower);
+         let timeToFullCharge_min = timeToFullCharge * 60;
+         let now = new Date();
+         let fullChargeTime;
+         let fullChargeTime_str;
+         if (timeToFullCharge > 0) {
+            fullChargeTime = new Date(now.getTime() + timeToFullCharge * 60 * 60 * 1000);
+            fullChargeTime_str = fullChargeTime.toLocaleString('de-DE', {
+               hour: '2-digit',
+               minute: '2-digit',
+               second: '2-digit',
+            });
+         } else {
+            fullChargeTime = new Date(0);
+            fullChargeTime_str = 'N/A';
+         }
+         ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h', Math.round(timeToFullCharge * 100) / 100, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'h',
+            desc: 'Time to full charge in hours',
+         });
+         ensureStateAsync(dst_summary + 'battery.timeToFullCharge_min', Math.round(timeToFullCharge_min * 100) / 100, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'min',
+            desc: 'Time to full charge in minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_at', fullChargeTime_str, {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            desc: 'Local time when battery will be full',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_ts', fullChargeTime.getTime(), {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value.time',
+            desc: 'Unix timestamp when battery will be full',
+         });
+      } else if (loadPower < 0) {
+         // Handle negative load power (discharging)
+         if (debug > 2) log(`Load power for battery discharging: ${loadPower} W`, 'info');
+         // Recalculate battery charge time
+         let timeToFullDischarge = await calcBatteryDischargeTime(loadPower);
+         let timeToFullDischarge_min = timeToFullDischarge * 60;
+         let now = new Date();
+         let fullDischargeTime;
+         let fullDischargeTime_str;
+         if (timeToFullDischarge > 0) {
+            fullDischargeTime = new Date(now.getTime() + timeToFullDischarge * 60 * 60 * 1000);
+            fullDischargeTime_str = fullDischargeTime.toLocaleString('de-DE', {
+               hour: '2-digit',
+               minute: '2-digit',
+               second: '2-digit',
+            });
+         } else {
+            fullDischargeTime = new Date(0);
+            fullDischargeTime_str = 'N/A';
+         }
+         ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h', Math.round(timeToFullDischarge * 100) / 100, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'h',
+            desc: 'Time to full discharge in hours',
+         });
+         ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_min', Math.round(timeToFullDischarge_min * 100) / 100, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'min',
+            desc: 'Time to full discharge in minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_at', fullDischargeTime_str, {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            desc: 'Local time when battery will be empty',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_ts', fullDischargeTime.getTime(), {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value.time',
+            desc: 'Unix timestamp when battery will be empty',
+         });
+      }
    });
 }
