@@ -82,7 +82,7 @@ async function ensureStateAsync(id, value, options = { read: true, write: true }
  * @constant {string} dst_SoC - ID of the target summary state that mirrors the SoC value.
  */
 if (existsState(rss_SoC)) {
-   ensureStateAsync(dst_SoC, getState(rss_SoC), {
+   ensureStateAsync(dst_SoC, Number(getState(rss_SoC)), {
       read: true,
       write: false,
       type: 'number',
