@@ -1332,7 +1332,12 @@ async function calcBatteryChargeTime(loadPower) {
 }
 async function calcBatteryDischargeTime(loadPower) {
    // set lowest SoC the discharge power is used for calculation
-   let lowestSoC = 5; // in percent - maybe readable from local or cloud data in future
+   let lowestSoC;
+   if (existsState(rss_minSoC)) {
+      lowestSoC = getState(rss_minSoC).val;
+   } else {
+      lowestSoC = minSoC_initialValue; // default lowest SoC if not defined
+   }
    // get total battery capacity
    let totalBatteryCapacity_Wh = 0;
    try {
@@ -1688,17 +1693,3 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
    });
 }
 
-//---------------------------------------------------------------------------------------------------
-// auto identify minSoC for battery based on discharging behavior
-//---------------------------------------------------------------------------------------------------
-if (existsState(dst_summary + 'storage.total.activePower_total')) {
-}
-
-async function getFirstLedStatus() {
-   if (existsState(rss_battery + '.0.led_status')) {
-      let led_status = getState(rss_battery + '.0.led_status').val;
-      if (debug > 1) log(`First battery LED status: ${led_status}`, 'info');
-      return led_status;
-   }
-   return null;
-}
