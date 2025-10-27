@@ -34,6 +34,8 @@ const rss_power_trigger = rss_livedata + '.meters.grid.agg_p_mw'; //trigger for 
 const rss_battery = rss_local + 'inventory.0.devices';
 let rss_battery_trigger = ''; //will be set later to battery.0
 let rss_gateway_trigger = ''; //will be set later to gateway.0
+let minSoC_initialValue = 30; // initial minSoC value in % if not set yet
+const rss_minSoC = rss_base_path + 'config.summary.minSoC'; // path to store minSoC value
 // destination path
 const dst_sc_stream = dst_summary + 'lifedataState';
 const dst_SoC = dst_summary + 'SoC';
@@ -69,7 +71,7 @@ async function ensureStateAsync(id, value, options = { read: true, write: true }
    }
 }
 // ---------------------------------------------------------------------------------------------------
-// get SOC state and transfer to summary
+// get SOC state and transfer to summary & calculate minSoC
 //---------------------------------------------------------------------------------------------------
 /**
  * Monitors the battery State of Charge (SoC) and mirrors it to a summary state.
@@ -81,6 +83,14 @@ async function ensureStateAsync(id, value, options = { read: true, write: true }
  * @constant {string} rss_SoC - ID of the source state providing the battery SoC.
  * @constant {string} dst_SoC - ID of the target summary state that mirrors the SoC value.
  */
+async function getFirstLedStatus() {
+   if (existsState(rss_battery + '.0.led_status')) {
+      let led_status = getState(rss_battery + '.0.led_status').val;
+      if (debug > 1) log(`First battery LED status: ${led_status}`, 'info');
+      return led_status;
+   }
+   return null;
+}
 if (existsState(rss_SoC)) {
    ensureStateAsync(dst_SoC, Number(getState(rss_SoC)), {
       read: true,
@@ -94,9 +104,46 @@ if (existsState(rss_SoC)) {
       desc: 'State of Charge (SoC) of the battery in %',
    });
    if (debug > 1) log(`Monitoring SoC state at ${rss_SoC} and updating ${dst_SoC} now`, 'info');
-   on({ id: rss_SoC, change: 'any' }, function (obj) {
+   on({ id: rss_SoC, change: 'any' }, async function (obj) {
       setState(dst_SoC, obj.state.val, true);
       if (debug > 2) log(`SoC updated: ${obj.state.val}%`, 'info');
+      // auto identify minSoC for battery based on discharging behavior
+      if (existsState(rss_minSoC)) {
+         let ledStatus = await getFirstLedStatus();
+         if (debug > 2) log(`Current battery LED status: ${ledStatus}`, 'info');
+         if (ledStatus == 13) {
+            // battery is discharging - SoC valid for minSoC check
+            let currentMinSoC = getState(rss_minSoC).val;
+            if (obj.state.val < currentMinSoC) {
+               ensureStateAsync(rss_minSoC, Number(obj.state.val), {
+                  read: true,
+                  write: true,
+                  type: 'number',
+                  role: 'value.battery',
+                  unit: '%',
+                  min: 0,
+                  max: 100,
+                  def: minSoC_initialValue,
+                  desc: 'Minimum State of Charge (SoC) of the battery in %',
+               });
+               if (debug > 2) log(`minSoC updated: ${obj.state.val}%`, 'info');
+            }
+         }
+      } else {
+         // minSoC not set yet - initialize it
+         ensureStateAsync(rss_minSoC, minSoC_initialValue, {
+            read: true,
+            write: true,
+            type: 'number',
+            role: 'value.battery',
+            unit: '%',
+            min: 0,
+            max: 100,
+            def: minSoC_initialValue,
+            desc: 'Minimum State of Charge (SoC) of the battery in %',
+         });
+         if (debug > 2) log(`minSoC initialized to ${minSoC_initialValue}%`, 'info');
+      }
    });
 }
 
@@ -1278,7 +1325,7 @@ async function calcBatteryChargeTime(loadPower) {
    let timeToFullCharge = 0;
    if (totalBatteryCapacity_Wh > 0 && totalSoC_percent < 100 && loadPower > 0) {
       const remainingCapacity = totalBatteryCapacity_Wh * (1 - totalSoC_percent / 100);
-      timeToFullCharge = (remainingCapacity / loadPower); // time in hours
+      timeToFullCharge = remainingCapacity / loadPower; // time in hours
    }
    if (debug > 2) log(`Time to full charge: ${timeToFullCharge} hours`, 'info');
    return timeToFullCharge;
@@ -1318,7 +1365,7 @@ async function calcBatteryDischargeTime(loadPower) {
    let timeToFullDischarge = 0;
    if (totalBatteryCapacity_Wh > 0 && totalSoC_percent > lowestSoC && loadPower < 0) {
       const remainingCapacity = totalBatteryCapacity_Wh * (totalSoC_percent / 100 - lowestSoC / 100);
-      timeToFullDischarge = (remainingCapacity / loadPower) * (-1); // time in hours
+      timeToFullDischarge = (remainingCapacity / loadPower) * -1; // time in hours
    }
    if (debug > 2) log(`Time to full discharge: ${timeToFullDischarge} hours`, 'info');
    return timeToFullDischarge;
@@ -1337,6 +1384,7 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
          let now = new Date();
          let fullChargeTime;
          let fullChargeTime_str;
+         let fullChargeTime_h_min;
          if (timeToFullCharge > 0) {
             fullChargeTime = new Date(now.getTime() + timeToFullCharge * 60 * 60 * 1000);
             fullChargeTime_str = fullChargeTime.toLocaleString('de-DE', {
@@ -1344,11 +1392,15 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
                minute: '2-digit',
                second: '2-digit',
             });
+            const hours = Math.floor(timeToFullCharge);
+            const minutes = Math.round((timeToFullCharge - hours) * 60);
+            fullChargeTime_h_min = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
          } else {
             fullChargeTime = new Date(0);
             fullChargeTime_str = 'N/A';
+            fullChargeTime_h_min = '00:00';
          }
-         ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h', Math.round(timeToFullCharge * 100) / 100, {
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h', Math.round(timeToFullCharge * 100) / 100, {
             read: true,
             write: false,
             type: 'number',
@@ -1357,14 +1409,26 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
             unit: 'h',
             desc: 'Time to full charge in hours',
          });
-         ensureStateAsync(dst_summary + 'battery.timeToFullCharge_min', Math.round(timeToFullCharge_min * 100) / 100, {
+         await ensureStateAsync(
+            dst_summary + 'battery.timeToFullCharge_min',
+            Math.round(timeToFullCharge_min * 100) / 100,
+            {
+               read: true,
+               write: false,
+               type: 'number',
+               role: 'value',
+               def: 0,
+               unit: 'min',
+               desc: 'Time to full charge in minutes',
+            }
+         );
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', fullChargeTime_h_min, {
             read: true,
             write: false,
-            type: 'number',
-            role: 'value',
-            def: 0,
-            unit: 'min',
-            desc: 'Time to full charge in minutes',
+            type: 'string',
+            role: 'text',
+            def: '00:00',
+            desc: 'Time to full charge in hours and minutes',
          });
          await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_at', fullChargeTime_str, {
             read: true,
@@ -1380,6 +1444,47 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
             role: 'value.time',
             desc: 'Unix timestamp when battery will be full',
          });
+         // zero discharge time states
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'h',
+            desc: 'Time to full discharge in hours',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_min', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'min',
+            desc: 'Time to full discharge in minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', '00:00', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            def: '00:00',
+            desc: 'Time to full charge in hours and minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_at', 'N/A', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            desc: 'Local time when battery will be empty',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_ts', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value.time',
+            desc: 'Unix timestamp when battery will be empty',
+         });
       } else if (loadPower < 0) {
          // Handle negative load power (discharging)
          if (debug > 2) log(`Load power for battery discharging: ${loadPower} W`, 'info');
@@ -1389,6 +1494,7 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
          let now = new Date();
          let fullDischargeTime;
          let fullDischargeTime_str;
+         let fullDischargeTime_h_min;
          if (timeToFullDischarge > 0) {
             fullDischargeTime = new Date(now.getTime() + timeToFullDischarge * 60 * 60 * 1000);
             fullDischargeTime_str = fullDischargeTime.toLocaleString('de-DE', {
@@ -1396,27 +1502,47 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
                minute: '2-digit',
                second: '2-digit',
             });
+            const hours = Math.floor(timeToFullDischarge);
+            const minutes = Math.round((timeToFullDischarge - hours) * 60);
+            fullDischargeTime_h_min = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
          } else {
             fullDischargeTime = new Date(0);
             fullDischargeTime_str = 'N/A';
+            fullDischargeTime_h_min = '00:00';
          }
-         ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h', Math.round(timeToFullDischarge * 100) / 100, {
+         await ensureStateAsync(
+            dst_summary + 'battery.timeToFullDischarge_h',
+            Math.round(timeToFullDischarge * 100) / 100,
+            {
+               read: true,
+               write: false,
+               type: 'number',
+               role: 'value',
+               def: 0,
+               unit: 'h',
+               desc: 'Time to full discharge in hours',
+            }
+         );
+         await ensureStateAsync(
+            dst_summary + 'battery.timeToFullDischarge_min',
+            Math.round(timeToFullDischarge_min * 100) / 100,
+            {
+               read: true,
+               write: false,
+               type: 'number',
+               role: 'value',
+               def: 0,
+               unit: 'min',
+               desc: 'Time to full discharge in minutes',
+            }
+         );
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', fullDischargeTime_h_min, {
             read: true,
             write: false,
-            type: 'number',
-            role: 'value',
-            def: 0,
-            unit: 'h',
-            desc: 'Time to full discharge in hours',
-         });
-         ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_min', Math.round(timeToFullDischarge_min * 100) / 100, {
-            read: true,
-            write: false,
-            type: 'number',
-            role: 'value',
-            def: 0,
-            unit: 'min',
-            desc: 'Time to full discharge in minutes',
+            type: 'string',
+            role: 'text',
+            def: '00:00',
+            desc: 'Time to full charge in hours and minutes',
          });
          await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_at', fullDischargeTime_str, {
             read: true,
@@ -1432,6 +1558,147 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
             role: 'value.time',
             desc: 'Unix timestamp when battery will be empty',
          });
+         // zero charge time states
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'h',
+            desc: 'Time to full charge in hours',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_min', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'min',
+            desc: 'Time to full charge in minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', '00:00', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            def: '00:00',
+            desc: 'Time to full charge in hours and minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_at', 'N/A', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            desc: 'Local time when battery will be full',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_ts', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value.time',
+            desc: 'Unix timestamp when battery will be full',
+         });
+      } else {
+         if (debug > 2)
+            log(`Load power is zero, no charge/discharge time calculation needed - values set to 0`, 'info');
+         // zero charge time states
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'h',
+            desc: 'Time to full charge in hours',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_min', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'min',
+            desc: 'Time to full charge in minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', '00:00', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            def: '00:00',
+            desc: 'Time to full charge in hours and minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_at', 'N/A', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            desc: 'Local time when battery will be full',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_ts', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value.time',
+            desc: 'Unix timestamp when battery will be full',
+         });
+         // zero discharge time states
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'h',
+            desc: 'Time to full discharge in hours',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_min', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'min',
+            desc: 'Time to full discharge in minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', '00:00', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            def: '00:00',
+            desc: 'Time to full charge in hours and minutes',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_at', 'N/A', {
+            read: true,
+            write: false,
+            type: 'string',
+            role: 'text',
+            desc: 'Local time when battery will be empty',
+         });
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_ts', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value.time',
+            desc: 'Unix timestamp when battery will be empty',
+         });
       }
    });
+}
+
+//---------------------------------------------------------------------------------------------------
+// auto identify minSoC for battery based on discharging behavior
+//---------------------------------------------------------------------------------------------------
+if (existsState(dst_summary + 'storage.total.activePower_total')) {
+}
+
+async function getFirstLedStatus() {
+   if (existsState(rss_battery + '.0.led_status')) {
+      let led_status = getState(rss_battery + '.0.led_status').val;
+      if (debug > 1) log(`First battery LED status: ${led_status}`, 'info');
+      return led_status;
+   }
+   return null;
 }
