@@ -1468,7 +1468,7 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
             unit: 'min',
             desc: 'Time to full discharge in minutes',
          });
-         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', '00:00', {
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h_min', '00:00', {
             read: true,
             write: false,
             type: 'string',
@@ -1541,7 +1541,7 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
                desc: 'Time to full discharge in minutes',
             }
          );
-         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', fullDischargeTime_h_min, {
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h_min', fullDischargeTime_h_min, {
             read: true,
             write: false,
             type: 'string',
@@ -1667,7 +1667,7 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
             unit: 'min',
             desc: 'Time to full discharge in minutes',
          });
-         await ensureStateAsync(dst_summary + 'battery.timeToFullCharge_h_min', '00:00', {
+         await ensureStateAsync(dst_summary + 'battery.timeToFullDischarge_h_min', '00:00', {
             read: true,
             write: false,
             type: 'string',
