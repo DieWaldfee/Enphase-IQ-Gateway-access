@@ -40,6 +40,7 @@ const rss_minSoC = rss_base_path + 'config.summary.minSoC'; // path to store min
 const dst_sc_stream = dst_summary + 'lifedataState';
 const dst_SoC = dst_summary + 'SoC';
 const dst_inverter = dst_summary + 'inverters';
+let dst_inverter_trigger = ''; //will be set later to summary.inverters.<first inverter>.production
 const dst_battery = dst_summary + 'battery';
 const dst_gateway = dst_summary + 'gateway';
 
@@ -74,14 +75,23 @@ async function ensureStateAsync(id, value, options = { read: true, write: true }
 // get SOC state and transfer to summary & calculate minSoC
 //---------------------------------------------------------------------------------------------------
 /**
- * Monitors the battery State of Charge (SoC) and mirrors it to a summary state.
- * - Checks if the source SoC state (rss_SoC) exists.
- * - If it exists, ensures that the target summary state (dst_SoC) is created or updated with proper attributes.
- * - Subscribes to changes of the source state and keeps the summary state synchronized automatically.
- * - Generates debug logs depending on the configured debug level.
+ * Retrieves the LED status from the first battery module, if available.
  *
- * @constant {string} rss_SoC - ID of the source state providing the battery SoC.
- * @constant {string} dst_SoC - ID of the target summary state that mirrors the SoC value.
+ * Reads the state `<rss_battery>.0.led_status` and returns its current value.
+ * Used primarily to detect whether the battery is charging, discharging, or idle.
+ * If the state does not exist, the function returns `null`.
+ *
+ * @async
+ * @function getFirstLedStatus
+ * @returns {Promise<number|null>} The numeric LED status code of the first battery, or `null` if unavailable.
+ *
+ * @example
+ * const ledStatus = await getFirstLedStatus();
+ * if (ledStatus === 13) log('Battery is discharging', 'info');
+ *
+ * @remarks
+ * - Requires the global variable `rss_battery` to be defined.
+ * - Produces debug log output when `debug > 1`.
  */
 async function getFirstLedStatus() {
    if (existsState(rss_battery + '.0.led_status')) {
@@ -91,6 +101,32 @@ async function getFirstLedStatus() {
    }
    return null;
 }
+/**
+ * Monitors the main battery State of Charge (SoC), synchronizes it to a summary state,
+ * and dynamically updates the minimum SoC value based on discharging behavior.
+ *
+ * When the source SoC state (`rss_SoC`) changes, the handler:
+ * - Mirrors its value into the summary state (`dst_SoC`).
+ * - Checks if the battery is discharging (based on LED status).
+ * - Updates or initializes the minimum SoC (`rss_minSoC`) when a new lower SoC is detected.
+ *
+ * @listens {ioBroker.StateChange} rss_SoC - Triggered when the SoC value changes.
+ * @async
+ * @callback onSoCChange
+ * @param {object} obj - ioBroker object containing the updated state.
+ * @param {ioBroker.State} obj.state - The new state information.
+ * @param {number} obj.state.val - The updated SoC value (0–100 %).
+ *
+ * @example
+ * // Automatically mirrors and tracks SoC:
+ * on({ id: rss_SoC, change: 'any' }, onSoCChange);
+ *
+ * @remarks
+ * - Uses {@link ensureStateAsync} to safely create and update target states.
+ * - Automatically initializes `rss_minSoC` with `minSoC_initialValue` if not yet defined.
+ * - Relies on {@link getFirstLedStatus} to verify the discharging condition.
+ * - Generates detailed debug logs depending on the global `debug` level.
+ */
 if (existsState(rss_SoC)) {
    ensureStateAsync(dst_SoC, Number(getState(rss_SoC)), {
       read: true,
@@ -1290,8 +1326,25 @@ if (existsState(rss_gateway_trigger)) {
 }
 
 //---------------------------------------------------------------------------------------------------
-// Batterieladung auf 100% bzw. auf lowest SoC berechnen
+// Calculate battery charging to 100% or down to lowest SoC
 //---------------------------------------------------------------------------------------------------
+/**
+ * Calculates the remaining battery charging time until 100% SoC is reached.
+ *
+ * Reads the current battery capacity and SoC from ioBroker data points,
+ * checks the provided charging power, and calculates the time until the battery is fully charged.
+ *
+ * @async
+ * @function calcBatteryChargeTime
+ * @param {number} loadPower - Current charging power in watts (W). Values ≤ 0 are ignored.
+ * @returns {Promise<number>} Estimated charging time in hours (h). Returns `0` if calculation is not possible.
+ *
+ * @example
+ * const timeToFull = await calcBatteryChargeTime(2500);
+ * log(`Battery will be fully charged in ${timeToFull.toFixed(2)} hours.`);
+ *
+ * @throws {Error} If an ioBroker state cannot be read (internally caught and logged).
+ */
 async function calcBatteryChargeTime(loadPower) {
    // get total battery capacity
    let totalBatteryCapacity_Wh = 0;
@@ -1330,6 +1383,23 @@ async function calcBatteryChargeTime(loadPower) {
    if (debug > 2) log(`Time to full charge: ${timeToFullCharge} hours`, 'info');
    return timeToFullCharge;
 }
+/**
+ * Calculates the remaining battery discharge time until the minimum SoC (State of Charge) is reached.
+ *
+ * Reads the current battery capacity, the SoC, and the minimum SoC from ioBroker data points,
+ * checks the provided discharge power, and calculates the time until the battery is fully discharged.
+ *
+ * @async
+ * @function calcBatteryDischargeTime
+ * @param {number} loadPower - Current discharge power in watts (W). Must be negative; otherwise, it is set to `0`.
+ * @returns {Promise<number>} Estimated discharge time in hours (h). Returns `0` if calculation is not possible.
+ *
+ * @example
+ * const timeToEmpty = await calcBatteryDischargeTime(-1800);
+ * log(`Battery will be empty in ${timeToEmpty.toFixed(2)} hours.`);
+ *
+ * @throws {Error} If an ioBroker state cannot be read (internally caught and logged).
+ */
 async function calcBatteryDischargeTime(loadPower) {
    // set lowest SoC the discharge power is used for calculation
    let lowestSoC;
@@ -1375,7 +1445,37 @@ async function calcBatteryDischargeTime(loadPower) {
    if (debug > 2) log(`Time to full discharge: ${timeToFullDischarge} hours`, 'info');
    return timeToFullDischarge;
 }
-// handler to recalculate battery charge/discharge time on load power change
+/**
+ * Event handler for recalculating battery charge and discharge times when power changes.
+ *
+ * Monitors the data point `storage.total.activePower_total` and automatically recalculates
+ * the remaining time until the battery is full or empty whenever the charging or discharging
+ * power changes. Results are written to the corresponding ioBroker data points under
+ * `dst_summary + 'battery.*'`.
+ *
+ * **Functionality:**
+ * - Positive power → Calls {@link calcBatteryChargeTime}
+ * - Negative power → Calls {@link calcBatteryDischargeTime}
+ * - Power = 0 → All time values are set to 0 or “N/A”
+ *
+ * @listens {ioBroker.StateChange} dst_summary + 'storage.total.activePower_total'
+ * @async
+ * @callback onLoadPowerChange
+ * @param {object} obj - ioBroker object containing the new state value.
+ * @param {ioBroker.State} obj.state - Current state of the monitored data point.
+ * @param {number} obj.state.val - Current power value in watts (W). Negative values indicate charging.
+ *
+ * @example
+ * // Automatically triggered when the battery power changes:
+ * on({ id: dst_summary + 'storage.total.activePower_total', change: 'any' }, onLoadPowerChange);
+ *
+ * @remarks
+ * - Updates the following states:
+ *   - `battery.timeToFullCharge_*`
+ *   - `battery.timeToFullDischarge_*`
+ * - Uses {@link ensureStateAsync} for safe creation and updating of states.
+ * - Outputs debug messages depending on the global `debug` level.
+ */
 if (existsState(dst_summary + 'storage.total.activePower_total')) {
    if (debug > 1) log(`Monitoring load power to recalculate battery charge/discharge time`, 'info');
    if (debug > 2) log(`Using event trigger ${dst_summary + 'storage.total.activePower_total'}`, 'info');
@@ -1693,3 +1793,237 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
    });
 }
 
+//---------------------------------------------------------------------------------------------------
+// max. values (actual and previous day) for total production power
+//---------------------------------------------------------------------------------------------------
+// identify max production power value
+async function maxTotalProductionPower() {
+   let maxTotalPower = 0;
+   let actualTotalPower = 0;
+   if (existsState(rss_livedata + '.meters.pv.agg_p_mw')) {
+      actualTotalPower = Math.round(getState(rss_livedata + '.meters.pv.agg_p_mw').val / 1000);
+   } else {
+      actualTotalPower = 0;
+   }
+   if (debug > 1) log(`Actual total production power: ${actualTotalPower} W`, 'info');
+   let lastTotalPower = 0;
+   if (existsState(dst_summary + 'maxValues.maxProductionPower')) {
+      lastTotalPower = getState(dst_summary + 'maxValues.maxProductionPower').val;
+   } else {
+      lastTotalPower = 0;
+   }
+   if (debug > 1) log(`Last max total production power: ${lastTotalPower} W`, 'info');
+   maxTotalPower = Math.max(actualTotalPower, lastTotalPower);
+   if (debug > 1) log(`New max total production power: ${maxTotalPower} W`, 'info');
+   await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower', maxTotalPower, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Max. total production power in W',
+   });
+}
+// identify max production power on every inverter
+async function maxInverterPower() {
+   // identify all inverters in dst_inverter
+   let inverterIDs = [];
+   // Try to get inverter IDs from the summary inverter_list state using getState
+   if (existsState(dst_inverter + '.inverter_list')) {
+      try {
+         const raw = getState(dst_inverter + '.inverter_list').val;
+         if (raw) {
+            if (Array.isArray(raw)) {
+               inverterIDs = raw;
+            } else if (typeof raw === 'string') {
+               // try JSON first, fallback to comma separated
+               try {
+                  inverterIDs = JSON.parse(raw);
+                  if (!Array.isArray(inverterIDs)) inverterIDs = [String(inverterIDs)];
+               } catch {
+                  inverterIDs = raw
+                     .split(',')
+                     .map((s) => s.trim())
+                     .filter(Boolean);
+               }
+            } else {
+               inverterIDs = [String(raw)];
+            }
+         }
+      } catch (e) {
+         log(`Error reading inverter_list: ${e}`, 'error');
+      }
+   } else {
+      // no inverter_list state available
+      inverterIDs = [];
+   }
+   if (debug > 1) log(`Inverter IDs found: ${JSON.stringify(inverterIDs)}`, 'info');
+   // Now you have all inverter IDs in the inverterIDs array
+   dst_inverter_trigger = '';
+   let i = 0;
+   for (const inverterID of inverterIDs) {
+      let maxInverterPower = 0;
+      let actualInverterPower = 0;
+      if (existsState(rss_livedata + '.meters.pv.inverters.' + inverterID + '.production')) {
+         actualInverterPower = Math.round(
+            getState(rss_livedata + '.meters.pv.inverters.' + inverterID + '.production').val
+         );
+         if (i == 0) dst_inverter_trigger = rss_livedata + '.meters.pv.inverters.' + inverterID + '.production';
+         i++;
+      } else {
+         actualInverterPower = 0;
+      }
+      if (debug > 1) log(`Actual inverter production power (${inverterID}): ${actualInverterPower} W`, 'info');
+      let lastInverterPower = 0;
+      if (existsState(dst_summary + 'maxValues.inverters.' + inverterID + '.maxProductionPower')) {
+         lastInverterPower = getState(dst_summary + 'maxValues.inverters.' + inverterID + '.maxProductionPower').val;
+      } else {
+         lastInverterPower = 0;
+      }
+      if (debug > 1) log(`Last max inverter production power (${inverterID}): ${lastInverterPower} W`, 'info');
+      maxInverterPower = Math.max(actualInverterPower, lastInverterPower);
+      if (debug > 1) log(`New max inverter production power (${inverterID}): ${maxInverterPower} W`, 'info');
+      await ensureStateAsync(
+         dst_summary + 'maxValues.inverters.' + inverterID + '.maxProductionPower',
+         maxInverterPower,
+         {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'W',
+            desc: 'Max. inverter production power in W',
+         }
+      );
+   }
+}
+// monitor production power to identify max value
+on({ id: rss_livedata + '.meters.pv.agg_p_mw', change: 'any' }, function (obj) {
+   maxTotalProductionPower();
+});
+await maxInverterPower(); //initial run
+if (existsState(dst_inverter_trigger)) {
+   if (debug > 1) log(`Monitoring inverter to identify max production power now`, 'info');
+   if (debug > 2) log(`Using event trigger ${rss_inverter_trigger} to refresh inverter data`, 'info');
+   on({ id: dst_inverter_trigger, change: 'any' }, function (obj) {
+      //timeout 500ms to ensure all inverters are updated
+      setTimeout(() => {
+         maxInverterPower();
+      }, 500);
+      if (debug > 2) log(`Inverter max production power updated`, 'info');
+   });
+}
+// copy actual day of max total production power to yesterday value at midnight
+async function pushTotalMaxProductionYesterday() {
+   let yesterdayMaxPower;
+   if (existsState(dst_summary + 'maxValues.maxProductionPower')) {
+      yesterdayMaxPower = getState(dst_summary + 'maxValues.maxProductionPower').val;
+   } else {
+      yesterdayMaxPower = 0;
+      await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower', 0, {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'W',
+         desc: 'Max. total production power in W',
+      });
+   }
+   await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower_yesterday', yesterdayMaxPower, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Max. total production power yesterday in W',
+   });
+   await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Max. total production power in W',
+   });
+}
+// copy actual day of max inverter production power to yesterday value at midnight
+async function pushInverterMaxProductionYesterday() {
+   // identify all inverters in dst_inverter
+   let inverterIDs = [];
+   // Try to get inverter IDs from the summary inverter_list state using getState
+   if (existsState(dst_inverter + '.inverter_list')) {
+      try {
+         const raw = getState(dst_inverter + '.inverter_list').val;
+         if (raw) {
+            if (Array.isArray(raw)) {
+               inverterIDs = raw;
+            } else if (typeof raw === 'string') {
+               // try JSON first, fallback to comma separated
+               try {
+                  inverterIDs = JSON.parse(raw);
+                  if (!Array.isArray(inverterIDs)) inverterIDs = [String(inverterIDs)];
+               } catch {
+                  inverterIDs = raw
+                     .split(',')
+                     .map((s) => s.trim())
+                     .filter(Boolean);
+               }
+            } else {
+               inverterIDs = [String(raw)];
+            }
+         }
+      } catch (e) {
+         log(`Error reading inverter_list: ${e}`, 'error');
+      }
+   } else {
+      // no inverter_list state available
+      inverterIDs = [];
+   }
+   if (debug > 1) log(`Inverter IDs found: ${JSON.stringify(inverterIDs)}`, 'info');
+   for (const inverter of inverters) {
+      let yesterdayMaxPower;
+      if (existsState(dst_inverter + inverter + '.maxProductionPower')) {
+         yesterdayMaxPower = getState(dst_inverter + inverter + '.maxProductionPower').val;
+      } else {
+         yesterdayMaxPower = 0;
+         await ensureStateAsync(dst_inverter + inverter + '.maxProductionPower', 0, {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'W',
+            desc: 'Max. inverter production power in W',
+         });
+      }
+      await ensureStateAsync(dst_inverter + inverter + '.maxProductionPower_yesterday', yesterdayMaxPower, {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'W',
+         desc: 'Max. inverter production power yesterday in W',
+      });
+      await ensureStateAsync(dst_inverter + inverter + '.maxProductionPower', 0, {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'W',
+         desc: 'Max. inverter production power in W',
+      });
+   }
+}
+// copy actual day of max total production power to yesterday value at midnight
+schedule('0 0 * * *', async function () {
+   if (debug > 1) log('Midnight reached - store yesterday max production power and reset max production power', 'info');
+   await pushTotalMaxProductionYesterday();
+   await pushInverterMaxProductionYesterday();
+});
