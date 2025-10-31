@@ -36,6 +36,8 @@ let rss_battery_trigger = ''; //will be set later to battery.0
 let rss_gateway_trigger = ''; //will be set later to gateway.0
 let minSoC_initialValue = 30; // initial minSoC value in % if not set yet
 const rss_minSoC = rss_base_path + 'config.summary.minSoC'; // path to store minSoC value
+const rss_PDM_p_totalEnergy = rss_local + 'PDM.energy.production.eim.wattHoursToday'; // energy meter data production
+const rss_PDM_c_totalEnergy = rss_local + 'PDM.energy.consumption.eim.wattHoursToday'; // energy meter data consumption
 // destination path
 const dst_sc_stream = dst_summary + 'lifedataState';
 const dst_SoC = dst_summary + 'SoC';
@@ -1807,15 +1809,15 @@ async function maxTotalProductionPower() {
    }
    if (debug > 1) log(`Actual total production power: ${actualTotalPower} W`, 'info');
    let lastTotalPower = 0;
-   if (existsState(dst_summary + 'maxValues.maxProductionPower')) {
-      lastTotalPower = getState(dst_summary + 'maxValues.maxProductionPower').val;
+   if (existsState(dst_summary + 'maxValues.power.maxProductionPower')) {
+      lastTotalPower = getState(dst_summary + 'maxValues.power.maxProductionPower').val;
    } else {
       lastTotalPower = 0;
    }
    if (debug > 1) log(`Last max total production power: ${lastTotalPower} W`, 'info');
    maxTotalPower = Math.max(actualTotalPower, lastTotalPower);
    if (debug > 1) log(`New max total production power: ${maxTotalPower} W`, 'info');
-   await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower', maxTotalPower, {
+   await ensureStateAsync(dst_summary + 'maxValues.power.maxProductionPower', maxTotalPower, {
       read: true,
       write: false,
       type: 'number',
@@ -1860,24 +1862,20 @@ async function maxInverterPower() {
    }
    if (debug > 1) log(`Inverter IDs found: ${JSON.stringify(inverterIDs)}`, 'info');
    // Now you have all inverter IDs in the inverterIDs array
-   dst_inverter_trigger = '';
-   let i = 0;
    for (const inverterID of inverterIDs) {
       let maxInverterPower = 0;
       let actualInverterPower = 0;
-      if (existsState(rss_livedata + '.meters.pv.inverters.' + inverterID + '.production')) {
-         actualInverterPower = Math.round(
-            getState(rss_livedata + '.meters.pv.inverters.' + inverterID + '.production').val
-         );
-         if (i == 0) dst_inverter_trigger = rss_livedata + '.meters.pv.inverters.' + inverterID + '.production';
-         i++;
+      if (existsState(dst_summary + 'inverters.' + inverterID + '.production')) {
+         actualInverterPower = Math.round(getState(dst_summary + 'inverters.' + inverterID + '.production').val);
       } else {
          actualInverterPower = 0;
       }
       if (debug > 1) log(`Actual inverter production power (${inverterID}): ${actualInverterPower} W`, 'info');
       let lastInverterPower = 0;
-      if (existsState(dst_summary + 'maxValues.inverters.' + inverterID + '.maxProductionPower')) {
-         lastInverterPower = getState(dst_summary + 'maxValues.inverters.' + inverterID + '.maxProductionPower').val;
+      if (existsState(dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower')) {
+         lastInverterPower = getState(
+            dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower'
+         ).val;
       } else {
          lastInverterPower = 0;
       }
@@ -1885,7 +1883,7 @@ async function maxInverterPower() {
       maxInverterPower = Math.max(actualInverterPower, lastInverterPower);
       if (debug > 1) log(`New max inverter production power (${inverterID}): ${maxInverterPower} W`, 'info');
       await ensureStateAsync(
-         dst_summary + 'maxValues.inverters.' + inverterID + '.maxProductionPower',
+         dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower',
          maxInverterPower,
          {
             read: true,
@@ -1903,11 +1901,12 @@ async function maxInverterPower() {
 on({ id: rss_livedata + '.meters.pv.agg_p_mw', change: 'any' }, function (obj) {
    maxTotalProductionPower();
 });
+// monitor inverter production power to identify max value
 await maxInverterPower(); //initial run
-if (existsState(dst_inverter_trigger)) {
+if (existsState(rss_inverter_trigger)) {
    if (debug > 1) log(`Monitoring inverter to identify max production power now`, 'info');
-   if (debug > 2) log(`Using event trigger ${rss_inverter_trigger} to refresh inverter data`, 'info');
-   on({ id: dst_inverter_trigger, change: 'any' }, function (obj) {
+   if (debug > 2) log(`Using event trigger ${rss_inverter_trigger} to refresh inverter max power data`, 'info');
+   on({ id: rss_inverter_trigger, change: 'any' }, function (obj) {
       //timeout 500ms to ensure all inverters are updated
       setTimeout(() => {
          maxInverterPower();
@@ -1918,21 +1917,13 @@ if (existsState(dst_inverter_trigger)) {
 // copy actual day of max total production power to yesterday value at midnight
 async function pushTotalMaxProductionYesterday() {
    let yesterdayMaxPower;
-   if (existsState(dst_summary + 'maxValues.maxProductionPower')) {
-      yesterdayMaxPower = getState(dst_summary + 'maxValues.maxProductionPower').val;
+   if (existsState(dst_summary + 'maxValues.power.maxProductionPower')) {
+      yesterdayMaxPower = getState(dst_summary + 'maxValues.power.maxProductionPower').val;
    } else {
       yesterdayMaxPower = 0;
-      await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower', 0, {
-         read: true,
-         write: false,
-         type: 'number',
-         role: 'value',
-         def: 0,
-         unit: 'W',
-         desc: 'Max. total production power in W',
-      });
    }
-   await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower_yesterday', yesterdayMaxPower, {
+   if (debug > 1) log(`Max total production power: ${yesterdayMaxPower} W`, 'info');
+   await ensureStateAsync(dst_summary + 'maxValues.power.maxProductionPower_yesterday', yesterdayMaxPower, {
       read: true,
       write: false,
       type: 'number',
@@ -1941,7 +1932,7 @@ async function pushTotalMaxProductionYesterday() {
       unit: 'W',
       desc: 'Max. total production power yesterday in W',
    });
-   await ensureStateAsync(dst_summary + 'maxValues.maxProductionPower', 0, {
+   await ensureStateAsync(dst_summary + 'maxValues.power.maxProductionPower', 0, {
       read: true,
       write: false,
       type: 'number',
@@ -1985,32 +1976,30 @@ async function pushInverterMaxProductionYesterday() {
       inverterIDs = [];
    }
    if (debug > 1) log(`Inverter IDs found: ${JSON.stringify(inverterIDs)}`, 'info');
-   for (const inverter of inverters) {
+   for (const inverterID of inverterIDs) {
       let yesterdayMaxPower;
-      if (existsState(dst_inverter + inverter + '.maxProductionPower')) {
-         yesterdayMaxPower = getState(dst_inverter + inverter + '.maxProductionPower').val;
+      if (existsState(dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower')) {
+         yesterdayMaxPower = getState(
+            dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower'
+         ).val;
       } else {
          yesterdayMaxPower = 0;
-         await ensureStateAsync(dst_inverter + inverter + '.maxProductionPower', 0, {
+      }
+      if (debug > 1) log(`Inverter ${inverterID} - max production power: ${yesterdayMaxPower} W`, 'info');
+      await ensureStateAsync(
+         dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower_yesterday',
+         yesterdayMaxPower,
+         {
             read: true,
             write: false,
             type: 'number',
             role: 'value',
             def: 0,
             unit: 'W',
-            desc: 'Max. inverter production power in W',
-         });
-      }
-      await ensureStateAsync(dst_inverter + inverter + '.maxProductionPower_yesterday', yesterdayMaxPower, {
-         read: true,
-         write: false,
-         type: 'number',
-         role: 'value',
-         def: 0,
-         unit: 'W',
-         desc: 'Max. inverter production power yesterday in W',
-      });
-      await ensureStateAsync(dst_inverter + inverter + '.maxProductionPower', 0, {
+            desc: 'Max. inverter production power yesterday in W',
+         }
+      );
+      await ensureStateAsync(dst_summary + 'maxValues.power.inverters.' + inverterID + '.maxProductionPower', 0, {
          read: true,
          write: false,
          type: 'number',
@@ -2026,4 +2015,102 @@ schedule('0 0 * * *', async function () {
    if (debug > 1) log('Midnight reached - store yesterday max production power and reset max production power', 'info');
    await pushTotalMaxProductionYesterday();
    await pushInverterMaxProductionYesterday();
+});
+
+//---------------------------------------------------------------------------------------------------
+// max. values (actual and previous day, monthly, year) for total and inverters production energy
+//---------------------------------------------------------------------------------------------------
+async function maxTotalProductionEnergy() {
+   let TotalEnergy = 0;
+   if (existsState(rss_PDM_p_totalEnergy)) {
+      TotalEnergy = getState(rss_PDM_p_totalEnergy).val;
+   } else {
+      TotalEnergy = 0;
+   }
+   if (debug > 1) log(`Actual total production energy today: ${TotalEnergy} Wh`, 'info');
+   await ensureStateAsync(dst_summary + 'maxValues.energy.ProductionEnergy', TotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Actual production energy in Wh',
+   });
+}
+on({ id: rss_PDM_p_totalEnergy, change: 'any' }, function (obj) {
+   maxTotalProductionEnergy();
+});
+// copy actual day of max total production energy to yesterday value short before midnight
+schedule('55 23 * * *', async function () {
+   if (debug > 1)
+      log('Midnight reached - store yesterday max production energy and reset max production energy', 'info');
+   let yesterdayTotalEnergy;
+   if (existsState(dst_summary + 'maxValues.energy.ProductionEnergy')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'maxValues.energy.ProductionEnergy').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'maxValues.energy.ProductionEnergy_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Max. total production energy yesterday in Wh',
+   });
+   await ensureStateAsync(dst_summary + 'maxValues.energy.ProductionEnergy', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Max. total production energy in Wh',
+   });
+   // monthly max production energy
+   let now = new Date();
+   let month = now.getMonth() + 1; //months from 1-12
+   let storedMonthEnergy = 0;
+   if (
+      existsState(dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0'))
+   ) {
+      storedMonthEnergy = getState(
+         dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0')
+      ).val;
+   } else {
+      storedMonthEnergy = 0;
+   }
+   maxMonthTotalEnergy = storedMonthEnergy + yesterdayTotalEnergy;
+   await ensureStateAsync(
+      dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0'),
+      maxMonthTotalEnergy,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Max. total production energy in Wh for month ' + month.toString().padStart(2, '0'),
+      }
+   );
+   // yearly max production energy
+   let storedYearEnergy = 0;
+   if (existsState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year')) {
+      storedYearEnergy = getState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year').val;
+   } else {
+      storedYearEnergy = 0;
+   }
+   maxYearTotalEnergy = storedYearEnergy + yesterdayTotalEnergy;
+   await ensureStateAsync(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year', maxYearTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Max. total production energy in Wh for year ',
+   });
 });
