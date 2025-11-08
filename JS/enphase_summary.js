@@ -2119,7 +2119,7 @@ schedule('55 23 * * *', async function () {
       role: 'value',
       def: 0,
       unit: 'Wh',
-      desc: 'Max. total production energy in Wh for year ',
+      desc: 'Max. total production energy in Wh for year',
    });
 });
 
@@ -2337,4 +2337,92 @@ on({ id: rss_livedata + '.meters.grid.agg_p_mw', change: 'any' }, function (obj)
       calcActualPowerflow();
    }, 500);
    if (debug > 2) log(`Powerflow updated`, 'info');
+});
+
+//---------------------------------------------------------------------------------------------------
+// Copy yearly data: current year -> previous year
+//---------------------------------------------------------------------------------------------------
+async function CopyEnergyToLastYear(deleteAfterCopy = false) {
+   //copy monthly data
+   let month = 0;
+   for (month = 1; month <= 12; month++) {
+      let storedMonthEnergy = 0;
+      if (
+         existsState(
+            dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0')
+         )
+      ) {
+         storedMonthEnergy = getState(
+            dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0')
+         ).val;
+      } else {
+         storedMonthEnergy = 0;
+      }
+      await ensureStateAsync(
+         dst_summary +
+            'maxValues.energy.lastYear.month.maxProductionEnergy_month_' +
+            month.toString().padStart(2, '0') +
+            '_lastYear',
+         storedMonthEnergy,
+         {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'Wh',
+            desc: 'Maximum production energy for month ' + month + ' last year',
+         }
+      );
+      if (deleteAfterCopy) {
+         await ensureStateAsync(
+            dst_summary +
+               'maxValues.energy.month.maxProductionEnergy_month_' +
+               month.toString().padStart(2, '0') +
+               '_lastYear',
+            0,
+            {
+               read: true,
+               write: false,
+               type: 'number',
+               role: 'value',
+               def: 0,
+               unit: 'Wh',
+               desc: 'Max. total production energy in Wh for month ' + month.toString().padStart(2, '0'),
+            }
+         );
+      }
+   }
+   //copy yearly data
+   let storedYearEnergy = 0;
+   if (existsState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year')) {
+      storedYearEnergy = getState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year').val;
+   } else {
+      storedYearEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'maxValues.energy.lastYear.year.maxProductionEnergy_year', storedYearEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Max. total production energy in Wh for last year',
+   });
+   if (deleteAfterCopy) {
+      await ensureStateAsync(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year', 0, {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Max. total production energy in Wh for year',
+      });
+   }
+}
+// copy actual year to last year at new year
+schedule('0 0 1 1 *', async function () {
+   if (debug > 1) log('New Year reached - copy yearly energy data to last year', 'info');
+   await CopyEnergyToLastYear(true);
 });
