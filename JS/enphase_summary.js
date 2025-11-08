@@ -1899,7 +1899,11 @@ async function maxInverterPower() {
 }
 // monitor production power to identify max value
 on({ id: rss_livedata + '.meters.pv.agg_p_mw', change: 'any' }, function (obj) {
-   maxTotalProductionPower();
+   //timeout 500ms to ensure all values are updated
+   setTimeout(() => {
+      maxTotalProductionPower();
+   }, 500);
+   if (debug > 2) log(`Total production power updated`, 'info');
 });
 // monitor inverter production power to identify max value
 await maxInverterPower(); //initial run
@@ -2039,7 +2043,11 @@ async function maxTotalProductionEnergy() {
    });
 }
 on({ id: rss_PDM_p_totalEnergy, change: 'any' }, function (obj) {
-   maxTotalProductionEnergy();
+   //timeout 500ms to ensure all values are updated
+   setTimeout(() => {
+      maxTotalProductionEnergy();
+   }, 500);
+   if (debug > 2) log(`Total production energy updated`, 'info');
 });
 // copy actual day of max total production energy to yesterday value short before midnight
 schedule('55 23 * * *', async function () {
@@ -2113,4 +2121,220 @@ schedule('55 23 * * *', async function () {
       unit: 'Wh',
       desc: 'Max. total production energy in Wh for year ',
    });
+});
+
+//---------------------------------------------------------------------------------------------------
+// actual self-consumtion and autarky calculation, feedInPower and purchasedPower
+//---------------------------------------------------------------------------------------------------
+async function calcActualPowerflow() {
+   let productionPower = 0; // from lifedata: positive: production power
+   let consumptionPower = 0; // from lifedata: positive: consumption power
+   let gridPower = 0; // from lifedata: positive: purchased power, negative: feed-in power
+   let storagePower = 0; // from lifedata: positive: discharge power, negative: charge power
+   let feedInPower = 0;
+   let purchasedPower = 0;
+   let selfConsumptionPower = 0;
+   let gridConsumptionPower = 0;
+   let gridChargePower = 0;
+   let storageConsumptionPower = 0;
+   let storageChargePower = 0;
+   let autarky = 0;
+   if (existsState(rss_livedata + '.meters.pv.agg_p_mw')) {
+      productionPower = getState(rss_livedata + '.meters.pv.agg_p_mw').val / 1000;
+   }
+   if (productionPower < 0) {
+      productionPower = 0;
+   }
+   if (debug > 1) log(`Production Power: ${productionPower} W`, 'info');
+   if (existsState(rss_livedata + '.meters.load.agg_p_mw')) {
+      consumptionPower = getState(rss_livedata + '.meters.load.agg_p_mw').val / 1000;
+   }
+   if (consumptionPower < 0) {
+      consumptionPower = 0;
+   }
+   if (debug > 1) log(`Consumption Power: ${consumptionPower} W`, 'info');
+   if (existsState(rss_livedata + '.meters.grid.agg_p_mw')) {
+      gridPower = getState(rss_livedata + '.meters.grid.agg_p_mw').val / 1000;
+   }
+   if (debug > 1) log(`Grid Power: ${gridPower} W`, 'info');
+   if (existsState(rss_livedata + '.meters.storage.agg_p_mw')) {
+      storagePower = getState(rss_livedata + '.meters.storage.agg_p_mw').val / 1000;
+   }
+   if (debug > 1) log(`Storage Power: ${storagePower} W`, 'info');
+   // calculate feed-in and purchased power
+   if (gridPower < 0) {
+      feedInPower = Math.abs(gridPower);
+      purchasedPower = 0;
+   } else {
+      feedInPower = 0;
+      purchasedPower = gridPower;
+   }
+   if (debug > 1) log(`Feed-in Power: ${feedInPower} W`, 'info');
+   if (debug > 1) log(`Purchased Power: ${purchasedPower} W`, 'info');
+   // storgae consumption and charge power
+   if (storagePower < 0) {
+      storageChargePower = Math.abs(storagePower);
+      storageConsumptionPower = 0;
+   } else {
+      storageChargePower = 0;
+      storageConsumptionPower = storagePower;
+   }
+   if (debug > 1) log(`Storage Consumption Power: ${storageConsumptionPower} W`, 'info');
+   if (debug > 1) log(`Storage Charge Power: ${storageChargePower} W`, 'info');
+   // calculate self-consumption
+   if (feedInPower >= 0) {
+      selfConsumptionPower = productionPower - feedInPower;
+   } else {
+      if (productionPower > 0) {
+         selfConsumptionPower = productionPower;
+      } else {
+         selfConsumptionPower = 0;
+      }
+   }
+   if (debug > 1) log(`Self-Consumption Power: ${selfConsumptionPower} W`, 'info');
+   // calculate grid consumption power
+   if (consumptionPower == selfConsumptionPower) {
+      gridConsumptionPower = 0;
+   } else {
+      gridConsumptionPower = consumptionPower - selfConsumptionPower - storageConsumptionPower;
+      if (gridConsumptionPower < 0) {
+         gridConsumptionPower = 0;
+      }
+   }
+   if (debug > 1) log(`Grid Consumption Power: ${gridConsumptionPower} W`, 'info');
+   // calculate grid charge power
+   if (purchasedPower > gridConsumptionPower) {
+      gridChargePower = purchasedPower - gridConsumptionPower;
+   } else {
+      gridChargePower = 0;
+   }
+   if (debug > 1) log(`Grid Charge Power: ${gridChargePower} W`, 'info');
+   // calculate autarky
+   if (consumptionPower == 0) {
+      autarky = 100; // no consumption -> autarky 100%; avoid division by zero
+   } else {
+      autarky = ((selfConsumptionPower + storageConsumptionPower) / consumptionPower) * 100;
+   }
+   if (debug > 1) log(`Autarky: ${autarky} %`, 'info');
+   // write values to states
+   await ensureStateAsync(dst_summary + 'powerflow.productionPower', Math.round(productionPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'PV Production Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.consumptionPower', Math.round(consumptionPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Consumption Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.gridPower', Math.round(gridPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Grid Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.storagePower', Math.round(storagePower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Storage Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.feedInPower', Math.round(feedInPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Feed-in Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.purchasedPower', Math.round(purchasedPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Purchased Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.selfConsumptionPower', Math.round(selfConsumptionPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Self-Consumption Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.gridConsumptionPower', Math.round(gridConsumptionPower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Grid Consumption Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.gridChargePower', Math.round(gridChargePower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Grid Charge Power in W',
+   });
+   await ensureStateAsync(
+      dst_summary + 'powerflow.storageConsumptionPower',
+      Math.round(storageConsumptionPower * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'W',
+         desc: 'Storage Consumption Power in W',
+      }
+   );
+   await ensureStateAsync(dst_summary + 'powerflow.storageChargePower', Math.round(storageChargePower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Storage Charge Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.autarky', Math.round(autarky), {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: '%',
+      desc: 'Autarky in %',
+   });
+}
+// monitor production power to identify max value
+on({ id: rss_livedata + '.meters.grid.agg_p_mw', change: 'any' }, function (obj) {
+   //timeout 500ms to ensure all values are updated
+   setTimeout(() => {
+      calcActualPowerflow();
+   }, 500);
+   if (debug > 2) log(`Powerflow updated`, 'info');
 });
