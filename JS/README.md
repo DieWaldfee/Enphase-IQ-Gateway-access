@@ -55,11 +55,10 @@ By default, only errors are written to the log. If you need more detailed inform
 let debug = 0; // Debug level (0 = none, 1 = error, 2 = info, 3 = debug)
 ```
 
-If you want to adjust the update rate, you can change the polling interval from the default value of 1 minute to your preference:
+If you want to adjust the update rate, you can change the polling interval from the default value of 1 minute to your preference.
+therfore use the datapoints under `.config.local.polling` to adjust. After adjustment please restart enphase_local.js to read your adjustments.
 
-```javascript
-let pollingInterval = 1; // polling interval in minutes (min: 1, max: 30; change as needed)
-```
+&nbsp;&nbsp;&nbsp;&nbsp;<img width="900" height="175" alt="Image" src="https://github.com/user-attachments/assets/43ca44ab-07ca-41a3-adce-4705d9237176" />
 
 ---
 
