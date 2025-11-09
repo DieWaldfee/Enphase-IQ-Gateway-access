@@ -36,21 +36,24 @@ const https = require('https');
 // *** USER INPUT ***
 let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
 let bearer_token = ''; // Add existing Envoy token (optional, default='') will be created automatically if empty
+
+// -------------------------------------------------------------------------------------------------------------------
+// initialization of variables
+// -------------------------------------------------------------------------------------------------------------------
+// polling interval variables - will be overwritten from datapoints if existing
 let pollingCron = ''; // Polling interval in cron format (e.g. '*/5 * * * *' for every 5 minutes; change as needed)
 let lowPollingInterval = 15; // Polling interval in minutes (min: 0, max: 59; change as needed)
 let medPollingInterval = 5; // Polling interval in minutes (min: 0, max: 59; change as needed)
 let highPollingIntervalSec = 30; // Polling interval in seconds; valid x sec & 0 min (min: 10, max: 59; change as needed)
 let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x min (min: 1, max: 59; change as needed)
-
-// -------------------------------------------------------------------------------------------------------------------
-// initialization of variables
-// -------------------------------------------------------------------------------------------------------------------
+// http response and error count
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
 let dpPrefix = '0_userdata.0.enphase.local.'; // Prefix for ioBroker datapoints
 // credentials for enphase IQ Gateway
 const dpBasicConfigPath = '0_userdata.0.enphase.config.local.'; // datapoint path to store the values
 const dpCredentialsPath = dpBasicConfigPath + 'credentials.'; // datapoint path to store user credentials
+const dpPollingPath = dpBasicConfigPath + 'polling.'; // datapoint path to store polling intervals
 // endpoint for a single call
 let ivp_eh_devs = '/ivp/eh/devs'; // URL path to get EH devs from local Envoy
 // endpoint for low frequency calls
@@ -79,20 +82,104 @@ const MAX_VALID_TIMESTAMP = 4100000000; // unix timestamp -> seconds since 1970-
 // Create credentials datapoints if not existing, and wait for creation to finish
 async function ensureCredentialsStates() {
    if (!existsState(dpCredentialsPath + 'username')) {
-      await createStateAsync(dpCredentialsPath + 'username', '', {type: 'string', role: 'text', read: true, write: true });
+      await createStateAsync(dpCredentialsPath + 'username', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+         desc: 'Please enter your Enphase Enlighten username here',
+      });
    }
    if (!existsState(dpCredentialsPath + 'password')) {
-      await createStateAsync(dpCredentialsPath + 'password', '', {type: 'string', role: 'text', read: true, write: true });
+      await createStateAsync(dpCredentialsPath + 'password', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+         desc: 'Please enter your Enphase Enlighten password here',
+      });
    }
    if (!existsState(dpCredentialsPath + 'serial_no')) {
-      await createStateAsync(dpCredentialsPath + 'serial_no', '', {type: 'string', role: 'text', read: true, write: true });
+      await createStateAsync(dpCredentialsPath + 'serial_no', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+         desc: 'Please enter the 12 digit serial number of your Enphase Envoy device here',
+      });
    }
    if (!existsState(dpCredentialsPath + 'gateway_ip')) {
-      await createStateAsync(dpCredentialsPath + 'gateway_ip', '', {type: 'string', role: 'text', read: true, write: true });
+      await createStateAsync(dpCredentialsPath + 'gateway_ip', '', {
+         type: 'string',
+         role: 'text',
+         read: true,
+         write: true,
+         desc: 'Please enter the IP address of your Enphase Envoy gateway device here',
+      });
    }
 }
 await ensureCredentialsStates();
 if (debug > 0) log('credentials, serial_no and gateway_ip datapoints created', 'info');
+
+// -------------------------------------------------------------------------------------------------------------------
+// read polling interval from iobroker datapoints if existing
+// -------------------------------------------------------------------------------------------------------------------
+async function readPollingIntervals() {
+   if (!existsState(dpPollingPath + 'lowPollingInterval')) {
+      await createStateAsync(dpPollingPath + 'lowPollingInterval', lowPollingInterval, {
+         read: true,
+         write: true,
+         type: 'number',
+         role: 'value',
+         def: lowPollingInterval,
+         min: 1,
+         max: 59,
+         unit: 'min',
+         desc: 'Low frequency polling interval in minutes (min: 1, max: 59)',
+      });
+   }
+   if (!existsState(dpPollingPath + 'medPollingInterval')) {
+      await createStateAsync(dpPollingPath + 'medPollingInterval', medPollingInterval, {
+         read: true,
+         write: true,
+         type: 'number',
+         role: 'value',
+         def: medPollingInterval,
+         min: 1,
+         max: 59,
+         unit: 'min',
+         desc: 'Medium frequency polling interval in minutes (min: 1, max: 59)',
+      });
+   }
+   if (!existsState(dpPollingPath + 'highPollingIntervalSec')) {
+      await createStateAsync(dpPollingPath + 'highPollingIntervalSec', highPollingIntervalSec, {
+         read: true,
+         write: true,
+         type: 'number',
+         role: 'value',
+         def: highPollingIntervalSec,
+         min: 0,
+         max: 59,
+         unit: 'sec',
+         desc: 'High frequency polling interval in seconds (min: 10, max: 59) if 0 sec then disabled',
+      });
+   }
+   if (!existsState(dpPollingPath + 'highPollingIntervalMin')) {
+      await createStateAsync(dpPollingPath + 'highPollingIntervalMin', highPollingIntervalMin, {
+         read: true,
+         write: true,
+         type: 'number',
+         role: 'value',
+         def: highPollingIntervalMin,
+         min: 0,
+         max: 59,
+         unit: 'min',
+         desc: 'High frequency polling interval in minutes (min: 1, max: 59) if 0 min then disabled',
+      });
+   }
+}
+await readPollingIntervals();
+if (debug > 0) log('polling intervals datapoints datapoints created', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // read credentials from iobroker datapoints
@@ -121,6 +208,71 @@ if (envoy_username === '' || envoy_password === '' || envoy_serial_no === '' || 
    log('The script created the necessary datapoints if they did not exist.', 'info');
    log('After setting the credentials please restart this script.', 'info');
    stopMyScript();
+   return; // prevent further execution (parallel call of schedules)
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+// read polling intervals from iobroker datapoints
+// -------------------------------------------------------------------------------------------------------------------
+try {
+   lowPollingInterval = getState(dpPollingPath + 'lowPollingInterval').val;
+   medPollingInterval = getState(dpPollingPath + 'medPollingInterval').val;
+   highPollingIntervalSec = getState(dpPollingPath + 'highPollingIntervalSec').val;
+   highPollingIntervalMin = getState(dpPollingPath + 'highPollingIntervalMin').val;
+} catch (error) {
+   log('Error reading polling intervals from datapoints: ' + error.message, 'error');
+   stopMyScript();
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+// check polling intervals from iobroker datapoints
+// -------------------------------------------------------------------------------------------------------------------
+if (lowPollingInterval === null || lowPollingInterval === undefined || lowPollingInterval === '') {
+   log('⚠️ variable lowPollingInterval not set – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (medPollingInterval === null || medPollingInterval === undefined || medPollingInterval === '') {
+   log('⚠️ variable medPollingInterval not set – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (highPollingIntervalSec === null || highPollingIntervalSec === undefined || highPollingIntervalSec === '') {
+   log('⚠️ variable highPollingIntervalSec not set – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (highPollingIntervalMin === null || highPollingIntervalMin === undefined || highPollingIntervalMin === '') {
+   log('⚠️ variable highPollingIntervalMin not set – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (lowPollingInterval < 1 || lowPollingInterval > 60) {
+   log('⚠️ variable lowPollingInterval out of range (1-59) – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (medPollingInterval < 1 || medPollingInterval > 60) {
+   log('⚠️ variable medPollingInterval out of range (1-59) – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (highPollingIntervalSec < 0 || highPollingIntervalSec > 59) {
+   log('⚠️ variable highPollingIntervalSec out of range (0-59) – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (highPollingIntervalMin < 0 || highPollingIntervalMin > 59) {
+   log('⚠️ variable highPollingIntervalMin out of range (0-59) – script stopped', 'error');
+   stopMyScript(); // stop script
+   return; // prevent further execution (parallel call of schedules)
+}
+if (highPollingIntervalSec == 0 && highPollingIntervalMin == 0) {
+   log(
+      '⚠️ variable highPollingIntervalSec and highPollingIntervalMin are both 0 - choose at least one – script stopped',
+      'error'
+   );
+   stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 
@@ -326,7 +478,8 @@ async function IObSetState(id, obj, debug = 0) {
                            '.' +
                            attr +
                            '_str with value: ' +
-                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), 'info'
+                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'),
+                        'info'
                      );
                   setState(id + '.' + attr, value, true); // unix timestamp
                   setState(id + '.' + attr + '_str', formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), true); // human readable date
@@ -362,7 +515,8 @@ async function IObSetState(id, obj, debug = 0) {
                            '.' +
                            attr +
                            '_str with value: ' +
-                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), 'info'
+                           formatDate(value, 'TT.MM.JJJJ SS:mm:ss'),
+                        'info'
                      );
                   createState(id + '.' + attr, value, false, { type: 'number', read: true, write: true });
                   createState(id + '.' + attr + '_str', formatDate(value, 'TT.MM.JJJJ SS:mm:ss'), false, {
@@ -547,7 +701,8 @@ pollingCron = `28 */${lowPollingInterval} * * * *`; // every x minutes with 28 s
 const lowCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0) log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes', 'info');
+         if (debug > 0)
+            log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes', 'info');
          if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
@@ -577,7 +732,8 @@ pollingCron = `13 */${medPollingInterval} * * * *`; // every x minutes with 13 s
 const medCyclicSchedule = schedule(pollingCron, async () => {
    try {
       if (error_cnt <= 0) {
-         if (debug > 0) log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes', 'info');
+         if (debug > 0)
+            log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes', 'info');
          if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
