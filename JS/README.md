@@ -60,6 +60,14 @@ therfore use the datapoints under `.config.local.polling` to adjust. After adjus
 
 &nbsp;&nbsp;&nbsp;&nbsp;<img width="900" height="175" alt="Image" src="https://github.com/user-attachments/assets/43ca44ab-07ca-41a3-adce-4705d9237176" />
 
+When turning the `highPollingIntervalSec` to 10 seconds the amount of requests from this script rises over the standard limit of 1000 requests per minute an an error will be thrown.
+To avoid this an adjustment in the configuration of the `javascript` adapter is nessesary:
+
+* navigate to the instances in your ioBroker and search the javascript adapter:<br>
+  ![512137152-b93920f3-13dd-4822-8ddd-0615bde61154](https://github.com/user-attachments/assets/c6f177fc-4c80-4465-a502-f72664750ea8)
+* access the configuration an change the value `Maximum setState requests per Minute per Script` from 1.000 to 10.000<br>
+  ![512136760-8d1bcc93-c643-4fad-9025-ab81ea18272d](https://github.com/user-attachments/assets/bcb96927-bb30-4452-8cec-65660cbbfa33)
+
 ---
 
 ## Dependencies
