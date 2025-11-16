@@ -61,6 +61,10 @@ therfore use the datapoints under `.config.local.polling` to adjust. After adjus
 &nbsp;&nbsp;&nbsp;&nbsp;<img width="900" height="175" alt="Image" src="https://github.com/user-attachments/assets/43ca44ab-07ca-41a3-adce-4705d9237176" />
 
 When turning the `highPollingIntervalSec` to 10 seconds the amount of requests from this script rises over the standard limit of 1000 requests per minute an an error will be thrown.
+```console
+javascript.0 | 11:20:48.341 | error | Script script.js.Enphase.Enphase_local is calling setState more than 1000 times per minute! Stopping Script now! Please check your script!
+javascript.0 | 11:20:48.345 | info | Stopping script script.js.Enphase.Enphase_local
+```
 To avoid this an adjustment in the configuration of the `javascript` adapter is nessesary:
 
 * navigate to the instances in your ioBroker and search the javascript adapter:<br>
