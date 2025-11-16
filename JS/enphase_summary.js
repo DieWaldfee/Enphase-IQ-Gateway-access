@@ -17,6 +17,8 @@
 // Configuration
 //---------------------------------------------------------------------------------------------------
 let debug = 0; // Debug level (0=none, 1=info, 2=advanced, 3=debug)
+//treshold for production to consider inverter active
+const production_active_threshold = 10; //in Watts - below this value activePowerMod is zeroed to zero
 //basic path
 const rss_base_path = '0_userdata.0.enphase.';
 const rss_local = rss_base_path + 'local.';
@@ -571,6 +573,18 @@ async function powerSummary(id) {
          } else {
             reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
          }
+         let activePowerMod = 0; // is activePower if above threshold, else zero
+         if (id == 'pv') {
+            if (activePower < 0) {
+               activePowerMod = 0;
+            } else {
+               if (activePower > production_active_threshold) {
+                  activePowerMod = activePower;
+               } else {
+                  activePowerMod = 0;
+               }
+            }
+         }
          //total: write data to summary
          ensureStateAsync(dst_summary + String(id) + '.total.activePower_total', Math.round(activePower * 10) / 10, {
             read: true,
@@ -581,6 +595,21 @@ async function powerSummary(id) {
             def: 0,
             desc: 'Active Power (P) in W',
          });
+         if (id == 'pv') {
+            ensureStateAsync(
+               dst_summary + String(id) + '.total.activePower_total_mod',
+               Math.round(activePowerMod * 10) / 10,
+               {
+                  read: true,
+                  write: false,
+                  type: 'number',
+                  role: 'value',
+                  unit: 'W',
+                  def: 0,
+                  desc: 'Modified Active Power (P) in W',
+               }
+            );
+         }
          ensureStateAsync(
             dst_summary + String(id) + '.total.apparentPower_total',
             Math.round(apparentPower * 10) / 10,
@@ -616,6 +645,17 @@ async function powerSummary(id) {
          } else {
             reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
          }
+         if (id == 'pv') {
+            if (activePower < 0) {
+               activePowerMod = 0;
+            } else {
+               if (activePower > production_active_threshold) {
+                  activePowerMod = activePower;
+               } else {
+                  activePowerMod = 0;
+               }
+            }
+         }
          //L1 (Phase A): write data to summary
          ensureStateAsync(dst_summary + String(id) + '.L1.activePower_L1', Math.round(activePower * 10) / 10, {
             read: true,
@@ -626,6 +666,21 @@ async function powerSummary(id) {
             def: 0,
             desc: 'Active Power (P) in W',
          });
+         if (id == 'pv') {
+            ensureStateAsync(
+               dst_summary + String(id) + '.L1.activePower_L1_mod',
+               Math.round(activePowerMod * 10) / 10,
+               {
+                  read: true,
+                  write: false,
+                  type: 'number',
+                  role: 'value',
+                  unit: 'W',
+                  def: 0,
+                  desc: 'Modified Active Power (P) in W',
+               }
+            );
+         }
          ensureStateAsync(dst_summary + String(id) + '.L1.apparentPower_L1', Math.round(apparentPower * 10) / 10, {
             read: true,
             write: false,
@@ -653,6 +708,17 @@ async function powerSummary(id) {
          } else {
             reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
          }
+         if (id == 'pv') {
+            if (activePower < 0) {
+               activePowerMod = 0;
+            } else {
+               if (activePower > production_active_threshold) {
+                  activePowerMod = activePower;
+               } else {
+                  activePowerMod = 0;
+               }
+            }
+         }
          //L2 (Phase B): write data to summary
          ensureStateAsync(dst_summary + String(id) + '.L2.activePower_L2', Math.round(activePower * 10) / 10, {
             read: true,
@@ -663,6 +729,21 @@ async function powerSummary(id) {
             def: 0,
             desc: 'Active Power (P) in W',
          });
+         if (id == 'pv') {
+            ensureStateAsync(
+               dst_summary + String(id) + '.L2.activePower_L2_mod',
+               Math.round(activePowerMod * 10) / 10,
+               {
+                  read: true,
+                  write: false,
+                  type: 'number',
+                  role: 'value',
+                  unit: 'W',
+                  def: 0,
+                  desc: 'Modified Active Power (P) in W',
+               }
+            );
+         }
          ensureStateAsync(dst_summary + String(id) + '.L2.apparentPower_L2', Math.round(apparentPower * 10) / 10, {
             read: true,
             write: false,
@@ -690,6 +771,17 @@ async function powerSummary(id) {
          } else {
             reactivePower = 0; // to avoid NaN in case of negative value due to rounding errors
          }
+         if (id == 'pv') {
+            if (activePower < 0) {
+               activePowerMod = 0;
+            } else {
+               if (activePower > production_active_threshold) {
+                  activePowerMod = activePower;
+               } else {
+                  activePowerMod = 0;
+               }
+            }
+         }
          //L3 (Phase C): write data to summary
          ensureStateAsync(dst_summary + String(id) + '.L3.activePower_L3', Math.round(activePower * 10) / 10, {
             read: true,
@@ -700,6 +792,21 @@ async function powerSummary(id) {
             def: 0,
             desc: 'Active Power (P) in W',
          });
+         if (id == 'pv') {
+            ensureStateAsync(
+               dst_summary + String(id) + '.L3.activePower_L3_mod',
+               Math.round(activePowerMod * 10) / 10,
+               {
+                  read: true,
+                  write: false,
+                  type: 'number',
+                  role: 'value',
+                  unit: 'W',
+                  def: 0,
+                  desc: 'Modified Active Power (P) in W',
+               }
+            );
+         }
          ensureStateAsync(dst_summary + String(id) + '.L3.apparentPower_L3', Math.round(apparentPower * 10) / 10, {
             read: true,
             write: false,
