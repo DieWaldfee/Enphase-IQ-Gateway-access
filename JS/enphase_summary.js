@@ -2139,7 +2139,7 @@ async function maxTotalProductionEnergy() {
       TotalEnergy = 0;
    }
    if (debug > 1) log(`Actual total production energy today: ${TotalEnergy} Wh`, 'info');
-   await ensureStateAsync(dst_summary + 'maxValues.energy.ProductionEnergy', TotalEnergy, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.ProductionEnergy', TotalEnergy, {
       read: true,
       write: false,
       type: 'number',
@@ -2158,15 +2158,14 @@ on({ id: rss_PDM_p_totalEnergy, change: 'any' }, function (obj) {
 });
 // copy actual day of max total production energy to yesterday value short before midnight
 schedule('55 23 * * *', async function () {
-   if (debug > 1)
-      log('Midnight reached - store yesterday max production energy and reset max production energy', 'info');
+   if (debug > 1) log('Midnight reached - store yesterday production energy and reset production energy', 'info');
    let yesterdayTotalEnergy;
-   if (existsState(dst_summary + 'maxValues.energy.ProductionEnergy')) {
-      yesterdayTotalEnergy = getState(dst_summary + 'maxValues.energy.ProductionEnergy').val;
+   if (existsState(dst_summary + 'sumValues.energy.ProductionEnergy')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.ProductionEnergy').val;
    } else {
       yesterdayTotalEnergy = 0;
    }
-   await ensureStateAsync(dst_summary + 'maxValues.energy.ProductionEnergy_yesterday', yesterdayTotalEnergy, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.ProductionEnergy_yesterday', yesterdayTotalEnergy, {
       read: true,
       write: false,
       type: 'number',
@@ -2175,7 +2174,7 @@ schedule('55 23 * * *', async function () {
       unit: 'Wh',
       desc: 'Max. total production energy yesterday in Wh',
    });
-   await ensureStateAsync(dst_summary + 'maxValues.energy.ProductionEnergy', 0, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.ProductionEnergy', 0, {
       read: true,
       write: false,
       type: 'number',
@@ -2189,17 +2188,17 @@ schedule('55 23 * * *', async function () {
    let month = now.getMonth() + 1; //months from 1-12
    let storedMonthEnergy = 0;
    if (
-      existsState(dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0'))
+      existsState(dst_summary + 'sumValues.energy.month.ProductionEnergy_month_' + month.toString().padStart(2, '0'))
    ) {
       storedMonthEnergy = getState(
-         dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0')
+         dst_summary + 'sumValues.energy.month.ProductionEnergy_month_' + month.toString().padStart(2, '0')
       ).val;
    } else {
       storedMonthEnergy = 0;
    }
    maxMonthTotalEnergy = storedMonthEnergy + yesterdayTotalEnergy;
    await ensureStateAsync(
-      dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0'),
+      dst_summary + 'sumValues.energy.month.ProductionEnergy_month_' + month.toString().padStart(2, '0'),
       maxMonthTotalEnergy,
       {
          read: true,
@@ -2213,13 +2212,13 @@ schedule('55 23 * * *', async function () {
    );
    // yearly max production energy
    let storedYearEnergy = 0;
-   if (existsState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year')) {
-      storedYearEnergy = getState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year').val;
+   if (existsState(dst_summary + 'sumValues.energy.year.ProductionEnergy_year')) {
+      storedYearEnergy = getState(dst_summary + 'sumValues.energy.year.ProductionEnergy_year').val;
    } else {
       storedYearEnergy = 0;
    }
    maxYearTotalEnergy = storedYearEnergy + yesterdayTotalEnergy;
-   await ensureStateAsync(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year', maxYearTotalEnergy, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.year.ProductionEnergy_year', maxYearTotalEnergy, {
       read: true,
       write: false,
       type: 'number',
@@ -2233,11 +2232,12 @@ schedule('55 23 * * *', async function () {
 //---------------------------------------------------------------------------------------------------
 // actual self-consumtion and autarky calculation, feedInPower and purchasedPower
 //---------------------------------------------------------------------------------------------------
-async function calcActualPowerflow() {
+async function calcActualPowerflow(timeDiff = 0) {
    let productionPower = 0; // from lifedata: positive: production power
    let consumptionPower = 0; // from lifedata: positive: consumption power
    let gridPower = 0; // from lifedata: positive: purchased power, negative: feed-in power
    let storagePower = 0; // from lifedata: positive: discharge power, negative: charge power
+   //calculated values
    let feedInPower = 0;
    let purchasedPower = 0;
    let selfConsumptionPower = 0;
@@ -2246,6 +2246,22 @@ async function calcActualPowerflow() {
    let storageConsumptionPower = 0;
    let storageChargePower = 0;
    let autarky = 0;
+   // time difference in hours between current and last measurement
+   let timeDiffHours = timeDiff / 3600000; // convert timeDiff from milliseconds to hours
+   if (debug > 2) log(`timeDiff: ${timeDiff}`, 'info');
+   //calculated estimated energy values based on power and time difference timeDiffHours
+   let productionEnergyEstimated = 0;
+   let consumptionEnergyEstimated = 0;
+   let gridEnergyEstimated = 0;
+   let storageEnergyEstimated = 0;
+   let feedInEnergyEstimated = 0;
+   let purchasedEnergyEstimated = 0;
+   let selfConsumptionEnergyEstimated = 0;
+   let gridConsumptionEnergyEstimated = 0;
+   let gridChargeEnergyEstimated = 0;
+   let storageConsumptionEnergyEstimated = 0;
+   let storageChargeEnergyEstimated = 0;
+   let autarkyEnergyEstimated = 0;
    if (existsState(rss_livedata + '.meters.pv.agg_p_mw')) {
       productionPower = getState(rss_livedata + '.meters.pv.agg_p_mw').val / 1000;
    }
@@ -2323,7 +2339,23 @@ async function calcActualPowerflow() {
       autarky = ((selfConsumptionPower + storageConsumptionPower) / consumptionPower) * 100;
    }
    if (debug > 1) log(`Autarky: ${autarky} %`, 'info');
-   // write values to states
+   // calculation of estimated energy values based on power and time difference timeDiffHours
+   productionEnergyEstimated = productionPower * timeDiffHours;
+   consumptionEnergyEstimated = consumptionPower * timeDiffHours;
+   gridEnergyEstimated = gridPower * timeDiffHours;
+   storageEnergyEstimated = storagePower * timeDiffHours;
+   feedInEnergyEstimated = feedInPower * timeDiffHours;
+   purchasedEnergyEstimated = purchasedPower * timeDiffHours;
+   selfConsumptionEnergyEstimated = selfConsumptionPower * timeDiffHours;
+   gridConsumptionEnergyEstimated = gridConsumptionPower * timeDiffHours;
+   gridChargeEnergyEstimated = gridChargePower * timeDiffHours;
+   storageConsumptionEnergyEstimated = storageConsumptionPower * timeDiffHours;
+   storageChargeEnergyEstimated = storageChargePower * timeDiffHours;
+   autarkyEnergyEstimated = 0;
+   let totalselfConsumptionEnergyEstimated = 0;
+   let totalstorageConsumptionEnergyEstimated = 0;
+   let totalconsumptionEnergyEstimated = 0;
+   // write power values to states
    await ensureStateAsync(dst_summary + 'powerflow.productionPower', Math.round(productionPower * 10) / 10, {
       read: true,
       write: false,
@@ -2436,14 +2468,534 @@ async function calcActualPowerflow() {
       unit: '%',
       desc: 'Autarky in %',
    });
+   // write energy values to states
+   let tempEnergy = 0;
+   if (existsState(dst_summary + 'sumValues.energy.productionEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.productionEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + productionEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.productionEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'PV Production Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.consumptionEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.consumptionEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   totalconsumptionEnergyEstimated = tempEnergy;
+   tempEnergy = tempEnergy + consumptionEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.consumptionEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Consumption Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.gridEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.gridEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + gridEnergyEstimated;
+   await ensureStateAsync(dst_summary + 'sumValues.energy.gridEnergyEstimated', Math.round(tempEnergy * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Grid Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.storageEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.storageEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + storageEnergyEstimated;
+   await ensureStateAsync(dst_summary + 'sumValues.energy.storageEnergyEstimated', Math.round(tempEnergy * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Storage Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.feedInEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.feedInEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + feedInEnergyEstimated;
+   await ensureStateAsync(dst_summary + 'sumValues.energy.feedInEnergyEstimated', Math.round(tempEnergy * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Feed-In Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.purchasedEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.purchasedEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + purchasedEnergyEstimated;
+   await ensureStateAsync(dst_summary + 'sumValues.energy.purchasedEnergyEstimated', Math.round(tempEnergy * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Purchased Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   totalselfConsumptionEnergyEstimated = tempEnergy;
+   tempEnergy = tempEnergy + selfConsumptionEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Self-Consumption Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + gridConsumptionEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Grid Consumption Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.gridChargeEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.gridChargeEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + gridChargeEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.gridChargeEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Grid Charge Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   totalstorageConsumptionEnergyEstimated = tempEnergy;
+   tempEnergy = tempEnergy + storageConsumptionEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Storage Consumption Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.storageChargeEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.storageChargeEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + storageChargeEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.storageChargeEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Storage Charge Energy in Wh based on time difference',
+      }
+   );
+   // calculate autarky based on energy data
+   if (totalconsumptionEnergyEstimated == 0) {
+      autarkyEnergyEstimated = 100; // no consumption -> autarky 100%; avoid division by zero
+   } else {
+      autarkyEnergyEstimated =
+         ((totalselfConsumptionEnergyEstimated + totalstorageConsumptionEnergyEstimated) /
+            totalconsumptionEnergyEstimated) *
+         100;
+   }
+   if (debug > 1) log(`Autarky (Energy Estimated): ${autarkyEnergyEstimated} %`, 'info');
+   await ensureStateAsync(dst_summary + 'sumValues.energy.autarkyEnergyEstimated', Math.round(autarkyEnergyEstimated), {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: '%',
+      desc: 'Autarky in % based on estimated energy values',
+   });
 }
 // monitor production power to identify max value
 on({ id: rss_livedata + '.meters.grid.agg_p_mw', change: 'any' }, function (obj) {
    //timeout 500ms to ensure all values are updated
+   let actTimestamp = obj.state ? obj.state.ts : 0;
+   let oldTimestamp = obj.oldState ? obj.oldState.ts : 0;
+   let timeDiff = actTimestamp - oldTimestamp;
    setTimeout(() => {
-      calcActualPowerflow();
+      calcActualPowerflow(timeDiff);
    }, 500);
    if (debug > 2) log(`Powerflow updated`, 'info');
+});
+// copy actual day of estimated energy values to yesterday value short before midnight
+schedule('55 23 * * *', async function () {
+   if (debug > 1)
+      log(
+         'Midnight reached - store yesterday estimated production energy and reset estimated production energy',
+         'info'
+      );
+   if (existsState(dst_summary + 'sumValues.energy.productionEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.productionEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.productionEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'PV Production Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.productionEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'PV Production Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.consumptionEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.consumptionEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.consumptionEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Consumption Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.consumptionEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Consumption Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.gridEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.gridEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.gridEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Grid Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.gridEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Grid Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.storageEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.storageEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.storageEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Storage Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.storageEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Storage Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.feedInEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.feedInEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.feedInEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Feed In Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.feedInEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Feed In Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.purchasedEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.purchasedEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.purchasedEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Purchased Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.purchasedEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Purchased Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated_yesterday',
+      yesterdayTotalEnergy,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Self Consumption Energy in Wh based on time difference for yesterday',
+      }
+   );
+   await ensureStateAsync(dst_summary + 'sumValues.energy.selfConsumptionEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Self Consumption Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated_yesterday',
+      yesterdayTotalEnergy,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Grid Consumption Energy in Wh based on time difference for yesterday',
+      }
+   );
+   await ensureStateAsync(dst_summary + 'sumValues.energy.gridConsumptionEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Grid Consumption Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.gridChargeEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.gridChargeEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.gridChargeEnergyEstimated_yesterday', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Grid Charge Energy in Wh based on time difference for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.gridChargeEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Grid Charge Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated_yesterday',
+      yesterdayTotalEnergy,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Storage Consumption Energy in Wh based on time difference for yesterday',
+      }
+   );
+   await ensureStateAsync(dst_summary + 'sumValues.energy.storageConsumptionEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Storage Consumption Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.storageChargeEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.storageChargeEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.storageChargeEnergyEstimated_yesterday',
+      yesterdayTotalEnergy,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Storage Charge Energy in Wh based on time difference for yesterday',
+      }
+   );
+   await ensureStateAsync(dst_summary + 'sumValues.energy.storageChargeEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'Wh',
+      desc: 'Storage Charge Energy in Wh based on time difference',
+   });
+   if (existsState(dst_summary + 'sumValues.energy.autarkyEnergyEstimated')) {
+      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.autarkyEnergyEstimated').val;
+   } else {
+      yesterdayTotalEnergy = 0;
+   }
+   await ensureStateAsync(dst_summary + 'sumValues.energy.autarkyEnergyEstimated', yesterdayTotalEnergy, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: '%',
+      desc: 'Autarky in % based on estimated energy values for yesterday',
+   });
+   await ensureStateAsync(dst_summary + 'sumValues.energy.autarkyEnergyEstimated', 0, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: '%',
+      desc: 'Autarky in % based on estimated energy values',
+   });
 });
 
 //---------------------------------------------------------------------------------------------------
@@ -2455,19 +3007,17 @@ async function CopyEnergyToLastYear(deleteAfterCopy = false) {
    for (month = 1; month <= 12; month++) {
       let storedMonthEnergy = 0;
       if (
-         existsState(
-            dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0')
-         )
+         existsState(dst_summary + 'sumValues.energy.month.ProductionEnergy_month_' + month.toString().padStart(2, '0'))
       ) {
          storedMonthEnergy = getState(
-            dst_summary + 'maxValues.energy.month.maxProductionEnergy_month_' + month.toString().padStart(2, '0')
+            dst_summary + 'sumValues.energy.month.ProductionEnergy_month_' + month.toString().padStart(2, '0')
          ).val;
       } else {
          storedMonthEnergy = 0;
       }
       await ensureStateAsync(
          dst_summary +
-            'maxValues.energy.lastYear.month.maxProductionEnergy_month_' +
+            'sumValues.energy.lastYear.month.ProductionEnergy_month_' +
             month.toString().padStart(2, '0') +
             '_lastYear',
          storedMonthEnergy,
@@ -2484,7 +3034,7 @@ async function CopyEnergyToLastYear(deleteAfterCopy = false) {
       if (deleteAfterCopy) {
          await ensureStateAsync(
             dst_summary +
-               'maxValues.energy.month.maxProductionEnergy_month_' +
+               'sumValues.energy.month.ProductionEnergy_month_' +
                month.toString().padStart(2, '0') +
                '_lastYear',
             0,
@@ -2502,12 +3052,12 @@ async function CopyEnergyToLastYear(deleteAfterCopy = false) {
    }
    //copy yearly data
    let storedYearEnergy = 0;
-   if (existsState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year')) {
-      storedYearEnergy = getState(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year').val;
+   if (existsState(dst_summary + 'sumValues.energy.year.ProductionEnergy_year')) {
+      storedYearEnergy = getState(dst_summary + 'sumValues.energy.year.ProductionEnergy_year').val;
    } else {
       storedYearEnergy = 0;
    }
-   await ensureStateAsync(dst_summary + 'maxValues.energy.lastYear.year.maxProductionEnergy_year', storedYearEnergy, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.lastYear.year.ProductionEnergy_year', storedYearEnergy, {
       read: true,
       write: false,
       type: 'number',
@@ -2517,7 +3067,7 @@ async function CopyEnergyToLastYear(deleteAfterCopy = false) {
       desc: 'Max. total production energy in Wh for last year',
    });
    if (deleteAfterCopy) {
-      await ensureStateAsync(dst_summary + 'maxValues.energy.year.maxProductionEnergy_year', 0, {
+      await ensureStateAsync(dst_summary + 'sumValues.energy.year.ProductionEnergy_year', 0, {
          read: true,
          write: false,
          type: 'number',
