@@ -67,6 +67,11 @@ Key points combining these data:
 * V3.1.0  summary and conclusion build from local and cloud data in 'enphase.summary'
 * V3.1.1  Bugfix
 * V3.1.2  comments added
+* V3.2.1  update in enphase_summary: battery & gateway summery added
+* V3.2.2  checking requires modules (open, express, node-fetch)
+* V3.2.3  Feature updates to enphase_summary.js
+* V3.3.0  breaking change in enphase_local! polling interval now in datapoint
+* V3.3.1  estimated energy values integrated based on calculated power values and the timestamps of datapoints
 * V4.0.0  planed: redesign in typescript parallel to the javascript-version (free to choose js or ts) (2025 Q4)
 * V5.0.0  planed: redesign into ioBroker adapter (2026 Q2-Q3)
 
