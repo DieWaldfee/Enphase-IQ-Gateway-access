@@ -2973,12 +2973,13 @@ schedule('55 23 * * *', async function () {
       unit: 'Wh',
       desc: 'Storage Charge Energy in Wh based on time difference',
    });
+   let yesterdayAutarky = 0;
    if (existsState(dst_summary + 'sumValues.energy.autarkyEnergyEstimated')) {
-      yesterdayTotalEnergy = getState(dst_summary + 'sumValues.energy.autarkyEnergyEstimated').val;
+      yesterdayAutarky = getState(dst_summary + 'sumValues.energy.autarkyEnergyEstimated').val;
    } else {
-      yesterdayTotalEnergy = 0;
+      yesterdayAutarky = 0;
    }
-   await ensureStateAsync(dst_summary + 'sumValues.energy.autarkyEnergyEstimated', yesterdayTotalEnergy, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.autarkyEnergyEstimated_yesterday', yesterdayAutarky, {
       read: true,
       write: false,
       type: 'number',
