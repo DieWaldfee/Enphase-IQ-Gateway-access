@@ -1,3 +1,7 @@
-## Test von Steffen
+# Integration der Daten in eine Visualisierung
 
-es funktioniert
+## ioBroker Instanz "Energiefluss-Adpater-erweitert"
+* Visualisieren des Energieflusses einer Enphase-Anlage
+
+## ioBroker Instanz "eChart"
+* Visualisierung der Bezugs- / Verbruachsdaten
