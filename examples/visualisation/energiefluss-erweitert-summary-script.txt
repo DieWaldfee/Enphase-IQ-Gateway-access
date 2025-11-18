@@ -510,7 +510,7 @@
             "calculate_kw": "calc",
             "counter_animation": false,
             "convert": false,
-            "decimal_places": 2,
+            "decimal_places": 1,
             "action": "none",
             "subtract": [
                 -1
@@ -1191,11 +1191,11 @@
             "color": "rgb(0, 181, 221)",
             "shadow": "",
             "override": {
-                "<1": {
-                    "display": "none"
-                },
-                ">=1": {
+                ">=100": {
                     "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
                 }
             },
             "position": 6
@@ -1207,11 +1207,11 @@
             "color": "rgb(87, 221, 46)",
             "shadow": "",
             "override": {
-                "<1": {
-                    "display": "none"
-                },
-                ">=1": {
+                ">=100": {
                     "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
                 }
             },
             "position": 7
@@ -1222,7 +1222,14 @@
             "href": "#path_84_85",
             "color": "rgb(0, 181, 221)",
             "shadow": "",
-            "override": {},
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
             "position": 8
         },
         "line_path_84_88": {
@@ -1232,11 +1239,11 @@
             "color": "rgb(0, 181, 221)",
             "shadow": "",
             "override": {
-                ">-1": {
-                    "display": "none"
-                },
-                "<=-1": {
+                "<=-100": {
                     "display": "inline"
+                },
+                ">-100": {
+                    "display": "none"
                 }
             },
             "position": 4
@@ -1248,11 +1255,11 @@
             "color": "rgb(115, 119, 128)",
             "shadow": "",
             "override": {
-                "<=0": {
-                    "display": "none"
-                },
-                ">0": {
+                ">=100": {
                     "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
                 }
             },
             "position": 2
@@ -1271,10 +1278,10 @@
             "href": "#path_88_85",
             "position": 3,
             "override": {
-                ">=50": {
+                ">=100": {
                     "display": "inline"
                 },
-                "<50": {
+                "<100": {
                     "display": "none"
                 }
             }
@@ -1323,11 +1330,11 @@
             "power": 0,
             "animation_type": -1,
             "override": {
-                "<1": {
-                    "display": "none"
-                },
-                ">=1": {
+                ">=100": {
                     "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
                 }
             }
         },
@@ -1345,11 +1352,11 @@
             "power": 0,
             "animation_type": -1,
             "override": {
-                "<1": {
-                    "display": "none"
-                },
-                ">=1": {
+                ">=100": {
                     "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
                 }
             }
         },
@@ -1366,7 +1373,14 @@
             "duration": 0,
             "power": 0,
             "animation_type": -1,
-            "override": {},
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
             "active_only": true
         },
         "anim_path_84_88": {
@@ -1383,11 +1397,11 @@
             "power": 0,
             "animation_type": -1,
             "override": {
-                ">-1": {
-                    "display": "none"
-                },
-                "<=-1": {
+                "<=-100": {
                     "display": "inline"
+                },
+                ">-100": {
+                    "display": "none"
                 }
             }
         },
@@ -1403,7 +1417,15 @@
             "dots": 0,
             "duration": 0,
             "power": 0,
-            "animation_type": -1
+            "animation_type": -1,
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            }
         },
         "anim_path_79_81": {
             "type": "animation",
@@ -1438,10 +1460,10 @@
             "css_active_negative": "",
             "css_inactive_negative": "",
             "override": {
-                ">=50": {
+                ">=100": {
                     "display": "inline"
                 },
-                "<50": {
+                "<100": {
                     "display": "none"
                 }
             },
