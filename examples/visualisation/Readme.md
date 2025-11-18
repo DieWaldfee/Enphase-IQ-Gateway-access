@@ -27,7 +27,7 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 
 ### 3. Instanz aufrufen
-* Instanz von energiefluss_erweiter auf rufen
+* Instanz von energiefluss_erweiter aufrufen
 * default Grafik editieren
 * default Grafik speichern
 
@@ -67,3 +67,4 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
