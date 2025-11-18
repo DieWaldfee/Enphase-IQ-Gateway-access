@@ -31,7 +31,7 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 ---
 
 ## ioBroker Instanz "echarts"
-Visualisierung der Bezugs- / Verbruachsdaten
+Visualisierung der Bezugs- / Verbrauchsdaten
 
   <img width="80" height="80" alt="echarts" src="https://github.com/user-attachments/assets/ead2209d-1a32-4752-aa50-24cc802c7731" />
 
@@ -52,6 +52,7 @@ Visualisierung der Bezugs- / Verbruachsdaten
  <img width="487" height="58" alt="image" src="https://github.com/user-attachments/assets/8694cc86-4879-4aca-9084-784ee742b04d" />
 
 ### 3. Instanz aufrufen
+
 
 
 
