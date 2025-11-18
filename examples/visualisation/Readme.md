@@ -47,18 +47,20 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 <img width="1204" height="810" alt="image" src="https://github.com/user-attachments/assets/129612b1-875d-4813-9912-814890aaef08" />
 
 
-* Daten aus der Skriptvorlage einfügen
+* Daten aus der Skriptvorlage einfügen -> Wert Setzen
 
 <img width="770" height="607" alt="image" src="https://github.com/user-attachments/assets/b2deed49-3f7a-408d-80f4-07b0ac4983c3" />
 
-* -> Wert Setzen
+### 5. Energiefluss laden
+
 * Instanz von energiefluss_erweiter aufrufen
-
-
-  
+ 
 <img width="547" height="75" alt="image" src="https://github.com/user-attachments/assets/65784a49-6510-4c8c-a841-f3490d3d8838" />
 
- 
+* Energiefluss wird geladen
+
+<img width="523" height="479" alt="Screenshot 2025-11-18 210414" src="https://github.com/user-attachments/assets/977a9be2-21ec-46cc-9b5f-50de20ea56f4" />
+
 ---
 
 ## ioBroker Instanz "echarts"
@@ -90,6 +92,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
 
 
