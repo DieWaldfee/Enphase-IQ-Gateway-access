@@ -27,7 +27,15 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 
 ### 3. Instanz aufrufen
+* Instanz von energiefluss_erweiter auf rufen
+* default Grafik editieren
+* default Grafik speichern
 
+### 4. Daten im Objektebaum einfügen
+* Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
+* Daten aus der Skriptvorlage einfügen
+* speichern
+ 
 ---
 
 ## ioBroker Instanz "echarts"
@@ -52,8 +60,10 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  <img width="487" height="58" alt="image" src="https://github.com/user-attachments/assets/8694cc86-4879-4aca-9084-784ee742b04d" />
 
 ### 3. Instanz aufrufen
+ * Chart "Name_ist_hier_frei_wählbar" neu anlegen
+ * Chart speichern
 
-
-
-
-
+### 4. Daten im Objektebaum einfügen
+ * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
+ * Daten aus der Skriptvorlage einfügen
+ * speichern
