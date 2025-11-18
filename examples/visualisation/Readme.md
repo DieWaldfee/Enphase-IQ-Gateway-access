@@ -42,12 +42,22 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 
 ### 4. Daten im Objektebaum einfügen
-* Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
+* Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen `energiefluss-erweitert.xxx.configuration`
 
-<img width="1012" height="810" alt="image" src="https://github.com/user-attachments/assets/f0d10577-4793-4db3-924e-22616ad4cbe1" />
+<img width="1204" height="810" alt="image" src="https://github.com/user-attachments/assets/129612b1-875d-4813-9912-814890aaef08" />
+
 
 * Daten aus der Skriptvorlage einfügen
-* speichern
+
+<img width="770" height="607" alt="image" src="https://github.com/user-attachments/assets/b2deed49-3f7a-408d-80f4-07b0ac4983c3" />
+
+* -> Wert Setzen
+* Instanz von energiefluss_erweiter aufrufen
+
+
+  
+<img width="547" height="75" alt="image" src="https://github.com/user-attachments/assets/65784a49-6510-4c8c-a841-f3490d3d8838" />
+
  
 ---
 
@@ -80,6 +90,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
 
 
