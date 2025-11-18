@@ -1905,7 +1905,19 @@ if (existsState(dst_summary + 'storage.total.activePower_total')) {
 //---------------------------------------------------------------------------------------------------
 // max. values (actual and previous day) for total production power
 //---------------------------------------------------------------------------------------------------
-// identify max production power value
+/**
+ * Determines the maximum total PV production power
+ * and updates it in the data point `maxValues.power.maxProductionPower`.
+ *
+ * Procedure:
+ * 1. Reads the current PV total production power (if available).
+ * 2. Reads the previously stored maximum value.
+ * 3. Compares both values and determines the new maximum.
+ * 4. Writes the new value into the target data point (read-only).
+ *
+ * @async
+ * @returns {Promise<void>} No return value; updates ioBroker data points.
+ */
 async function maxTotalProductionPower() {
    let maxTotalPower = 0;
    let actualTotalPower = 0;
@@ -1934,7 +1946,22 @@ async function maxTotalProductionPower() {
       desc: 'Max. total production power in W',
    });
 }
-// identify max production power on every inverter
+/**
+ * Determines the maximum production power for each individual inverter
+ * and updates it in the corresponding data points under
+ * `maxValues.power.inverters.<inverterID>.maxProductionPower`.
+ *
+ * Behavior:
+ * 1. Reads the inverter ID list from `inverter_list` (supports array, JSON, or comma-separated string).
+ * 2. Iterates through all detected inverters.
+ * 3. Reads the current inverter production value (if available).
+ * 4. Reads the previously stored maximum for that inverter.
+ * 5. Compares both values and determines the new maximum.
+ * 6. Stores the updated maximum value in its dedicated data point (read-only).
+ *
+ * @async
+ * @returns {Promise<void>} No return value; updates ioBroker states.
+ */
 async function maxInverterPower() {
    // identify all inverters in dst_inverter
    let inverterIDs = [];
@@ -2004,7 +2031,17 @@ async function maxInverterPower() {
       );
    }
 }
-// monitor production power to identify max value
+/**
+ * Event listener for changes in the total PV production value (`agg_p_mw`).
+ *
+ * Behavior:
+ * 1. Listens for any update of the state `<rss_livedata>.meters.pv.agg_p_mw`.
+ * 2. Waits 500 ms to ensure all related values are updated.
+ * 3. Calls {@link maxTotalProductionPower} to recalculate the maximum total production power.
+ * 4. Logs a debug message when debug level > 2.
+ *
+ * @listens stateChange
+ */
 on({ id: rss_livedata + '.meters.pv.agg_p_mw', change: 'any' }, function (obj) {
    //timeout 500ms to ensure all values are updated
    setTimeout(() => {
@@ -2012,7 +2049,21 @@ on({ id: rss_livedata + '.meters.pv.agg_p_mw', change: 'any' }, function (obj) {
    }, 500);
    if (debug > 2) log(`Total production power updated`, 'info');
 });
-// monitor inverter production power to identify max value
+/**
+ * Initializes inverter maximum power tracking and sets up an event listener
+ * to update maximum inverter production values whenever the inverter trigger changes.
+ *
+ * Behavior:
+ * 1. Performs an initial execution of {@link maxInverterPower}.
+ * 2. Verifies that the inverter trigger state exists.
+ * 3. Logs debug information depending on the configured debug level.
+ * 4. Subscribes to changes on `rss_inverter_trigger`.
+ * 5. Waits 500 ms after each trigger to ensure all inverter values have updated.
+ * 6. Re-runs {@link maxInverterPower} to refresh maximum inverter production power values.
+ *
+ * @async
+ * @returns {Promise<void>} No return value; sets up the event listener and runs the initial calculation.
+ */
 await maxInverterPower(); //initial run
 if (existsState(rss_inverter_trigger)) {
    if (debug > 1) log(`Monitoring inverter to identify max production power now`, 'info');
@@ -2025,7 +2076,19 @@ if (existsState(rss_inverter_trigger)) {
       if (debug > 2) log(`Inverter max production power updated`, 'info');
    });
 }
-// copy actual day of max total production power to yesterday value at midnight
+/**
+ * Transfers the current day's maximum total production power into the
+ * "yesterday" data point and resets the daily maximum for the new day.
+ *
+ * Behavior:
+ * 1. Reads today's maximum total production power (if available).
+ * 2. Logs the value depending on debug settings.
+ * 3. Writes the value into `maxProductionPower_yesterday`.
+ * 4. Resets `maxProductionPower` to 0 for the next daily cycle.
+ *
+ * @async
+ * @returns {Promise<void>} No return value; updates ioBroker states.
+ */
 async function pushTotalMaxProductionYesterday() {
    let yesterdayMaxPower;
    if (existsState(dst_summary + 'maxValues.power.maxProductionPower')) {
@@ -2053,7 +2116,21 @@ async function pushTotalMaxProductionYesterday() {
       desc: 'Max. total production power in W',
    });
 }
-// copy actual day of max inverter production power to yesterday value at midnight
+/**
+ * Transfers the current day's maximum production power for each inverter
+ * into its corresponding "yesterday" data point and resets the daily values.
+ *
+ * Behavior:
+ * 1. Reads the inverter list from `inverter_list` (supports array, JSON, or comma-separated string).
+ * 2. Iterates over each inverter ID found.
+ * 3. Reads today's maximum production power for each inverter (if available).
+ * 4. Logs the value depending on the debug level.
+ * 5. Writes the value to a dedicated `maxProductionPower_yesterday` state.
+ * 6. Resets today's `maxProductionPower` state to 0 for the next cycle.
+ *
+ * @async
+ * @returns {Promise<void>} No return value; updates ioBroker states.
+ */
 async function pushInverterMaxProductionYesterday() {
    // identify all inverters in dst_inverter
    let inverterIDs = [];
@@ -2121,7 +2198,18 @@ async function pushInverterMaxProductionYesterday() {
       });
    }
 }
-// copy actual day of max total production power to yesterday value at midnight
+/**
+ * Daily midnight scheduler that stores yesterday's maximum production power
+ * (total + per inverter) and resets the daily max values for the new day.
+ *
+ * Behavior:
+ * 1. Runs every day at 00:00 (midnight).
+ * 2. Logs a debug message depending on the debug level.
+ * 3. Calls {@link pushTotalMaxProductionYesterday} to store/reset total max values.
+ * 4. Calls {@link pushInverterMaxProductionYesterday} to store/reset per-inverter max values.
+ *
+ * @schedule 0 0 * * *
+ */
 schedule('0 0 * * *', async function () {
    if (debug > 1) log('Midnight reached - store yesterday max production power and reset max production power', 'info');
    await pushTotalMaxProductionYesterday();
@@ -2131,6 +2219,18 @@ schedule('0 0 * * *', async function () {
 //---------------------------------------------------------------------------------------------------
 // max. values (actual and previous day, monthly, year) for total and inverters production energy
 //---------------------------------------------------------------------------------------------------
+/**
+ * Reads the current total production energy for today and stores it
+ * in the summary state `sumValues.energy.ProductionEnergy`.
+ *
+ * Behavior:
+ * 1. Reads the total production energy from `rss_PDM_p_totalEnergy` (if available).
+ * 2. Logs the value depending on the debug level.
+ * 3. Writes the value to the summary data point.
+ *
+ * @async
+ * @returns {Promise<void>} No return value; updates the ioBroker summary state.
+ */
 async function maxTotalProductionEnergy() {
    let TotalEnergy = 0;
    if (existsState(rss_PDM_p_totalEnergy)) {
@@ -2149,6 +2249,17 @@ async function maxTotalProductionEnergy() {
       desc: 'Actual production energy in Wh',
    });
 }
+/**
+ * Event listener for updates of the total production energy value.
+ *
+ * Behavior:
+ * 1. Listens for any change of the state `rss_PDM_p_totalEnergy`.
+ * 2. Waits 500 ms to ensure all related energy values are fully updated.
+ * 3. Calls {@link maxTotalProductionEnergy} to refresh the stored summary energy value.
+ * 4. Logs a debug message when debug level > 2.
+ *
+ * @listens stateChange
+ */
 on({ id: rss_PDM_p_totalEnergy, change: 'any' }, function (obj) {
    //timeout 500ms to ensure all values are updated
    setTimeout(() => {
@@ -2156,7 +2267,19 @@ on({ id: rss_PDM_p_totalEnergy, change: 'any' }, function (obj) {
    }, 500);
    if (debug > 2) log(`Total production energy updated`, 'info');
 });
-// copy actual day of max total production energy to yesterday value short before midnight
+/**
+ * Daily 23:55 job: archive today's production and update aggregates.
+ * - Reads {dst_summary}sumValues.energy.ProductionEnergy (Wh)
+ * - Writes {dst_summary}sumValues.energy.ProductionEnergy_yesterday = today's value
+ * - Resets {dst_summary}sumValues.energy.ProductionEnergy = 0
+ * - Updates monthly {…energy.month.ProductionEnergy_month_MM} += yesterday
+ * - Updates yearly  {…energy.year.ProductionEnergy_year}    += yesterday
+ *
+ * @async
+ * @description Runs once per day at 23:55. Uses existsState/getState to read values and
+ * ensureStateAsync to create/update number states (Wh). Month is derived from current date.
+ * Controlled by global debug and dst_summary.
+ */
 schedule('55 23 * * *', async function () {
    if (debug > 1) log('Midnight reached - store yesterday production energy and reset production energy', 'info');
    let yesterdayTotalEnergy;
@@ -2232,6 +2355,32 @@ schedule('55 23 * * *', async function () {
 //---------------------------------------------------------------------------------------------------
 // actual self-consumtion and autarky calculation, feedInPower and purchasedPower
 //---------------------------------------------------------------------------------------------------
+/**
+ * Calculates current power flows and accumulates estimated energies, then writes results to summary states.
+ *
+ * Reads live power from rss_livedata (pv/load/grid/storage), derives:
+ * - feed-in vs. purchased (from grid sign),
+ * - self-consumption, grid consumption, grid charge,
+ * - storage discharge/charge,
+ * - autarky (%),
+ * and computes per-interval energy estimates using timeDiff.
+ *
+ * Power is rounded to 0.1 W, energy to 0.1 Wh. Negative PV/Load are clamped to 0. Grid < 0 = feed-in.
+ * Autarky avoids division by zero (consumption = 0 → 100%).
+ *
+ * Writes (dst_summary):
+ * - powerflow.*: productionPower, consumptionPower, gridPower, storagePower, feedInPower, purchasedPower,
+ *   selfConsumptionPower, gridConsumptionPower, gridChargePower, storageConsumptionPower, storageChargePower, autarky
+ * - sumValues.energy.* (estimated): production/consumption/grid/storage/feedIn/purchased/selfConsumption/
+ *   gridConsumption/gridCharge/storageConsumption/storageCharge + autarkyEnergyEstimated
+ *
+ * Dependencies: existsState, getState, ensureStateAsync; globals: rss_livedata, dst_summary, debug.
+ *
+ * @async
+ * @function calcActualPowerflow
+ * @param {number} [timeDiff=0] Elapsed time in milliseconds since previous sample (converted to hours internally).
+ * @returns {Promise<void>} Resolves after states are updated.
+ */
 async function calcActualPowerflow(timeDiff = 0) {
    let productionPower = 0; // from lifedata: positive: production power
    let consumptionPower = 0; // from lifedata: positive: consumption power
@@ -2351,6 +2500,17 @@ async function calcActualPowerflow(timeDiff = 0) {
    gridChargeEnergyEstimated = gridChargePower * timeDiffHours;
    storageConsumptionEnergyEstimated = storageConsumptionPower * timeDiffHours;
    storageChargeEnergyEstimated = storageChargePower * timeDiffHours;
+   if (debug > 1) log(`productionEnergyEstimated: ${productionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`consumptionEnergyEstimated: ${consumptionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`gridEnergyEstimated: ${gridEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`storageEnergyEstimated: ${storageEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`feedInEnergyEstimated: ${feedInEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`purchasedEnergyEstimated: ${purchasedEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`selfConsumptionEnergyEstimated: ${selfConsumptionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`gridConsumptionEnergyEstimated: ${gridConsumptionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`gridChargeEnergyEstimated: ${gridChargeEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`storageConsumptionEnergyEstimated: ${storageConsumptionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`storageChargeEnergyEstimated: ${storageChargeEnergyEstimated} Wh`, 'info');
    autarkyEnergyEstimated = 0;
    let totalselfConsumptionEnergyEstimated = 0;
    let totalstorageConsumptionEnergyEstimated = 0;
@@ -2667,6 +2827,9 @@ async function calcActualPowerflow(timeDiff = 0) {
       }
    );
    // calculate autarky based on energy data
+   if (debug > 1) log(`totalconsumptionEnergyEstimated: ${totalconsumptionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`totalselfConsumptionEnergyEstimated: ${totalselfConsumptionEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`totalstorageConsumptionEnergyEstimated: ${totalstorageConsumptionEnergyEstimated} Wh`, 'info');
    if (totalconsumptionEnergyEstimated == 0) {
       autarkyEnergyEstimated = 100; // no consumption -> autarky 100%; avoid division by zero
    } else {
@@ -2686,7 +2849,20 @@ async function calcActualPowerflow(timeDiff = 0) {
       desc: 'Autarky in % based on estimated energy values',
    });
 }
-// monitor production power to identify max value
+/**
+ * Event handler: refreshes powerflow when grid power changes.
+ * - Subscribes to <rss_livedata>.meters.grid.agg_p_mw
+ * - Computes elapsed time (ms) from state timestamps (obj.state.ts - obj.oldState.ts)
+ * - Delays 500 ms to let related meters update, then calls calcActualPowerflow(timeDiff)
+ * - Logs when debug > 2
+ *
+ * @listens {ioBroker.StateChange}
+ * @callback onGridPowerChange
+ * @param {object} obj - State change payload.
+ * @param {ioBroker.State} obj.state - New state (uses ts).
+ * @param {ioBroker.State} [obj.oldState] - Previous state (uses ts).
+ * @requires calcActualPowerflow
+ */
 on({ id: rss_livedata + '.meters.grid.agg_p_mw', change: 'any' }, function (obj) {
    //timeout 500ms to ensure all values are updated
    let actTimestamp = obj.state ? obj.state.ts : 0;
@@ -2697,7 +2873,18 @@ on({ id: rss_livedata + '.meters.grid.agg_p_mw', change: 'any' }, function (obj)
    }, 500);
    if (debug > 2) log(`Powerflow updated`, 'info');
 });
-// copy actual day of estimated energy values to yesterday value short before midnight
+/**
+ * Daily 23:55 job: archive estimated energies and reset daily estimates.
+ * - For each sumValues.energy.*Estimated: copy today → *_yesterday, then reset today to 0
+ *   (production, consumption, grid, storage, feedIn, purchased, selfConsumption,
+ *    gridConsumption, gridCharge, storageConsumption, storageCharge, autarkyEnergyEstimated).
+ *
+ * @async
+ * @fires schedule 55 23 * * *
+ * @description Runs daily at 23:55; reads with existsState/getState, upserts with ensureStateAsync.
+ * @dependsOn existsState, getState, ensureStateAsync
+ * @globals dst_summary, debug
+ */
 schedule('55 23 * * *', async function () {
    if (debug > 1)
       log(
@@ -3002,6 +3189,23 @@ schedule('55 23 * * *', async function () {
 //---------------------------------------------------------------------------------------------------
 // Copy yearly data: current year -> previous year
 //---------------------------------------------------------------------------------------------------
+/**
+ * Copies current year's monthly and yearly production energy into the "lastYear" namespace
+ * and optionally resets the current-year values.
+ * - Months 01..12:
+ *   sumValues.energy.month.ProductionEnergy_month_MM
+ *   → sumValues.energy.lastYear.month.ProductionEnergy_month_MM_lastYear
+ * - Year total:
+ *   sumValues.energy.year.ProductionEnergy_year
+ *   → sumValues.energy.lastYear.year.ProductionEnergy_year
+ *
+ * @async
+ * @function CopyEnergyToLastYear
+ * @param {boolean} [deleteAfterCopy=false] When true, sets the current-year month/year sources to 0 after copying.
+ * @dependsOn existsState, getState, ensureStateAsync
+ * @globals dst_summary
+ * @returns {Promise<void>}
+ */
 async function CopyEnergyToLastYear(deleteAfterCopy = false) {
    //copy monthly data
    let month = 0;
@@ -3079,7 +3283,15 @@ async function CopyEnergyToLastYear(deleteAfterCopy = false) {
       });
    }
 }
-// copy actual year to last year at new year
+/**
+ * Yearly 01-01 00:00 job: copy current-year energy to lastYear and reset current year.
+ * - Copies monthly (01..12) and yearly totals to lastYear namespace.
+ * - Resets current-year values after copy.
+ *
+ * @async
+ * @fires schedule 0 0 1 1 *
+ * @requires CopyEnergyToLastYear
+ */
 schedule('0 0 1 1 *', async function () {
    if (debug > 1) log('New Year reached - copy yearly energy data to last year', 'info');
    await CopyEnergyToLastYear(true);
