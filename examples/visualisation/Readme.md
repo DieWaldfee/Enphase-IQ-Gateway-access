@@ -1,5 +1,7 @@
 # !!! ANLEITUNG IN ARBEIT !!!
+
 ---
+
 # Integration der Daten in eine Visualisierung
 
 ## ioBroker Instanz "energiefluss-erweitert"
@@ -26,6 +28,7 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 ### 3. Instanz aufrufen
 
+---
 
 ## ioBroker Instanz "echarts"
 Visualisierung der Bezugs- / Verbruachsdaten
@@ -49,6 +52,7 @@ Visualisierung der Bezugs- / Verbruachsdaten
  <img width="487" height="58" alt="image" src="https://github.com/user-attachments/assets/8694cc86-4879-4aca-9084-784ee742b04d" />
 
 ### 3. Instanz aufrufen
+
 
 
 
