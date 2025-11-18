@@ -28,11 +28,24 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 ### 3. Instanz aufrufen
 * Instanz von energiefluss_erweiter aufrufen
+  
+<img width="547" height="75" alt="image" src="https://github.com/user-attachments/assets/65784a49-6510-4c8c-a841-f3490d3d8838" />
+
+
 * default Grafik editieren
-* default Grafik speichern
+
+<img width="446" height="479" alt="image" src="https://github.com/user-attachments/assets/0a6c45cd-d9bf-4143-8e84-0c5a1f157067" />
+
+
+* default Grafik  und schließen
+<img width="414" height="471" alt="image" src="https://github.com/user-attachments/assets/d095405b-173c-45a3-a29c-36db446c249e" />
+
 
 ### 4. Daten im Objektebaum einfügen
 * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
+
+<img width="1012" height="810" alt="image" src="https://github.com/user-attachments/assets/f0d10577-4793-4db3-924e-22616ad4cbe1" />
+
 * Daten aus der Skriptvorlage einfügen
 * speichern
  
@@ -67,5 +80,6 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
 
