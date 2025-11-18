@@ -16,7 +16,7 @@ Visualisieren des Energieflusses einer Enphase-Anlage
    <img width="145" height="213" alt="image" src="https://github.com/user-attachments/assets/b77b8fed-56ba-4238-af2d-f2f3daf1b091" />
 
 ### 2. Expertenmodus aktivieren
-* weißen Kopf klicken
+* den weißen Kopf anklicken
 * Expertenmodus aktivieren -> "OK"
 
  <img width="487" height="287" alt="image" src="https://github.com/user-attachments/assets/549f6401-d859-4d6d-9fd9-b6355897115a" />
@@ -50,7 +50,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
    <img width="145" height="213" alt="image" src="https://github.com/user-attachments/assets/005a925a-ecc0-432b-8142-b125b88cec96" />
 
 ### 2. Expertenmodus aktivieren
-* weißen Kopf klicken
+* den weißen Kopf anklicken
 * Expertenmodus aktivieren -> "OK"
 
  <img width="487" height="287" alt="image" src="https://github.com/user-attachments/assets/549f6401-d859-4d6d-9fd9-b6355897115a" />
@@ -67,4 +67,5 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
