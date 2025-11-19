@@ -1,7 +1,3 @@
-# !!! ANLEITUNG IN ARBEIT !!!
-
----
-
 # Integration der Daten in eine Visualisierung
 
 ## ioBroker Instanz "energiefluss-erweitert"
@@ -63,6 +59,10 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 ---
 
+# !!! ANLEITUNG IN ARBEIT !!!
+
+---
+
 ## ioBroker Instanz "echarts"
 Visualisierung der Bezugs- / Verbrauchsdaten
 
@@ -92,6 +92,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
 
 
