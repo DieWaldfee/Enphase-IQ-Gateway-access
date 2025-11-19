@@ -54,8 +54,11 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 <img width="547" height="75" alt="image" src="https://github.com/user-attachments/assets/65784a49-6510-4c8c-a841-f3490d3d8838" />
 
 * Energiefluss wird geladen
+* Seite aktualisieren (Taste F5)
 
 <img width="523" height="479" alt="Screenshot 2025-11-18 210414" src="https://github.com/user-attachments/assets/977a9be2-21ec-46cc-9b5f-50de20ea56f4" />
+
+* Expertenmodus deaktivieren
 
 ---
 
@@ -92,6 +95,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
 
 
