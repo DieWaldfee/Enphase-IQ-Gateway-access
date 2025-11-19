@@ -54,8 +54,8 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 <img width="547" height="75" alt="image" src="https://github.com/user-attachments/assets/65784a49-6510-4c8c-a841-f3490d3d8838" />
 
 * Energiefluss wird geladen
-* default Grafik editieren
-* default Grafik speichern und beenden
+* Grafik nochmals editieren
+* Grafik speichern und beenden
   
 * Seite aktualisieren (Taste F5)
 
@@ -99,6 +99,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
  * speichern
+
 
 
 
