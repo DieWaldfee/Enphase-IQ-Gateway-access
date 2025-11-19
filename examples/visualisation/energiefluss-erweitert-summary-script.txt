@@ -882,8 +882,8 @@
             "font_size": 15,
             "align": "middle",
             "text": "ID 87",
-            "unit": "kWh",
-            "source": 38,
+            "unit": "kW",
+            "source": 47,
             "source_option": -1,
             "source_display": "value",
             "shadow": "",
@@ -953,7 +953,7 @@
             "id": 123,
             "pos_x": 22,
             "pos_y": 89,
-            "source": 40,
+            "source": 48,
             "type": "icon",
             "width": 14,
             "height": 14,
@@ -989,7 +989,7 @@
             "align": "middle",
             "text": "ID 87",
             "unit": "%",
-            "source": 40,
+            "source": 48,
             "source_option": -1,
             "source_display": "value",
             "shadow": "",
@@ -1022,43 +1022,8 @@
                 }
             }
         },
-        "125": {
-            "position": 19,
-            "id": 125,
-            "pos_x": 154,
-            "pos_y": 262,
-            "source": 44,
-            "calculate_kw": "none",
-            "counter_animation": false,
-            "convert": false,
-            "decimal_places": 0,
-            "type": "text",
-            "align": "middle",
-            "subType": "datasource",
-            "text": "Datasource 125",
-            "source_option": -1,
-            "source_option_lc": -1,
-            "source_display": "text",
-            "linebreak": 0,
-            "subtract": [],
-            "add": [],
-            "unit": "",
-            "source_action": 44,
-            "color": "none",
-            "fill": "rgb(87, 221, 46)",
-            "font_size": 11,
-            "font_family": "\"Arial\", sans-serif",
-            "override": {
-                "00:00": {
-                    "display": "none"
-                },
-                "default": {
-                    "display": "inline"
-                }
-            }
-        },
         "126": {
-            "position": 0,
+            "position": 19,
             "id": 126,
             "pos_x": 154,
             "pos_y": 262,
@@ -1079,6 +1044,42 @@
             "add": [],
             "unit": "",
             "source_action": 43,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_size": 11,
+            "font_family": "\"Arial\", sans-serif",
+            "override": {
+                "00:00": {
+                    "display": "none"
+                },
+                "default": {
+                    "display": "inline"
+                }
+            },
+            "group": null
+        },
+        "127": {
+            "position": 0,
+            "id": 127,
+            "pos_x": 154,
+            "pos_y": 262,
+            "source": 44,
+            "calculate_kw": "none",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 0,
+            "type": "text",
+            "align": "middle",
+            "subType": "datasource",
+            "text": "Datasource 125",
+            "source_option": -1,
+            "source_option_lc": -1,
+            "source_display": "text",
+            "linebreak": 0,
+            "subtract": [],
+            "add": [],
+            "unit": "",
+            "source_action": 44,
             "color": "none",
             "fill": "rgb(87, 221, 46)",
             "font_size": 11,
@@ -1501,19 +1502,9 @@
             "alias": "lifedataState",
             "factor": 1
         },
-        "38": {
-            "source": "0_userdata.0.enphase.summary.maxValues.energy.ProductionEnergy",
-            "alias": "ProductionEnergy",
-            "factor": 1
-        },
         "39": {
             "source": "0_userdata.0.enphase.summary.maxValues.power.maxProductionPower",
             "alias": "maxProductionPower",
-            "factor": 1
-        },
-        "40": {
-            "source": "0_userdata.0.enphase.summary.powerflow.autarky",
-            "alias": "autarky",
             "factor": 1
         },
         "42": {
@@ -1534,6 +1525,16 @@
         "45": {
             "source": "0_userdata.0.enphase.summary.powerflow.storageChargePower",
             "alias": "storageChargePower",
+            "factor": 1
+        },
+        "47": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.ProductionEnergy",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.ProductionEnergy",
+            "factor": 1
+        },
+        "48": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.autarkyEnergyEstimated",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.autarkyEnergyEstimated",
             "factor": 1
         }
     }
