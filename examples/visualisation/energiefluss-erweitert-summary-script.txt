@@ -38,7 +38,8 @@
             "color": ""
         },
         "background_color": "#000000",
-        "tourVisited": true
+        "tourVisited": true,
+        "enable_line_animation": false
     },
     "calculation": {
         "battery": {
@@ -518,7 +519,15 @@
             "add": [
                 -1
             ],
-            "frame": "_overlay"
+            "frame": "_overlay",
+            "override": {
+                "<=0": {
+                    "display": "none"
+                },
+                ">0": {
+                    "display": "inline"
+                }
+            }
         },
         "88": {
             "position": 0,
@@ -870,11 +879,11 @@
             "group": null
         },
         "120": {
-            "position": 18,
+            "position": 21,
             "type": "text",
             "subType": "datasource",
             "id": 120,
-            "pos_x": 75.5,
+            "pos_x": 74.5,
             "pos_y": 51,
             "color": "none",
             "fill": "rgb(0, 181, 221)",
@@ -882,7 +891,7 @@
             "font_size": 15,
             "align": "middle",
             "text": "ID 87",
-            "unit": "kW",
+            "unit": "kWh",
             "source": 47,
             "source_option": -1,
             "source_display": "value",
@@ -1092,6 +1101,72 @@
                     "display": "inline"
                 }
             },
+            "group": null
+        },
+        "128": {
+            "position": 19,
+            "type": "text",
+            "subType": "datasource",
+            "id": 128,
+            "pos_x": 73.5,
+            "pos_y": 80,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "kWh",
+            "source": 49,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "group": null
+        },
+        "129": {
+            "position": 18,
+            "type": "text",
+            "subType": "datasource",
+            "id": 129,
+            "pos_x": 73.5,
+            "pos_y": 65,
+            "color": "none",
+            "fill": "rgb(115, 119, 128)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "kWh",
+            "source": 50,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
             "group": null
         }
     },
@@ -1535,6 +1610,16 @@
         "48": {
             "source": "0_userdata.0.enphase.summary.sumValues.energy.autarkyEnergyEstimated",
             "alias": "0_userdata.0.enphase.summary.sumValues.energy.autarkyEnergyEstimated",
+            "factor": 1
+        },
+        "49": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.gridConsumptionEnergyEstimated",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.gridConsumptionEnergyEstimated",
+            "factor": 1
+        },
+        "50": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.feedInEnergyEstimated",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.feedInEnergyEstimated",
             "factor": 1
         }
     }
