@@ -111,11 +111,20 @@ Visualisierung der Bezugs- / Verbrauchsdaten
 
 ### 6. eChart aufrufen
 
- * eChart-speichern / schreiben
+ * eChart umbenennen
+ 
+<img width="1461" height="362" alt="image" src="https://github.com/user-attachments/assets/1e70f348-3c83-49a4-bf8b-787976f7bc06" />
 
+ * eChart umbenennen
+ * umbenannten Chart anklicken
+ * "Optionen" auswählen -> nach unten skrollen
+ * web.0 klicken
+   
+<img width="1759" height="953" alt="image" src="https://github.com/user-attachments/assets/fde633e4-c95b-4a36-91e1-4c50d6d3af31" />
 
+ * Link in ein neues Browerfenster einfügen
 
-
+<img width="1066" height="633" alt="image" src="https://github.com/user-attachments/assets/d10b0066-d725-44fc-8be4-eead0b971ca3" />
 
 
 
