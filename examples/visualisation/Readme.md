@@ -59,8 +59,13 @@ Visualisieren des Energieflusses einer Enphase-Anlage
   
 * Seite aktualisieren (Taste F5)
 
-<img width="608" height="567" alt="Screenshot 2025-11-19 125639" src="https://github.com/user-attachments/assets/01bef4fc-a2da-48c6-952e-c95e1a56bd9e" />
+<img width="508" height="467" alt="Screenshot 2025-11-19 125639" src="https://github.com/user-attachments/assets/01bef4fc-a2da-48c6-952e-c95e1a56bd9e" />
 
+* ggf umstellen auf weißen Hintergrund
+
+<img width="1692" height="995" alt="image" src="https://github.com/user-attachments/assets/d2eec78a-a343-4015-9ee3-1d431f55c5cc" />
+
+<img width="538" height="470" alt="image" src="https://github.com/user-attachments/assets/c8041b7b-1acf-4689-a0ca-31353369869b" />
 
 * Expertenmodus deaktivieren
 
@@ -125,6 +130,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Link in ein neues Browerfenster einfügen
 
 <img width="1066" height="633" alt="image" src="https://github.com/user-attachments/assets/d10b0066-d725-44fc-8be4-eead0b971ca3" />
+
 
 
 
