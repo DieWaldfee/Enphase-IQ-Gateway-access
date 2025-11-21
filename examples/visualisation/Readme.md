@@ -81,7 +81,13 @@ Visualisierung der Bezugs- / Verbrauchsdaten
    
    <img width="145" height="213" alt="image" src="https://github.com/user-attachments/assets/005a925a-ecc0-432b-8142-b125b88cec96" />
 
-### 2. Expertenmodus aktivieren
+### 2. Datenpunkte für History-Adapter aktivieren
+
+*
+*
+*
+
+### 3. Expertenmodus aktivieren
 * den weißen Kopf anklicken
 * Expertenmodus aktivieren -> "OK"
 
@@ -91,14 +97,21 @@ Visualisierung der Bezugs- / Verbrauchsdaten
      
  <img width="487" height="58" alt="image" src="https://github.com/user-attachments/assets/8694cc86-4879-4aca-9084-784ee742b04d" />
 
-### 3. Instanz aufrufen
- * Chart "Name_ist_hier_frei_wählbar" neu anlegen
- * Chart speichern
+### 4. Instanz aufrufen
+ * Chart neu anlegen `preset 1 wird automatisch angelegt`
 
-### 4. Daten im Objektebaum einfügen
+<img width="612" height="631" alt="image" src="https://github.com/user-attachments/assets/b247696a-96dc-4dd6-b5b2-27896a59733d" />
+
+### 5. Daten im Objektebaum einfügen
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
- * speichern
+ * speichern / schreiben 
+   
+<img width="1514" height="1101" alt="image" src="https://github.com/user-attachments/assets/e5cc78f0-fbd0-4277-963f-bccf4ff83929" />
+
+### 6. eChart aufrufen
+
+ * eChart-speichern / schreiben
 
 
 
