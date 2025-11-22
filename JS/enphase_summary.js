@@ -3296,3 +3296,217 @@ schedule('0 0 1 1 *', async function () {
    if (debug > 1) log('New Year reached - copy yearly energy data to last year', 'info');
    await CopyEnergyToLastYear(true);
 });
+
+//---------------------------------------------------------------------------------------------------
+// history values for powerflow
+//---------------------------------------------------------------------------------------------------
+/**
+ * Accumulates interval energy history for a powerflow datapoint and stores 15‑minute and 1‑hour totals.
+ *
+ * Logic:
+ * - Validates input (datapoint required).
+ * - Derives elapsed hours from timeDiff (ms → h).
+ * - Reads current instantaneous power value from dst_summary + 'powerflow.<datapoint>'.
+ * - Reads existing accumulated Wh values from histValues.<datapoint>_{15min|1h}.
+ * - Adds (power * elapsedHours) to each accumulator, rounds to 0.1 Wh, and writes back.
+ *
+ * Behavior:
+ * - Skips silently if source powerflow state is absent.
+ * - Creates target history states if missing via ensureStateAsync.
+ * - Falls back to empty tag if none provided.
+ *
+ * @async
+ * @function createHistoryDatapoint
+ * @param {string} datapoint Name of the powerflow field (e.g. 'consumptionPower', 'productionPower').
+ * @param {string} tag Human readable label prefix for state description (optional, default '').
+ * @param {number} timeDiff Elapsed time in milliseconds between samples (used to integrate power to energy).
+ * @returns {Promise<void>} Resolves after history states are updated or exits early on invalid input.
+ *
+ * @example
+ * // Integrate 5 seconds (5000 ms) for productionPower
+ * await createHistoryDatapoint('productionPower', 'Production energy in interval', 5000);
+ *
+ * @remarks
+ * - Uses globals: dst_summary, debug.
+ * - Units stored: Wh (estimated).
+ * - Rounding: Math.round(x * 10) / 10 → 0.1 Wh resolution.
+ */
+async function createHistoryDatapoint(datapoint, tag, timeDiff) {
+   // time difference in hours between current and last measurement
+   let timeDiffHours = timeDiff / 3600000; // convert timeDiff from milliseconds to hours
+   if (debug > 2) log(`timeDiff: ${timeDiff}`, 'info');
+   if (datapoint == null || datapoint === undefined || datapoint === '') {
+      log('No datapoint provided for history creation', 'warn');
+      return;
+   }
+   if (tag == null || tag === undefined || tag === '') {
+      tag = '';
+   }
+   let historyData = 0;
+   let historyData_15min = 0;
+   let historyData_1hour = 0;
+   // create history for powerflow values
+   if (existsState(dst_summary + 'powerflow.' + datapoint)) {
+      historyData = getState(dst_summary + 'powerflow.' + datapoint).val;
+      if (debug > 2) log('Current ' + datapoint + ' value: ' + historyData, 'info');
+      if (existsState(dst_summary + 'histValues.' + datapoint + '_15min')) {
+         historyData_15min = getState(dst_summary + 'histValues.' + datapoint + '_15min').val;
+      } else {
+         historyData_15min = 0;
+      }
+      if (existsState(dst_summary + 'histValues.' + datapoint + '_1h')) {
+         historyData_1hour = getState(dst_summary + 'histValues.' + datapoint + '_1h').val;
+      } else {
+         historyData_1hour = 0;
+      }
+      historyData_15min = historyData_15min + historyData * timeDiffHours;
+      historyData_1hour = historyData_1hour + historyData * timeDiffHours;
+      if (debug > 1)
+         log(
+            'Updated ' +
+               datapoint +
+               ' historyData_15min: ' +
+               historyData_15min +
+               ', historyData_1hour: ' +
+               historyData_1hour,
+            'info'
+         );
+      await ensureStateAsync(
+         dst_summary + 'histValues.' + datapoint + '_15min',
+         Math.round(historyData_15min * 10) / 10,
+         {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'Wh',
+            desc: tag + ' 15 minutes',
+         }
+      );
+      await ensureStateAsync(dst_summary + 'histValues.' + datapoint + '_1h', Math.round(historyData_1hour * 10) / 10, {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: tag + ' 1 hour',
+      });
+   }
+}
+/**
+ * Aggregates interval energy history for all powerflow datapoints.
+ * Delegates to createHistoryDatapoint with labels for: consumption, feed-in, grid (charge/consumption/total),
+ * production, purchased, self-consumption, storage (total/charge/discharge).
+ *
+ * @async
+ * @function createPowerflowHistory
+ * @param {number} timeDiff Elapsed time in milliseconds since previous sample.
+ * @returns {Promise<void>}
+ * @dependsOn createHistoryDatapoint
+ */
+async function createPowerflowHistory(timeDiff) {
+   await createHistoryDatapoint('consumptionPower', 'Consumption energy in interval', timeDiff);
+   await createHistoryDatapoint('feedInPower', 'FeedIn energy in interval', timeDiff);
+   await createHistoryDatapoint('gridChargePower', 'Grid charge energy in interval', timeDiff);
+   await createHistoryDatapoint('gridConsumptionPower', 'Grid consumption energy in interval', timeDiff);
+   await createHistoryDatapoint('gridPower', 'Grid power in interval', timeDiff);
+   await createHistoryDatapoint('productionPower', 'Production energy in interval', timeDiff);
+   await createHistoryDatapoint('purchasedPower', 'Purchased energy in interval', timeDiff);
+   await createHistoryDatapoint('selfConsumptionPower', 'Self consumption energy in interval', timeDiff);
+   await createHistoryDatapoint('storagePower', 'Storage power in interval', timeDiff);
+   await createHistoryDatapoint('storageChargePower', 'Storage charge energy in interval', timeDiff);
+   await createHistoryDatapoint('storageConsumptionPower', 'Storage consumption energy in interval', timeDiff);
+}
+/**
+ * Event handler updating powerflow interval history when consumption power changes.
+ * - Subscribes to summary powerflow.consumptionPower.
+ * - Computes elapsed time (ms) from new vs. old state timestamps.
+ * - Delays 500 ms to allow related powerflow states to settle.
+ * - Calls createPowerflowHistory(timeDiff) to integrate all datapoints.
+ * - Logs progress when debug > 2.
+ *
+ * @listens {ioBroker.StateChange}
+ * @callback onConsumptionPowerChange
+ * @param {object} obj State change payload.
+ * @param {ioBroker.State} obj.state New state (uses ts for timestamp).
+ * @param {ioBroker.State} [obj.oldState] Previous state (uses ts for timestamp).
+ * @requires createPowerflowHistory
+ */
+on({ id: dst_summary + 'powerflow.consumptionPower', change: 'any' }, function (obj) {
+   //timeout 500ms to ensure all values are updated
+   let actTimestamp = obj.state ? obj.state.ts : 0;
+   let oldTimestamp = obj.oldState ? obj.oldState.ts : 0;
+   let timeDiff = actTimestamp - oldTimestamp;
+   setTimeout(() => {
+      createPowerflowHistory(timeDiff);
+   }, 500);
+   if (debug > 2) log(`Powerflow histValues updated`, 'info');
+});
+/**
+ * Quarterly (every 00/15/30/45 min) reset of 15‑minute powerflow history accumulators.
+ * - Iterates predefined powerflow datapoints and zeroes histValues.<datapoint>_15min if it exists.
+ *
+ * @async
+ * @fires schedule 0,15,30,45 * * * *
+ * @returns {Promise<void>}
+ * @dependsOn existsState, ensureStateAsync
+ * @globals dst_summary, debug
+ */
+schedule('0,15,30,45 * * * *', async function () {
+   if (debug > 1) log('Reset 15 minutes history datapoints for powerflow', 'info');
+   let datapoint = '';
+   let datapoints = [
+      'consumptionPower',
+      'feedInPower',
+      'gridChargePower',
+      'gridConsumptionPower',
+      'gridPower',
+      'productionPower',
+      'purchasedPower',
+      'selfConsumptionPower',
+      'storagePower',
+      'storageChargePower',
+      'storageConsumptionPower',
+   ];
+   for (let i = 0; i < datapoints.length; i++) {
+      datapoint = datapoints[i];
+      if (existsState(dst_summary + 'histValues.' + datapoint + '_15min')) {
+         await ensureStateAsync(dst_summary + 'histValues.' + datapoint + '_15min', 0, {});
+      }
+   }
+});
+/**
+ * Hourly (minute 00) reset of 1‑hour powerflow history accumulators.
+ * - For each predefined powerflow datapoint: if histValues.<datapoint>_1h exists, set it to 0.
+ *
+ * @async
+ * @fires schedule 0 * * * *
+ * @returns {Promise<void>}
+ * @dependsOn existsState, ensureStateAsync
+ * @globals dst_summary, debug
+ */
+schedule('0 * * * *', async function () {
+   if (debug > 1) log('Reset 1 hour history datapoints for powerflow', 'info');
+   let datapoint = '';
+   let datapoints = [
+      'consumptionPower',
+      'feedInPower',
+      'gridChargePower',
+      'gridConsumptionPower',
+      'gridPower',
+      'productionPower',
+      'purchasedPower',
+      'selfConsumptionPower',
+      'storagePower',
+      'storageChargePower',
+      'storageConsumptionPower',
+   ];
+   for (let i = 0; i < datapoints.length; i++) {
+      datapoint = datapoints[i];
+      if (existsState(dst_summary + 'histValues.' + datapoint + '_1h')) {
+         await ensureStateAsync(dst_summary + 'histValues.' + datapoint + '_1h', 0, {});
+      }
+   }
+});
