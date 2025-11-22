@@ -1,6 +1,6 @@
 # Integration der Daten in eine Visualisierung
 
-## ioBroker Instanz "energiefluss-erweitert"
+## ---  ioBroker Instanz "energiefluss-erweitert" ---
 Visualisieren des Energieflusses einer Enphase-Anlage 
 
  <img width="80" height="80" alt="energiefluss-erweitert" src="https://github.com/user-attachments/assets/d57ac070-e409-45bc-b750-84a42491bc12" />
@@ -75,7 +75,7 @@ Visualisieren des Energieflusses einer Enphase-Anlage
 
 
 
-## ioBroker Instanz "echarts"
+## --- ioBroker Instanz "echarts" ---
 Visualisierung der Bezugs- / Verbrauchsdaten
 
   <img width="80" height="80" alt="echarts" src="https://github.com/user-attachments/assets/ead2209d-1a32-4752-aa50-24cc802c7731" />
