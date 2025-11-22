@@ -7,8 +7,8 @@
     "data": {
       "lines": [
         {
-          "name": "PV alle 15 min",
-          "id": "0_userdata.0.Testumgebung.PV_alle_15_min",
+          "name": "productionPower 15min",
+          "id": "0_userdata.0.enphase.summary.histValues.productionPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
           "chartType": "bar",
@@ -20,15 +20,15 @@
           "color": "rgb(0,181,221)",
           "fill": 0.6,
           "ignoreNull": "0",
-          "unit": "kWh",
+          "unit": "Wh",
           "offset": "0",
           "yOffset": "0",
           "yaxe": "left",
           "afterComma": "3"
         },
         {
-          "name": "Netz alle 15 min",
-          "id": "0_userdata.0.Testumgebung.Netz_alle_15_min",
+          "name": "0 userdata 0 enphase summary histValues gridConsumptionPower 15min",
+          "id": "0_userdata.0.enphase.summary.histValues.gridConsumptionPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
           "chartType": "bar",
@@ -40,12 +40,12 @@
           "commonYAxis": "0",
           "fill": 0.2,
           "ignoreNull": "0",
-          "unit": "kWh",
+          "unit": "Wh",
           "afterComma": "3"
         },
         {
-          "name": "Batterie Entladung 15 min",
-          "id": "0_userdata.0.Testumgebung.Batterie_Entladung_15_min",
+          "name": "storageConsumptionPower_15min",
+          "id": "0_userdata.0.enphase.summary.histValues.storageConsumptionPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 2,
           "chartType": "bar",
@@ -53,15 +53,15 @@
           "symbolSize": 3,
           "validTime": 35,
           "xaxe": "off",
-          "unit": "kWh",
+          "unit": "Wh",
           "color": "rgb(87,221,46)",
           "commonYAxis": "0",
           "afterComma": "3",
           "ignoreNull": "0"
         },
         {
-          "name": "Hausverbrauch alle 15 min",
-          "id": "0_userdata.0.Testumgebung.Hausverbrauch_alle_15_min",
+          "name": "0 userdata 0 enphase summary histValues consumptionPower 15min",
+          "id": "0_userdata.0.enphase.summary.histValues.consumptionPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
           "chartType": "bar",
@@ -72,13 +72,14 @@
           "color": "rgb(221,123,26)",
           "fill": 0.6,
           "ignoreNull": "0",
-          "unit": "kWh",
+          "unit": "Wh",
           "commonYAxis": "0",
-          "afterComma": "3"
+          "afterComma": "3",
+          "convert": "val*-1"
         },
         {
-          "name": "Einspeisung alle 15 min",
-          "id": "0_userdata.0.Testumgebung.Einspeisung_alle_15_min",
+          "name": "feedInPower_15min",
+          "id": "0_userdata.0.enphase.summary.histValues.feedInPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
           "chartType": "bar",
@@ -90,12 +91,13 @@
           "fill": 0.5,
           "commonYAxis": "0",
           "ignoreNull": "0",
-          "unit": "kWh",
-          "afterComma": "3"
+          "unit": "Wh",
+          "afterComma": "3",
+          "convert": "val*-1"
         },
         {
-          "name": "Batterie Ladung 15 min",
-          "id": "0_userdata.0.Testumgebung.Batterie_Ladung_15_min",
+          "name": "storageChargePower_15min",
+          "id": "0_userdata.0.enphase.summary.histValues.storageChargePower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 2,
           "chartType": "bar",
@@ -103,11 +105,12 @@
           "symbolSize": 3,
           "validTime": 35,
           "xaxe": "off",
-          "unit": "kWh",
+          "unit": "Wh",
           "color": "rgb(87,221,46)",
           "commonYAxis": "0",
           "afterComma": "3",
-          "ignoreNull": "0"
+          "ignoreNull": "0",
+          "convert": "val*-1"
         }
       ],
       "marks": [],
@@ -174,5 +177,5 @@
   },
   "from": "system.adapter.admin.0",
   "user": "system.user.admin",
-  "ts": 1763373861455
+  "ts": 1763854335755
 }
