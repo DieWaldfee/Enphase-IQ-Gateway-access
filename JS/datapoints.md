@@ -221,13 +221,47 @@ Note also, that the power fractions appear somtimes with the same values - this 
 
 ### Datapoint .pv
 
-*description tbd---------------------------------------------------------*
+`.pv` represents the production from your roof.
+
+- datapoint folder `L1`: contains power values for the first phase of the production.
+- datapoint `L1.activePower_L1`: [W] active power production over first phase.
+- datapoint `L1.apparentPower_L1`: [VA] apparent power production over first phase. 
+- datapoint `L1.reactivePower_L1`: [VAR] reactive power production over first phase.
+- datapoint folder `L2`: contains power values for the second phase of the production.
+- datapoint `L2.activePower_L2`: [W] active power production over second phase.
+- datapoint `L2.apparentPower_L2`: [VA] apparent power production over second phase.
+- datapoint `L2.reactivePower_L2`: [VAR] reactive power production over second phase.
+- datapoint folder `L3`: contains power values for the third phase of the production.
+- datapoint `L3.activePower_L3`: [W] active power production over third phase.
+- datapoint `L3.apparentPower_L3`: [VA] apparent power production over third phase. 
+- datapoint `L3.reactivePower_L3`: [VAR] reactive power production over third phase. 
+- datapoint folder `total`: contains power values for the all phases in total of the production.
+- datapoint `total.activePower_total`: [W] active power production over all phases.
+- datapoint `total.apparentPower_total`: [VA] apparent power production over all phases.
+- datapoint `total.reactivePower_total`: [VAR] reactive power production over all phases. 
 
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="775" height="405" alt="grafik" src="https://github.com/user-attachments/assets/e8446c14-7137-4359-92d2-352c5facf404" />
 
 ### Datapoint .storage
 
-*description tbd---------------------------------------------------------*
+`.storage` represents the power from an to your batteries if avaiable in your system.
+
+- datapoint folder `L1`: contains power values for the first phase of the batteries.
+- datapoint `L1.activePower_L1`: [W] active power batteries over first phase.
+- datapoint `L1.apparentPower_L1`: [VA] apparent power batteries over first phase. 
+- datapoint `L1.reactivePower_L1`: [VAR] reactive power batteries over first phase.
+- datapoint folder `L2`: contains power values for the second phase of the batteries.
+- datapoint `L2.activePower_L2`: [W] active power batteries over second phase.
+- datapoint `L2.apparentPower_L2`: [VA] apparent power batteries over second phase.
+- datapoint `L2.reactivePower_L2`: [VAR] reactive power batteries over second phase.
+- datapoint folder `L3`: contains power values for the third phase of the batteries.
+- datapoint `L3.activePower_L3`: [W] active power batteries over third phase.
+- datapoint `L3.apparentPower_L3`: [VA] apparent power batteries over third phase. 
+- datapoint `L3.reactivePower_L3`: [VAR] reactive power batteries over third phase. 
+- datapoint folder `total`: contains power values for the all phases in total of the batteries.
+- datapoint `total.activePower_total`: [W] active power batteries over all phases.
+- datapoint `total.apparentPower_total`: [VA] apparent power batteries over all phases.
+- datapoint `total.reactivePower_total`: [VAR] reactive power batteries over all phases. 
 
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="875" height="330" alt="grafik" src="https://github.com/user-attachments/assets/3f9b41cf-de36-4d2d-8c1a-a59780b51000" />
 
