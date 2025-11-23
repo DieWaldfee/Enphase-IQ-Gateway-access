@@ -27,7 +27,7 @@
           "afterComma": "3"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues gridConsumptionPower 15min",
+          "name": "gridConsumptionPower 15min",
           "id": "0_userdata.0.enphase.summary.histValues.gridConsumptionPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
@@ -60,7 +60,7 @@
           "ignoreNull": "0"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues consumptionPower 15min",
+          "name": "consumptionPower 15min",
           "id": "0_userdata.0.enphase.summary.histValues.consumptionPower_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
@@ -177,5 +177,5 @@
   },
   "from": "system.adapter.admin.0",
   "user": "system.user.admin",
-  "ts": 1763854335755
+  "ts": 1763861216448
 }
