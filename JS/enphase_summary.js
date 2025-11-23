@@ -3331,7 +3331,7 @@ schedule('0 0 1 1 *', async function () {
  * - Units stored: Wh (estimated).
  * - Rounding: Math.round(x * 10) / 10 → 0.1 Wh resolution.
  */
-async function createHistoryDatapoint(datapoint, tag, timeDiff) {
+async function createHistoryDatapoint(datapoint, datapointTarget, tag, timeDiff) {
    // time difference in hours between current and last measurement
    let timeDiffHours = timeDiff / 3600000; // convert timeDiff from milliseconds to hours
    if (debug > 2) log(`timeDiff: ${timeDiff}`, 'info');
@@ -3349,13 +3349,13 @@ async function createHistoryDatapoint(datapoint, tag, timeDiff) {
    if (existsState(dst_summary + 'powerflow.' + datapoint)) {
       historyData = getState(dst_summary + 'powerflow.' + datapoint).val;
       if (debug > 2) log('Current ' + datapoint + ' value: ' + historyData, 'info');
-      if (existsState(dst_summary + 'histValues.' + datapoint + '_15min')) {
-         historyData_15min = getState(dst_summary + 'histValues.' + datapoint + '_15min').val;
+      if (existsState(dst_summary + 'histValues.' + datapointTarget + '_15min')) {
+         historyData_15min = getState(dst_summary + 'histValues.' + datapointTarget + '_15min').val;
       } else {
          historyData_15min = 0;
       }
-      if (existsState(dst_summary + 'histValues.' + datapoint + '_1h')) {
-         historyData_1hour = getState(dst_summary + 'histValues.' + datapoint + '_1h').val;
+      if (existsState(dst_summary + 'histValues.' + datapointTarget + '_1h')) {
+         historyData_1hour = getState(dst_summary + 'histValues.' + datapointTarget + '_1h').val;
       } else {
          historyData_1hour = 0;
       }
@@ -3364,7 +3364,7 @@ async function createHistoryDatapoint(datapoint, tag, timeDiff) {
       if (debug > 1)
          log(
             'Updated ' +
-               datapoint +
+               datapointTarget +
                ' historyData_15min: ' +
                historyData_15min +
                ', historyData_1hour: ' +
@@ -3372,7 +3372,7 @@ async function createHistoryDatapoint(datapoint, tag, timeDiff) {
             'info'
          );
       await ensureStateAsync(
-         dst_summary + 'histValues.' + datapoint + '_15min',
+         dst_summary + 'histValues.' + datapointTarget + '_15min',
          Math.round(historyData_15min * 10) / 10,
          {
             read: true,
@@ -3384,15 +3384,19 @@ async function createHistoryDatapoint(datapoint, tag, timeDiff) {
             desc: tag + ' 15 minutes',
          }
       );
-      await ensureStateAsync(dst_summary + 'histValues.' + datapoint + '_1h', Math.round(historyData_1hour * 10) / 10, {
-         read: true,
-         write: false,
-         type: 'number',
-         role: 'value',
-         def: 0,
-         unit: 'Wh',
-         desc: tag + ' 1 hour',
-      });
+      await ensureStateAsync(
+         dst_summary + 'histValues.' + datapointTarget + '_1h',
+         Math.round(historyData_1hour * 10) / 10,
+         {
+            read: true,
+            write: false,
+            type: 'number',
+            role: 'value',
+            def: 0,
+            unit: 'Wh',
+            desc: tag + ' 1 hour',
+         }
+      );
    }
 }
 /**
@@ -3407,17 +3411,37 @@ async function createHistoryDatapoint(datapoint, tag, timeDiff) {
  * @dependsOn createHistoryDatapoint
  */
 async function createPowerflowHistory(timeDiff) {
-   await createHistoryDatapoint('consumptionPower', 'Consumption energy in interval', timeDiff);
-   await createHistoryDatapoint('feedInPower', 'FeedIn energy in interval', timeDiff);
-   await createHistoryDatapoint('gridChargePower', 'Grid charge energy in interval', timeDiff);
-   await createHistoryDatapoint('gridConsumptionPower', 'Grid consumption energy in interval', timeDiff);
-   await createHistoryDatapoint('gridPower', 'Grid power in interval', timeDiff);
-   await createHistoryDatapoint('productionPower', 'Production energy in interval', timeDiff);
-   await createHistoryDatapoint('purchasedPower', 'Purchased energy in interval', timeDiff);
-   await createHistoryDatapoint('selfConsumptionPower', 'Self consumption energy in interval', timeDiff);
-   await createHistoryDatapoint('storagePower', 'Storage power in interval', timeDiff);
-   await createHistoryDatapoint('storageChargePower', 'Storage charge energy in interval', timeDiff);
-   await createHistoryDatapoint('storageConsumptionPower', 'Storage consumption energy in interval', timeDiff);
+   await createHistoryDatapoint('consumptionPower', 'consumptionEnergy', 'Consumption energy in interval', timeDiff);
+   await createHistoryDatapoint('feedInPower', 'feedInEnergy', 'FeedIn energy in interval', timeDiff);
+   await createHistoryDatapoint('gridChargePower', 'gridChargeEnergy', 'Grid charge energy in interval', timeDiff);
+   await createHistoryDatapoint(
+      'gridConsumptionPower',
+      'gridConsumptionEnergy',
+      'Grid consumption energy in interval',
+      timeDiff
+   );
+   await createHistoryDatapoint('gridPower', 'gridEnergy', 'Grid energy in interval', timeDiff);
+   await createHistoryDatapoint('productionPower', 'productionEnergy', 'Production energy in interval', timeDiff);
+   await createHistoryDatapoint('purchasedPower', 'purchasedEnergy', 'Purchased energy in interval', timeDiff);
+   await createHistoryDatapoint(
+      'selfConsumptionPower',
+      'selfConsumptionEnergy',
+      'Self consumption energy in interval',
+      timeDiff
+   );
+   await createHistoryDatapoint('storagePower', 'storageEnergy', 'Storage energy in interval', timeDiff);
+   await createHistoryDatapoint(
+      'storageChargePower',
+      'storageChargeEnergy',
+      'Storage charge energy in interval',
+      timeDiff
+   );
+   await createHistoryDatapoint(
+      'storageConsumptionPower',
+      'storageConsumptionEnergy',
+      'Storage consumption energy in interval',
+      timeDiff
+   );
 }
 /**
  * Event handler updating powerflow interval history when consumption power changes.
