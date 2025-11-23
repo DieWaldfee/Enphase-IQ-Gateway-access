@@ -103,7 +103,32 @@ total summary of all batteries in your system:
 
 ### Datapoint .histValues
 
-*description tbd---------------------------------------------------------*
+The values in `.histValues` are direct orientated to the values of powerflow exept the autarky. All values are described in detail in the chapter "Datapoint .powerflow" - please check there, if you have questions. Calculated is the energy resulting from actual measured power and the time interval these data are refreshed. (`actual Power * time interval between last value and actual value`)
+
+In these history values you find the summary interval of the energy in the interval of 15 minutes and 1 hour to use these values for e.g. an history chart in vis. Every 15 minutes the datapoint will be set to 0Wh. Every hour the hourly datapoints will also set 0 Wh. To get the intervals in accordance to the clock this is done every 0, 15, 30, 45 minutes in an hour with an schedule. The result of this datapoints is the 15 minutes energy and 1 hour energy slice of your energy flow. 
+
+- datapoint `consumptionEnergy_15min`: [Wh] actual consumption energy 15 minutes interval
+- datapoint `consumptionEnergy_1h`: [Wh] actual consumption energy 15 minutes interval
+- datapoint `feedInEnergy_15min`: [Wh] actual energy feed (sold) into grid 15 minutes interval
+- datapoint `feedInEnergy_1h`: [Wh] actual energy feed (sold) into grid 15 minutes interval
+- datapoint `gridChargeEnergy_15min`: [Wh] actual energy from grid to charge your batteries 15 minutes interval
+- datapoint `gridChargeEnergy_1h`: [Wh] actual energy from grid to charge your batteries 15 minutes interval
+- datapoint `gridConsumptionEnergy_15min`: [Wh] actual energy consumption form grid 15 minutes interval
+- datapoint `gridConsumptionEnergy_1h`: [Wh] actual energy consumption form grid 15 minutes interval
+- datapoint `gridEnergy_15min`: [Wh] actual energy energy 15 minutes interval
+- datapoint `gridEnergy_1h`: [Wh] actual energy energy 1 hour interval
+- datapoint `productionEnergy_15min`: [Wh] actual production energy 15 minutes interval
+- datapoint `productionEnergy_1h`: [Wh] actual production energy 1 hour interval
+- datapoint `purchasedEnergy_15min`: [Wh] actual energy consumption from grid you pay for 15 minutes interval
+- datapoint `purchasedEnergy_1h`: [Wh] actual energy consumption from grid you pay for 1 hour interval
+- datapoint `selfConsumptionEnergy_15min`: [Wh] actual production energy you use yourself 15 minutes interval
+- datapoint `selfConsumptionEnergy_1h`: [Wh] actual production energy you use yourself 1 hour interval
+- datapoint `storageChargeEnergy_15min`: [Wh] actual charging energy to charge your enphase battery 15 minutes interval
+- datapoint `storageChargeEnergy_1h`: [Wh] actual charging energy to charge your enphase battery 1 hour interval
+- datapoint `storageConsumptionEnergy_15min`: [Wh] actual consumption energy from your enphase batteries 15 minutes interval
+- datapoint `storageConsumptionEnergy_1h`: [Wh] actual consumption energy from your enphase batteries 1 hour interval
+- datapoint `storageEnergy_15min`: [Wh] actual storage energy (batteries) 15 minutes interval
+- datapoint `storageEnergy_1h`: [Wh] actual storage energy (batteries) 1 hour interval
 
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="750" height="440" alt="grafik" src="https://github.com/user-attachments/assets/6fdf2eeb-0e22-499b-a0bf-4570aa484d26" />
 
