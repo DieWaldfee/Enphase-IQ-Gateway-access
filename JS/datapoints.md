@@ -78,6 +78,55 @@ total summary of all batteries in your system:
 
 <img width="915" height="120" alt="grafik" src="https://github.com/user-attachments/assets/26fb4528-42c4-48cd-a5d2-102f18bd46c5" />
 
+### Datapoint .grid
+
+- datapoint folder `L1`: contains power values for the first phase of the grid your are connetcted to.
+- datapoint `L1.activePower_L1`: [W] active power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
+- datapoint `L1.apparentPower_L1`: [W] apparent power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
+- datapoint `L1.reactivePower_L1`: [W] reactive power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
+- datapoint folder `L2`: contains power values for the second phase of the grid your are connetcted to.
+- datapoint `L2.activePower_L2`: [W] active power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
+- datapoint `L2.apparentPower_L2`: [W] apparent power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
+- datapoint `L2.reactivePower_L2`: [W] reactive power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
+- datapoint folder `L3`: contains power values for the third phase of the grid your are connetcted to.
+- datapoint `L3.activePower_L3`: [W] active power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
+- datapoint `L3.apparentPower_L3`: [W] apparent power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
+- datapoint `L3.reactivePower_L3`: [W] reactive power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
+- datapoint folder `total`: contains power values for the all phases in total of the grid your are connetcted to.
+- datapoint `total.activePower_total`: [W] active power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
+- datapoint `total.apparentPower_total`: [W] apparent power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
+- datapoint `total.reactivePower_total`: [W] reactive power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
+
+<img width="870" height="328" alt="grafik" src="https://github.com/user-attachments/assets/d22e290f-0666-459b-bb8b-cf4d98f84e11" />
+
+### Datapoint .histValues
+
+### Datapoint .inverters
+
+Each inverter has his own folder named by his enphase-ID. In total you get the list of all your inverters to iterate over them, if needed.
+
+For each inverter in your system:
+- datapoint folder `3456789` (inverterID): contains a summary of our inverter.
+- datapoint `3456789.active`: [true/false] status of your inverter
+- datapoint `3456789.id`: [1] enphase-ID of your inverter - same as the folders name
+- datapoint `3456789.production`: [W] actual production of your single inverter
+- datapoint `3456789.serialnumber`: [1] your serial number of the inverter
+- datapoint `3456789.status`: [true/false] inverter operating status: true = normal operation, false = error
+- datapoint `3456789.statustext`: [string] inverter operation status as a string
+- datapoint `3456789.systemID`: [1] enphase-ID of the system the inverter is connected to
+
+For all interters in your system:
+- datapoint `inverter_list`: [json] list of all inverter enphase-IDs in your system to be able to iterate over all inverters
+
+<img width="800" height="222" alt="grafik" src="https://github.com/user-attachments/assets/4a9d9f29-3707-4b2d-8edd-aba3c9b79028" />
+<img width="850" height="75" alt="grafik" src="https://github.com/user-attachments/assets/668e698f-01e2-49ac-bfa0-26470e2231a6" />
+
+### Datapoint .load
+
+
+
+
+
 
 
 
