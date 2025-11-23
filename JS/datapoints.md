@@ -16,7 +16,7 @@ The datapoints are descriped in [Readme.md](https://github.com/DieWaldfee/Enphas
 
 ## Datapoint in enphase_summary.js
 
-<img width="875" height="225" alt="grafik" src="https://github.com/user-attachments/assets/d2132ab1-f6d4-493f-a15a-1e15793bb538" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="875" height="225" alt="grafik" src="https://github.com/user-attachments/assets/d2132ab1-f6d4-493f-a15a-1e15793bb538" />
 
 - datapoint folder `battery`: summary data of installed batteries, if avaiable
 - datapoint folder `gateway`: summary data of gateway informations
@@ -64,7 +64,7 @@ total summary of all batteries in your system:
 - datapoint `timeToFullDischarge_ts`: [timestamp] calculated time on the clock as timestamp, when the batteries are fully discharged with the actual power (0 if not discharging)
 - datapoint `totalCapacity`: [Wh] summary of the battery capacities in your system
 
-<img width="865" height="520" alt="grafik" src="https://github.com/user-attachments/assets/c6ca790c-1d1f-4968-b29e-99200672454a" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="865" height="520" alt="grafik" src="https://github.com/user-attachments/assets/c6ca790c-1d1f-4968-b29e-99200672454a" />
 
 ### Datapoint .gateway
 
@@ -76,28 +76,30 @@ total summary of all batteries in your system:
 - datapoint `2345678.statustext`: [string] gateway operation status as a string
 - datapoint `2345678.systemID`: [1] enphase-ID of the system the gateway is connected to
 
-<img width="915" height="120" alt="grafik" src="https://github.com/user-attachments/assets/26fb4528-42c4-48cd-a5d2-102f18bd46c5" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="915" height="120" alt="grafik" src="https://github.com/user-attachments/assets/26fb4528-42c4-48cd-a5d2-102f18bd46c5" />
 
 ### Datapoint .grid
 
+`.grid` represents the consumption or feedIn from / into the grid your are connected to.
+
 - datapoint folder `L1`: contains power values for the first phase of the grid your are connetcted to.
 - datapoint `L1.activePower_L1`: [W] active power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
-- datapoint `L1.apparentPower_L1`: [W] apparent power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
-- datapoint `L1.reactivePower_L1`: [W] reactive power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
+- datapoint `L1.apparentPower_L1`: [VA] apparent power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
+- datapoint `L1.reactivePower_L1`: [VAR] reactive power flowing from/to the grid over first phase. (+ = consumption, - = feedIn)
 - datapoint folder `L2`: contains power values for the second phase of the grid your are connetcted to.
 - datapoint `L2.activePower_L2`: [W] active power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
-- datapoint `L2.apparentPower_L2`: [W] apparent power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
-- datapoint `L2.reactivePower_L2`: [W] reactive power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
+- datapoint `L2.apparentPower_L2`: [VA] apparent power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
+- datapoint `L2.reactivePower_L2`: [VAR] reactive power flowing from/to the grid over second phase. (+ = consumption, - = feedIn)
 - datapoint folder `L3`: contains power values for the third phase of the grid your are connetcted to.
 - datapoint `L3.activePower_L3`: [W] active power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
-- datapoint `L3.apparentPower_L3`: [W] apparent power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
-- datapoint `L3.reactivePower_L3`: [W] reactive power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
+- datapoint `L3.apparentPower_L3`: [VA] apparent power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
+- datapoint `L3.reactivePower_L3`: [VAR] reactive power flowing from/to the grid over third phase. (+ = consumption, - = feedIn)
 - datapoint folder `total`: contains power values for the all phases in total of the grid your are connetcted to.
 - datapoint `total.activePower_total`: [W] active power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
-- datapoint `total.apparentPower_total`: [W] apparent power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
-- datapoint `total.reactivePower_total`: [W] reactive power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
+- datapoint `total.apparentPower_total`: [VA] apparent power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
+- datapoint `total.reactivePower_total`: [VAR] reactive power flowing from/to the grid over all phases. (+ = consumption, - = feedIn)
 
-<img width="870" height="328" alt="grafik" src="https://github.com/user-attachments/assets/d22e290f-0666-459b-bb8b-cf4d98f84e11" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="870" height="328" alt="grafik" src="https://github.com/user-attachments/assets/d22e290f-0666-459b-bb8b-cf4d98f84e11" />
 
 ### Datapoint .histValues
 
@@ -118,11 +120,31 @@ For each inverter in your system:
 For all interters in your system:
 - datapoint `inverter_list`: [json] list of all inverter enphase-IDs in your system to be able to iterate over all inverters
 
-<img width="800" height="222" alt="grafik" src="https://github.com/user-attachments/assets/4a9d9f29-3707-4b2d-8edd-aba3c9b79028" />
-<img width="850" height="75" alt="grafik" src="https://github.com/user-attachments/assets/668e698f-01e2-49ac-bfa0-26470e2231a6" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="800" height="222" alt="grafik" src="https://github.com/user-attachments/assets/4a9d9f29-3707-4b2d-8edd-aba3c9b79028" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="850" height="75" alt="grafik" src="https://github.com/user-attachments/assets/668e698f-01e2-49ac-bfa0-26470e2231a6" />
 
 ### Datapoint .load
 
+`.load` represents the consumption in your home.
+
+- datapoint folder `L1`: contains power values for the first phase of the consumption.
+- datapoint `L1.activePower_L1`: [W] active power consumption over first phase.
+- datapoint `L1.apparentPower_L1`: [VA] apparent power consumption over first phase. 
+- datapoint `L1.reactivePower_L1`: [VAR] reactive power consumption over first phase.
+- datapoint folder `L2`: contains power values for the second phase of the consumption.
+- datapoint `L2.activePower_L2`: [W] active power consumption over second phase.
+- datapoint `L2.apparentPower_L2`: [VA] apparent power consumption over second phase.
+- datapoint `L2.reactivePower_L2`: [VAR] reactive power consumption over second phase.
+- datapoint folder `L3`: contains power values for the third phase of the consumption.
+- datapoint `L3.activePower_L3`: [W] active power consumption over third phase.
+- datapoint `L3.apparentPower_L3`: [VA] apparent power consumption over third phase. 
+- datapoint `L3.reactivePower_L3`: [VAR] reactive power consumption over third phase. 
+- datapoint folder `total`: contains power values for the all phases in total of the consumption.
+- datapoint `total.activePower_total`: [W] active power consumption over all phases.
+- datapoint `total.apparentPower_total`: [VA] apparent power consumption over all phases.
+- datapoint `total.reactivePower_total`: [VAR] reactive power consumption over all phases. 
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="890" height="333" alt="grafik" src="https://github.com/user-attachments/assets/cfbf3a2c-8889-49c3-97e8-26e6f5ec5e3e" />
 
 
 
