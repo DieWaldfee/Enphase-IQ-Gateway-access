@@ -3197,7 +3197,7 @@ schedule('55 23 * * *', async function () {
  *   → sumValues.energy.lastYear.month.ProductionEnergy_month_MM_lastYear
  * - Year total:
  *   sumValues.energy.year.ProductionEnergy_year
- *   → sumValues.energy.lastYear.year.ProductionEnergy_year
+ *   → sumValues.energy.year.ProductionEnergy_lastyear
  *
  * @async
  * @function CopyEnergyToLastYear
@@ -3262,7 +3262,7 @@ async function CopyEnergyToLastYear(deleteAfterCopy = false) {
    } else {
       storedYearEnergy = 0;
    }
-   await ensureStateAsync(dst_summary + 'sumValues.energy.lastYear.year.ProductionEnergy_year', storedYearEnergy, {
+   await ensureStateAsync(dst_summary + 'sumValues.energy.year.ProductionEnergy_lastyear', storedYearEnergy, {
       read: true,
       write: false,
       type: 'number',
