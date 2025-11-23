@@ -163,6 +163,27 @@ For your whole system:
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="955" height="212" alt="grafik" src="https://github.com/user-attachments/assets/f098eb07-22be-405d-bc39-2083fb1cf6da" />
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="955" height="76" alt="grafik" src="https://github.com/user-attachments/assets/b2622473-ca9f-4428-b3d0-5f8f29f127fe" />
 
+### Datapoint .powerflow
+
+in `.powerflow` the measured power values (measurepoint is the gateway) are splitted into named partes to visualize what these values means. 
+Measures are `load` -> `consumptionPower`, `grid` -> `gridPower` , `pv` -> `productionPower` and `storage` -> `storagePower`. All other values are calculated based on these four values to get visualized what is going on in your pv-system. The values are power values an represents the actual powerflow. To get the whole actual day see `.sumValues`.
+
+Note also, that the power fractions appear somtimes with the same values - this is correct and you can check the constistancy. If you have no grid charging from grid - these values are nearby 0W. If you see values about +-15W or less - this is about the measurement accurancy in your gateway and means you have something about 0W...
+
+- datapoint `autarky`: [%] actual autarky. <br> if consumptionPower = 0 it is defined as 100% <br> `((selfConsumptionPower + storageConsumptionPower) / consumptionPower) * 100`
+- datapoint `consumptionPower`: [W] actual consumption. <br> if consumption < 0W it is defined as 0W <br> data source is `load` from your gateway 
+- datapoint `feedInPower`: [W] actual power feed (sold) into grid. <br> if gridPower > 0W it is defined as 0W, else it is the grid power <br> data source is `grid` from your gateway 
+- datapoint `gridChargePower`: [W] actual power from grid to charge your batteries. <br> if purchasedPower =< gridConsumptionPower it is defined as 0W <br> `gridChargePower = purchasedPower - gridConsumptionPower`
+- datapoint `gridConsumptionPower`: [W] actual power consumption form grid <br> if selfConsumptionPower equal consumptionPower it is defiend as 0W <br> if selfConsumptionPower plus storageConsumptionPower fits your need it is defined also as 0W <br> `gridConsumptionPower = consumptionPower - selfConsumptionPower - storageConsumptionPower`
+- datapoint `gridPower`: [W] actual grid power. data source is `grid` from your gateway 
+- datapoint `productionPower`: [W] actual production power. data source is `pv` from your gateway  
+- datapoint `purchasedPower`: [W] actual power consumption from grid you pay for. <br> if gridPower < 0W it is defined as 0W <br> `purchasedPower = gridPower`
+- datapoint `selfConsumptionPower`: [W] actual production power you use yourself. <br> if production power = 0W it is defined as 0W <br> `selfConsumptionPower = productionPower - feedInPower`
+- datapoint `storageChargePower`: [W] actual charging power to charge your enphase battery. <br> if storagePower >= 0W it is defined as 0W <br> `storageChargePower = Math.abs(storagePower)`
+- datapoint `storageConsumptionPower`: [W] actual consumption power from your enphase batteries. <br> if storagePower < 0W it is defined as 0W <br> `storageConsumptionPower = storagePower`
+- datapoint `storagePower`: [W] actual storage power (batteries). data source is `storage` from your gateway 
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="850" height="227" alt="grafik" src="https://github.com/user-attachments/assets/cd5f7cb7-6665-4cd9-9ce7-10891902cbc8" />
 
 
 
