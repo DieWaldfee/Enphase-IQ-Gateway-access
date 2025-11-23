@@ -36,7 +36,7 @@ The datapoints are descriped in [Readme.md](https://github.com/DieWaldfee/Enphas
 The battery datapoint are only present, if you have enphase batteries in your system.
 
 For each battery in your system:
-- datapoint folder `1234567` (batteryID): contains a summary of our single battery. If you have more than one battery you will see for every single Battery such a folder.
+- datapoint folder `1234567` (batteryID): contains a summary of our single battery. If you have more than one battery you will see for every single battery such a folder.
 - datapoint `1234567.active`: [true/false] status of your battery
 - datapoint `1234567.capacity`: [Wh] capacity of your single battery
 - datapoint `1234567.id`: [1] enphase-ID of your battery - same as the folders name
@@ -65,4 +65,19 @@ total summary of all batteries in your system:
 - datapoint `totalCapacity`: [Wh] summary of the battery capacities in your system
 
 <img width="865" height="520" alt="grafik" src="https://github.com/user-attachments/assets/c6ca790c-1d1f-4968-b29e-99200672454a" />
+
+### Datapoint .gateway
+
+- datapoint folder `2345678` (gatewayID): contains a summary of our gateway. If you have more than one gateway you will see for every single gateway such a folder. Normaly you have only one gateway.
+- datapoint `2345678.active`: [true/false] status of your gateway
+- datapoint `2345678.id`: [1] enphase-ID of your gateway - same as the folders name
+- datapoint `2345678.serialnumber`: [1] your serial number of the gateway
+- datapoint `2345678.status`: [true/false] gateway operating status: true = normal operation, false = error
+- datapoint `2345678.statustext`: [string] gateway operation status as a string
+- datapoint `2345678.systemID`: [1] enphase-ID of the system the gateway is connected to
+
+<img width="915" height="120" alt="grafik" src="https://github.com/user-attachments/assets/26fb4528-42c4-48cd-a5d2-102f18bd46c5" />
+
+
+
 
