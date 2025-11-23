@@ -105,7 +105,8 @@ total summary of all batteries in your system:
 
 The values in `.histValues` are direct orientated to the values of powerflow exept the autarky. All values are described in detail in the chapter "Datapoint .powerflow" - please check there, if you have questions. Calculated is the energy resulting from actual measured power and the time interval these data are refreshed. (`actual Power * time interval between last value and actual value`)
 
-In these history values you find the summary interval of the energy in the interval of 15 minutes and 1 hour to use these values for e.g. an history chart in vis. Every 15 minutes the datapoint will be set to 0Wh. Every hour the hourly datapoints will also set 0 Wh. To get the intervals in accordance to the clock this is done every 0, 15, 30, 45 minutes in an hour with an schedule. The result of this datapoints is the 15 minutes energy and 1 hour energy slice of your energy flow. 
+In these history values you find the summary interval of the energy in the interval of 15 minutes and 1 hour to use these values for e.g. an history chart in vis. Every 15 minutes the datapoint will be set to 0Wh. Every hour the hourly datapoints will also set 0 Wh. To get the intervals in accordance to the clock this is done every 0, 15, 30, 45 minutes in an hour with an schedule. The result of this datapoints is the 15 minutes energy and 1 hour energy slice of your energy flow.
+Note that the positive and negative values can accour in the interval. Maybe the result turns negativ and the come back to 0 Wh in e.g. an hour interval. You can see this perhaps on the batteries in winter. 
 
 - datapoint `consumptionEnergy_15min`: [Wh] actual consumption energy 15 minutes interval
 - datapoint `consumptionEnergy_1h`: [Wh] actual consumption energy 15 minutes interval
@@ -130,7 +131,8 @@ In these history values you find the summary interval of the energy in the inter
 - datapoint `storageEnergy_15min`: [Wh] actual storage energy (batteries) 15 minutes interval
 - datapoint `storageEnergy_1h`: [Wh] actual storage energy (batteries) 1 hour interval
 
-&nbsp;&nbsp;&nbsp;&nbsp; <img width="750" height="440" alt="grafik" src="https://github.com/user-attachments/assets/6fdf2eeb-0e22-499b-a0bf-4570aa484d26" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="860" height="445" alt="grafik" src="https://github.com/user-attachments/assets/731e68d3-27a0-4b94-b848-3d14ef04fc07" />
+
 
 ### Datapoint .inverters
 
