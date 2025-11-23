@@ -267,7 +267,13 @@ Note also, that the power fractions appear somtimes with the same values - this 
 
 ### Datapoint .sumValues
 
-*description tbd---------------------------------------------------------*
+`sumValues` represents a set of energy values from dayly over monthly to yearly. 
+
+The dayly interval is accumulated over the day from the small values changing in the polling interval. This procedure is an estimation to the real or physical energy summary because the changes in between this interval are ignored. In an environment without high votality it doesn´t matter, but in high frequency changes the error gets high. Normaly you don´t have realy high changing power consumption and production at home, so the error is acceptable.
+
+For the consumption and production the enphase gateway has its own meters the predict the physical correct energy flow in high accurancy. Therefor the estimation is not needed for this components of your enery flows.
+
+
 
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="790" height="555" alt="grafik" src="https://github.com/user-attachments/assets/0524f678-0514-4906-9b1a-080627b60624" />
 
