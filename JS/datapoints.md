@@ -202,6 +202,8 @@ For your whole system:
 in `.powerflow` the measured power values (measurepoint is the gateway) are splitted into named partes to visualize what these values means. 
 Measures are `load` -> `consumptionPower`, `grid` -> `gridPower` , `pv` -> `productionPower` and `storage` -> `storagePower`. All other values are calculated based on these four values to get visualized what is going on in your pv-system. The values are power values an represents the actual powerflow. To get the whole actual day see `.sumValues`.
 
+While calculation the autraky the consumption from th ebatteries is taken in account even if you have done gridcharging before. I suggest, the you get green power from grid so the autarky represents the autarky from fossil energy.
+
 Note also, that the power fractions appear somtimes with the same values - this is correct and you can check the constistancy. If you have no grid charging from grid - these values are nearby 0W. If you see values about +-15W or less - this is about the measurement accurancy in your gateway and means you have something about 0W...
 
 - datapoint `autarky`: [%] actual autarky. <br> if consumptionPower = 0 it is defined as 100% <br> `((selfConsumptionPower + storageConsumptionPower) / consumptionPower) * 100`
@@ -271,18 +273,54 @@ Note also, that the power fractions appear somtimes with the same values - this 
 
 The dayly interval is accumulated over the day from the small values changing in the polling interval. This procedure is an estimation to the real or physical energy summary because the changes in between this interval are ignored. In an environment without high votality it doesn´t matter, but in high frequency changes the error gets high. Normaly you don´t have realy high changing power consumption and production at home, so the error is acceptable.
 
-For the consumption and production the enphase gateway has its own meters the predict the physical correct energy flow in high accurancy. Therefor the estimation is not needed for this components of your enery flows.
+For the consumption and production the enphase gateway has its own meters that predict the physical correct energy flow in high accurancy. Therefor the estimation is not needed for this components of your enery flows. The dayly autarky is calculated form the estimated energies. For the description of the underlaying power calculation please see the details in the chaper "Datapoint `.powerflow`. 
 
+For all summarized energies:
+- datapoint folder `energy`: contains all sumarized energy values.
 
+For monthly sumarized energies:
+- datapoint folder `energy.month`: contains all monthly sumarized energy values.
+- datapoint `energy.month.ProductionEnergy_month_01`: [Wh] contains sumarized production energy in january this year
+- datapoint `energy.month.ProductionEnergy_month_01_lastYear`: [Wh] contains sumarized production energy in january last year
+- ...
+- datapoint `energy.month.ProductionEnergy_month_12`: [Wh] contains sumarized production energy in december this year
+- datapoint `energy.month.ProductionEnergy_month_12_lastYear`: [Wh] contains sumarized production energy in december last year
+
+The datapoints ending with `_lastYear` will be scheduled generated at sylverster. If you start the script in may, the first datapoint will be from may.
+
+For yearly sumarized energy values:
+- datapoint folder `enegry.year`: contains yearly sumarized energy values.
+- datapoint `energy.year.ProductionEnergy_year`: [Wh] contains sumarized production energy this year since start of the script.
+- datapoint `energy.year.ProductionEnergy_lastyear`: [Wh] contains sumarized production energy last year.
+
+The datapoints ending with `_lastYear` will be scheduled generated at sylverster.
+
+Dayly sumarized energy values:
+- datapoint `energy.ProductionEnegry`: [Wh] production energy of the actual day since 00:00. (data from meter in gateway)
+- datapoint `energy.ProductionEnegry_yesterday`: [Wh] production energy from yesterday. (data from meter in gateway)
+- datapoint `energy.autrakyEnergyEstimated`: [%] autarky calculated fom the actual estimates energies this day
+- datapoint `energy.autrakyEnergyEstimated_yesterday`: [%] autarky calculated fom the estimates energies yesterday
+- datapoint `energy.consumptionEnergyEstimated`: [Wh] consumption of the actual day since 00:00
+- datapoint `energy.consumptionEnergyEstimated_yesterday`: [Wh]  consumption from yesterday
+- datapoint `energy.feedInEnergyEstimated`: [Wh] energy feed (sold) into grid of the actual day since 00:00
+- datapoint `energy.feedInEnergyEstimated_yesterday`: [Wh] energy feed (sold) into grid from yesterday
+- datapoint `energy.gridChargeEnergyEstimated`: [Wh] energy from grid to charge your batteries of the actual day since 00:00
+- datapoint `energy.gridChargeEnergyEstimated_yesterday`: [Wh] energy from grid to charge your batteries from yesterday
+- datapoint `energy.gridConsumptionEnergyEstimated`: [Wh] energy consumption from grid of the actual day since 00:00
+- datapoint `energy.gridConsumptionEnergyEstimated_yesterday`: [Wh] energy consumption from grid from yesterday
+- datapoint `energy.gridEnergyEstimated`: [Wh] grid energy of the actual day since 00:00
+- datapoint `energy.gridEnergyEstimated_yesterday`: [Wh] grid energy from yesterday
+- datapoint `energy.productionEnergyEstimated`: [Wh] production energy of the actual day since 00:00 <br> Compare this valeu with `energy.ProductionEnegry` to get an idea of the error while estimation
+- datapoint `energy.productionEnergyEstimated_yesterday`: [Wh] production energy from yesterday
+- datapoint `energy.purchasedEnergyEstimated`: [Wh] energy consumption from grid you pay for of the actual day since 00:00
+- datapoint `energy.purchasedEnergyEstimated_yesterday`: [Wh] energy consumption from grid you pay for from yesterday
+- datapoint `energy.selfConsumptionEnergyEstimated`: [Wh] production energy you use yourself of the actual day since 00:00
+- datapoint `energy.selfConsumptionEnergyEstimated_yesterday`: [Wh] production energy you use yourself from yesterday
+- datapoint `energy.storageChargeEnergyEstimated`: [Wh] charging energy to charge your enphase battery of the actual day since 00:00
+- datapoint `energy.storageChargeEnergyEstimated_yesterday`: [Wh] charging energy to charge your enphase battery from yesterday
+- datapoint `energy.storageConsumptionEnergyEstimated`: [Wh] consumption energy from your enphase batteries of the actual day since 00:00
+- datapoint `energy.storageConsumptionEnergyEstimated_yesterday`: [Wh] consumption energy from your enphase batteries from yesterday
+- datapoint `energy.storageEnergyEstimated`: [Wh] storage energy (batteries) of the actual day since 00:00
+- datapoint `energy.storageEnergyEstimated_yesterday`: [Wh] storage energy (batteries) from yesterday
 
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="790" height="555" alt="grafik" src="https://github.com/user-attachments/assets/0524f678-0514-4906-9b1a-080627b60624" />
-
-
-
-
-
-
-
-
-
-
