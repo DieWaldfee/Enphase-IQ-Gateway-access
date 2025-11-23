@@ -103,6 +103,10 @@ total summary of all batteries in your system:
 
 ### Datapoint .histValues
 
+*description tbd---------------------------------------------------------*
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="750" height="440" alt="grafik" src="https://github.com/user-attachments/assets/6fdf2eeb-0e22-499b-a0bf-4570aa484d26" />
+
 ### Datapoint .inverters
 
 Each inverter has his own folder named by his enphase-ID. In total you get the list of all your inverters to iterate over them, if needed.
@@ -151,14 +155,17 @@ For all interters in your system:
 In `.maxValues` is the dayly maximum power stored form the actual day an from yesterday. The actual day is checked on every change of the underlying datapoint and updated if needed.
 Every inverter has his own folder with the max. power of the day / yesterday. The total power maximum is listed below the inverters folders. Be aware of the power losses between your roof and the meter in your gateway. Therfore the summary of all inverters power is higher than the total power measured in your gateway.
 
+For all power values in `maxValues`:
+- datapoint folder `power`: contains a max. power values.
+
 For each inverter in your system:
-- datapoint folder `3456789` (inverterID): contains a max. power values of our inverter.
-- datapoint `3456789.maxProductionPower`: [W] max. power value of the actual day (measured in your inverter)
-- datapoint `3456789.maxProductionPower_yesterday`: [W] max. power value from yesterday (measured in your inverter)
+- datapoint folder `power.3456789` (inverterID): contains a max. power values of our inverter.
+- datapoint `power.3456789.maxProductionPower`: [W] max. power value of the actual day (measured in your inverter)
+- datapoint `power.3456789.maxProductionPower_yesterday`: [W] max. power value from yesterday (measured in your inverter)
 
 For your whole system:
-- datapoint `maxProductionPower`: [W] max. power value of the actual day in total (measured in your gateway)
-- datapoint `maxProductionPower_yesterday`: [W] max. power value from yesterday (measured in your gateway)
+- datapoint `power.maxProductionPower`: [W] max. power value of the actual day in total (measured in your gateway)
+- datapoint `power.maxProductionPower_yesterday`: [W] max. power value from yesterday (measured in your gateway)
 
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="955" height="212" alt="grafik" src="https://github.com/user-attachments/assets/f098eb07-22be-405d-bc39-2083fb1cf6da" />
 &nbsp;&nbsp;&nbsp;&nbsp; <img width="955" height="76" alt="grafik" src="https://github.com/user-attachments/assets/b2622473-ca9f-4428-b3d0-5f8f29f127fe" />
@@ -183,7 +190,26 @@ Note also, that the power fractions appear somtimes with the same values - this 
 - datapoint `storageConsumptionPower`: [W] actual consumption power from your enphase batteries. <br> if storagePower < 0W it is defined as 0W <br> `storageConsumptionPower = storagePower`
 - datapoint `storagePower`: [W] actual storage power (batteries). data source is `storage` from your gateway 
 
-&nbsp;&nbsp;&nbsp;&nbsp; <img width="850" height="227" alt="grafik" src="https://github.com/user-attachments/assets/cd5f7cb7-6665-4cd9-9ce7-10891902cbc8" />
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="750" height="227" alt="grafik" src="https://github.com/user-attachments/assets/cd5f7cb7-6665-4cd9-9ce7-10891902cbc8" />
+
+### Datapoint .pv
+
+*description tbd---------------------------------------------------------*
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="775" height="405" alt="grafik" src="https://github.com/user-attachments/assets/e8446c14-7137-4359-92d2-352c5facf404" />
+
+### Datapoint .storage
+
+*description tbd---------------------------------------------------------*
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="875" height="330" alt="grafik" src="https://github.com/user-attachments/assets/3f9b41cf-de36-4d2d-8c1a-a59780b51000" />
+
+### Datapoint .sumValues
+
+*description tbd---------------------------------------------------------*
+
+&nbsp;&nbsp;&nbsp;&nbsp; <img width="790" height="555" alt="grafik" src="https://github.com/user-attachments/assets/0524f678-0514-4906-9b1a-080627b60624" />
+
 
 
 
