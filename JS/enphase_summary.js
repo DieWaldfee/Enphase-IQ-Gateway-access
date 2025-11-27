@@ -3482,17 +3482,17 @@ schedule('0,15,30,45 * * * *', async function () {
    if (debug > 1) log('Reset 15 minutes history datapoints for powerflow', 'info');
    let datapoint = '';
    let datapoints = [
-      'consumptionPower',
-      'feedInPower',
-      'gridChargePower',
-      'gridConsumptionPower',
-      'gridPower',
-      'productionPower',
-      'purchasedPower',
-      'selfConsumptionPower',
-      'storagePower',
-      'storageChargePower',
-      'storageConsumptionPower',
+      'consumptionEnergy',
+      'feedInEnergy',
+      'gridChargeEnergy',
+      'gridConsumptionEnergy',
+      'gridEnergy',
+      'productionEnergy',
+      'purchasedEnergy',
+      'selfConsumptionEnergy',
+      'storageEnergy',
+      'storageChargeEnergy',
+      'storageConsumptionEnergy',
    ];
    for (let i = 0; i < datapoints.length; i++) {
       datapoint = datapoints[i];
@@ -3515,17 +3515,17 @@ schedule('0 * * * *', async function () {
    if (debug > 1) log('Reset 1 hour history datapoints for powerflow', 'info');
    let datapoint = '';
    let datapoints = [
-      'consumptionPower',
-      'feedInPower',
-      'gridChargePower',
-      'gridConsumptionPower',
-      'gridPower',
-      'productionPower',
-      'purchasedPower',
-      'selfConsumptionPower',
-      'storagePower',
-      'storageChargePower',
-      'storageConsumptionPower',
+      'consumptionEnergy',
+      'feedInEnergy',
+      'gridChargeEnergy',
+      'gridConsumptionEnergy',
+      'gridEnergy',
+      'productionEnergy',
+      'purchasedEnergy',
+      'selfConsumptionEnergy',
+      'storageEnergy',
+      'storageChargeEnergy',
+      'storageConsumptionEnergy',
    ];
    for (let i = 0; i < datapoints.length; i++) {
       datapoint = datapoints[i];
