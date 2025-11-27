@@ -74,6 +74,7 @@ Key points combining these data:
 * V3.3.1  estimated energy values integrated based on calculated power values and the timestamps of datapoints
 * V3.3.2  bugfix: Fix yesterday's autarky energy state handling
 * V3.3.3  histValues added to enphase_sumary.js to support eCharts. Description of the datapoints added.
+* V3.3.4  Bugfix in histValues: zero-schedule corrected
 * V4.0.0  planed: redesign in typescript parallel to the javascript-version (free to choose js or ts) (2025 Q4)
 * V5.0.0  planed: redesign into ioBroker adapter (2026 Q2-Q3)
 
