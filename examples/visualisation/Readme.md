@@ -90,14 +90,14 @@ Visualisierung der Bezugs- / Verbrauchsdaten
 
 * History für folgende Punkte aktivieren
   
-    * `0_userdata.0.enphase.summary.histValues.consumptionPower_15min`
-    * `0_userdata.0.enphase.summary.histValues.feedInPower_15min`
-    * `0_userdata.0.enphase.summary.histValues.gridConsumptionPower_15min`
-    * `0_userdata.0.enphase.summary.histValues.productionPower_15min`
-    * `0_userdata.0.enphase.summary.histValues.storageChargePower_15min`
-    * `0_userdata.0.enphase.summary.histValues.storageConsumptionPower_15min`
+    * `0_userdata.0.enphase.summary.histValues.consumptionEnergy_15min`
+    * `0_userdata.0.enphase.summary.histValues.feedInEnergy_15min`
+    * `0_userdata.0.enphase.summary.histValues.gridConsumptionEnergy_15min`
+    * `0_userdata.0.enphase.summary.histValues.productionEnergy_15min`
+    * `0_userdata.0.enphase.summary.histValues.storageChargeEnergy_15min`
+    * `0_userdata.0.enphase.summary.histValues.storageConsumptionEnergy_15min`
   
-<img width="1924" height="875" alt="image" src="https://github.com/user-attachments/assets/bd4270bb-edbe-40a7-a208-85aab3b43e9e" />
+<img width="1928" height="869" alt="image" src="https://github.com/user-attachments/assets/a3cae25b-dc1f-4575-a17c-ce409fa73040" />
 
 ### 3. Expertenmodus aktivieren
 * den weißen Kopf anklicken
@@ -137,6 +137,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Link in ein neues Browerfenster einfügen
 
 <img width="1066" height="633" alt="image" src="https://github.com/user-attachments/assets/d10b0066-d725-44fc-8be4-eead0b971ca3" />
+
 
 
 
