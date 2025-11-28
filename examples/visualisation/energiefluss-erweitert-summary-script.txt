@@ -1,0 +1,1626 @@
+{
+    "basic": {
+        "enable_grid": true,
+        "enable_animation": true,
+        "enable_area_catch": true,
+        "enable_config_icon": true,
+        "enable_last_id": false,
+        "enable_icon_proxy": false,
+        "enable_low_performance": false,
+        "height": 360,
+        "width": 408,
+        "styles": "",
+        "font": {
+            "family": "\"Arial\", sans-serif",
+            "size": "15",
+            "color": "",
+            "fill": "",
+            "align": "middle"
+        },
+        "rect": {
+            "height": 100,
+            "width": 100,
+            "corners": 10
+        },
+        "circle": {
+            "radius": 50
+        },
+        "elm": {
+            "stroke_width": 5,
+            "color": "",
+            "fill": "",
+            "pos_x": 50,
+            "pos_y": 50
+        },
+        "icon": {
+            "height": 24,
+            "width": 24,
+            "color": ""
+        },
+        "background_color": "#000000",
+        "tourVisited": true,
+        "enable_line_animation": false
+    },
+    "calculation": {
+        "battery": {
+            "dod": -1,
+            "capacity": -1,
+            "percent": -1,
+            "charge": -1,
+            "charge_prop": true,
+            "charge_kw": false,
+            "discharge": -1,
+            "discharge_prop": false,
+            "discharge_kw": false
+        },
+        "consumption": {
+            "production": [],
+            "production_kw": false,
+            "gridFeed": -1,
+            "gridFeed_kw": false,
+            "gridFeed_prop": true,
+            "gridConsume": -1,
+            "gridConsume_kw": false,
+            "gridConsume_prop": false,
+            "batteryCharge": -1,
+            "batteryCharge_kw": false,
+            "batteryCharge_prop": true,
+            "batteryDischarge": -1,
+            "batteryDischarge_kw": false,
+            "batteryDischarge_prop": false
+        }
+    },
+    "animation": {
+        "stroke": "#ffce4a",
+        "stroke_dasharray": "1  135",
+        "stroke_width": 7,
+        "animation_duration": 2000,
+        "stroke_linecap": "round",
+        "animation_timing_function": "linear"
+    },
+    "animation_configuration": {
+        "dots": 1,
+        "distance": 10,
+        "length": 1
+    },
+    "line": {
+        "stroke_width": 2,
+        "stroke": "#000000"
+    },
+    "elements": {
+        "10": {
+            "position": 15,
+            "type": "text",
+            "id": 10,
+            "pos_x": 154,
+            "pos_y": 20,
+            "color": "none",
+            "fill": "rgb(0, 181, 221)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Produktion",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "27": {
+            "position": 13,
+            "type": "text",
+            "subType": "datasource",
+            "id": 27,
+            "pos_x": 341,
+            "pos_y": 219,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 27",
+            "unit": "W",
+            "source": -1,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "auto",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 0,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay"
+        },
+        "33": {
+            "position": 12,
+            "type": "text",
+            "subType": "datasource",
+            "id": 33,
+            "pos_x": 341,
+            "pos_y": 118,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 33",
+            "unit": "kW",
+            "source": 30,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay"
+        },
+        "37": {
+            "position": 11,
+            "type": "text",
+            "subType": "datasource",
+            "id": 37,
+            "pos_x": 251,
+            "pos_y": 219,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 37",
+            "unit": "kW",
+            "source": 30,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay"
+        },
+        "43": {
+            "position": 10,
+            "type": "text",
+            "id": 43,
+            "pos_x": 54,
+            "pos_y": 235,
+            "color": "none",
+            "fill": "rgb(115, 119, 128)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Energienetz",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "62": {
+            "position": 9,
+            "type": "text",
+            "id": 62,
+            "pos_x": 251,
+            "pos_y": 235,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Verbrauch",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "68": {
+            "position": 8,
+            "type": "icon",
+            "id": "68",
+            "icon": "octicon:sun-24",
+            "width": 35,
+            "height": 35,
+            "color": "rgb(0, 181, 221)",
+            "pos_x": 136.5,
+            "pos_y": 59,
+            "shadow": "",
+            "source": -1,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none"
+        },
+        "69": {
+            "position": 7,
+            "type": "circle",
+            "id": 69,
+            "radius": 30,
+            "pos_x": 341,
+            "pos_y": 77,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(221, 123, 26)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": -1,
+            "threshold": 0
+        },
+        "75": {
+            "position": 6,
+            "type": "circle",
+            "id": 75,
+            "radius": 30,
+            "pos_x": 341,
+            "pos_y": 177,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(221, 123, 26)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": -1,
+            "threshold": 0
+        },
+        "76": {
+            "position": 7,
+            "type": "icon",
+            "id": "76",
+            "icon": "carbon:home",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(221, 123, 26)",
+            "pos_x": 324.5,
+            "pos_y": 60.5,
+            "shadow": "",
+            "source": -1,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none"
+        },
+        "77": {
+            "position": 6,
+            "type": "icon",
+            "id": "77",
+            "icon": "material-symbols:heat-sharp",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(221, 123, 26)",
+            "pos_x": 324.5,
+            "pos_y": 160.5,
+            "shadow": "",
+            "source": -1,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none"
+        },
+        "79": {
+            "position": 5,
+            "type": "circle",
+            "id": 79,
+            "radius": 30,
+            "pos_x": 251,
+            "pos_y": 177,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(221, 123, 26)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": -1,
+            "threshold": 0,
+            "override": {
+                ">1": {
+                    "display": "none"
+                },
+                "<1": {
+                    "display": "inline"
+                }
+            }
+        },
+        "80": {
+            "position": 5,
+            "type": "icon",
+            "id": "80",
+            "icon": "mdi:house-city",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(221, 123, 26)",
+            "pos_x": 234.5,
+            "pos_y": 160.5,
+            "shadow": "",
+            "source": 36,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none",
+            "override": {
+                "0": {
+                    "display": "none"
+                },
+                "1": {
+                    "display": "inline"
+                }
+            }
+        },
+        "81": {
+            "position": 4,
+            "type": "circle",
+            "id": 81,
+            "radius": 30,
+            "pos_x": 341,
+            "pos_y": 278,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(221, 123, 26)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": -1,
+            "threshold": 0
+        },
+        "83": {
+            "position": 4,
+            "type": "icon",
+            "id": "83",
+            "icon": "material-symbols:electric-car-outline",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(221, 123, 26)",
+            "pos_x": 324.5,
+            "pos_y": 261.5,
+            "shadow": "",
+            "source": -1,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none"
+        },
+        "84": {
+            "position": 3,
+            "type": "circle",
+            "id": 84,
+            "radius": 30,
+            "pos_x": 154,
+            "pos_y": 77,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(0, 181, 221)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": -1,
+            "threshold": 0
+        },
+        "85": {
+            "position": 1,
+            "type": "circle",
+            "id": 85,
+            "radius": 30,
+            "pos_x": 154,
+            "pos_y": 278,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(87, 221, 46)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": -1,
+            "threshold": 0
+        },
+        "86": {
+            "position": 8,
+            "type": "text",
+            "subType": "datasource",
+            "id": 86,
+            "pos_x": 154,
+            "pos_y": 319,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 86",
+            "unit": "kW",
+            "source": 29,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay"
+        },
+        "87": {
+            "position": 16,
+            "type": "text",
+            "subType": "datasource",
+            "id": 87,
+            "pos_x": 154,
+            "pos_y": 36,
+            "color": "none",
+            "fill": "rgb(0, 181, 221)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "kW",
+            "source": 31,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "override": {
+                "<=0": {
+                    "display": "none"
+                },
+                ">0": {
+                    "display": "inline"
+                }
+            }
+        },
+        "88": {
+            "position": 0,
+            "type": "circle",
+            "id": 88,
+            "radius": 30,
+            "pos_x": 54,
+            "pos_y": 177,
+            "fill": "rgb(0, 0, 0)",
+            "color": "rgb(115, 119, 128)",
+            "stroke": 2,
+            "shadow": "rgba(0, 0, 0, 0.7)",
+            "frame": "_overlay",
+            "fill_type": -1,
+            "fill_direction": 90,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": 28,
+            "threshold": 0
+        },
+        "89": {
+            "position": 6,
+            "type": "text",
+            "subType": "datasource",
+            "id": 89,
+            "pos_x": 54,
+            "pos_y": 219,
+            "color": "none",
+            "fill": "rgb(115, 119, 128)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 89",
+            "unit": "kW",
+            "source": 28,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 100,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay"
+        },
+        "91": {
+            "position": 5,
+            "type": "text",
+            "id": 91,
+            "pos_x": 154,
+            "pos_y": 335,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "Batterie",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "92": {
+            "position": 9,
+            "type": "icon",
+            "id": "92",
+            "icon": "mdi:electricity-from-grid",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(115, 119, 128)",
+            "pos_x": 37.5,
+            "pos_y": 160.5,
+            "shadow": "",
+            "source": 28,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none",
+            "override": {
+                "<1": {
+                    "display": "none"
+                },
+                ">0": {
+                    "display": "inline"
+                }
+            }
+        },
+        "93": {
+            "position": 4,
+            "type": "text",
+            "id": 93,
+            "pos_x": 341,
+            "pos_y": 235,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Heizung",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "94": {
+            "position": 3,
+            "type": "text",
+            "id": 94,
+            "pos_x": 341,
+            "pos_y": 133,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Haus",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "95": {
+            "position": 2,
+            "type": "text",
+            "id": 95,
+            "pos_x": 341,
+            "pos_y": 335,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Wallbox",
+            "shadow": "",
+            "frame": "_overlay"
+        },
+        "97": {
+            "position": 2,
+            "type": "icon",
+            "id": "97",
+            "icon": "mdi:electricity-to-grid",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(115, 119, 128)",
+            "pos_x": 37.5,
+            "pos_y": 160.5,
+            "shadow": "",
+            "source": 28,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none",
+            "override": {
+                ">0": {
+                    "display": "none"
+                },
+                "<0": {
+                    "display": "inline"
+                }
+            }
+        },
+        "108": {
+            "position": 1,
+            "type": "text",
+            "subType": "datasource",
+            "id": 108,
+            "pos_x": 154,
+            "pos_y": 295,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "ID 108",
+            "unit": "%",
+            "source": 27,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "none",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 0,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "prepend": ""
+        },
+        "110": {
+            "position": 13,
+            "type": "icon",
+            "id": "110",
+            "icon": "mdi:house-city",
+            "width": 33,
+            "height": 33,
+            "color": "rgb(221, 0, 0)",
+            "pos_x": 234.5,
+            "pos_y": 160.5,
+            "shadow": "",
+            "source": 36,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none",
+            "override": {
+                "0": {
+                    "display": "inline"
+                },
+                "1": {
+                    "display": "none"
+                }
+            }
+        },
+        "111": {
+            "position": 0,
+            "type": "text",
+            "subType": "datasource",
+            "id": 111,
+            "pos_x": 341,
+            "pos_y": 319,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 111",
+            "unit": "W",
+            "source": -1,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "auto",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 0,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay"
+        },
+        "112": {
+            "position": 1,
+            "type": "icon",
+            "id": "112",
+            "icon": "f7:battery-0",
+            "width": 39,
+            "height": 33,
+            "color": "rgb(87, 221, 46)",
+            "pos_x": 135,
+            "pos_y": 262,
+            "shadow": "",
+            "source": 27,
+            "threshold": 0,
+            "frame": "_overlay",
+            "action": "none",
+            "override": {}
+        },
+        "113": {
+            "position": 2,
+            "type": "rect",
+            "id": 113,
+            "rx": 3,
+            "height": 14,
+            "width": 26,
+            "pos_x": 139.5,
+            "pos_y": 271.5,
+            "fill": "none",
+            "color": "rgb(87, 221, 46)",
+            "stroke": 1,
+            "shadow": "",
+            "frame": "_overlay",
+            "fill_value": "rgb(87,221,46)",
+            "fill_type": "value",
+            "fill_direction": 180,
+            "fill_max": 100,
+            "border_type": -1,
+            "border_direction": "cw",
+            "border_style": "round",
+            "border_reverse": false,
+            "border_start": 180,
+            "source": 27,
+            "threshold": 0,
+            "override": {}
+        },
+        "114": {
+            "position": 14,
+            "type": "text",
+            "id": 114,
+            "pos_x": 54,
+            "pos_y": 20,
+            "color": "none",
+            "fill": "rgb(0, 181, 221)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 14,
+            "align": "middle",
+            "text": "Tageswerte",
+            "shadow": "",
+            "frame": "_overlay",
+            "group": null
+        },
+        "115": {
+            "position": 12,
+            "id": 115,
+            "pos_x": 22,
+            "pos_y": 29,
+            "source": -1,
+            "type": "icon",
+            "width": 14,
+            "height": 14,
+            "icon": "mdi:peak",
+            "color": "rgb(0, 181, 221)"
+        },
+        "118": {
+            "position": 11,
+            "id": 118,
+            "pos_x": 22,
+            "pos_y": 59,
+            "source": -1,
+            "type": "icon",
+            "width": 14,
+            "height": 14,
+            "icon": "mdi:electricity-to-grid",
+            "color": "rgb(115, 119, 128)",
+            "group": null
+        },
+        "119": {
+            "position": 0,
+            "id": 119,
+            "pos_x": 22,
+            "pos_y": 44,
+            "source": -1,
+            "type": "icon",
+            "width": 14,
+            "height": 14,
+            "icon": "ph:solar-panel-fill",
+            "color": "rgb(0, 181, 221)",
+            "group": null
+        },
+        "120": {
+            "position": 21,
+            "type": "text",
+            "subType": "datasource",
+            "id": 120,
+            "pos_x": 74.5,
+            "pos_y": 51,
+            "color": "none",
+            "fill": "rgb(0, 181, 221)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "kWh",
+            "source": 47,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "group": null
+        },
+        "121": {
+            "position": 7,
+            "type": "text",
+            "subType": "datasource",
+            "id": 121,
+            "pos_x": 75.5,
+            "pos_y": 36,
+            "color": "none",
+            "fill": "rgb(0, 181, 221)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "W",
+            "source": 39,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "none",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": "0",
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "group": null
+        },
+        "122": {
+            "position": 4,
+            "id": 122,
+            "pos_x": 22,
+            "pos_y": 74,
+            "source": -1,
+            "type": "icon",
+            "width": 14,
+            "height": 14,
+            "icon": "carbon:home",
+            "color": "rgb(221, 123, 26)",
+            "group": null
+        },
+        "123": {
+            "position": 3,
+            "id": 123,
+            "pos_x": 22,
+            "pos_y": 89,
+            "source": 48,
+            "type": "icon",
+            "width": 14,
+            "height": 14,
+            "icon": "mdi:island",
+            "color": "rgb(221, 143, 29)",
+            "group": null,
+            "override": {
+                "<=33": {
+                    "color": "rgb(221,0,0)",
+                    "display": "inline"
+                },
+                "<=66": {
+                    "color": "rgb(221,194,50)",
+                    "display": "inline"
+                },
+                ">66": {
+                    "color": "rgb(87,221,46)",
+                    "display": "inline"
+                }
+            }
+        },
+        "124": {
+            "position": 17,
+            "type": "text",
+            "subType": "datasource",
+            "id": 124,
+            "pos_x": 75.5,
+            "pos_y": 96,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "%",
+            "source": 48,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "none",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "group": null,
+            "override": {
+                "<=33": {
+                    "fill": "rgb(221,0,0)",
+                    "display": "inline"
+                },
+                "<=66": {
+                    "fill": "rgb(221,194,50)",
+                    "display": "inline"
+                },
+                ">66": {
+                    "fill": "rgb(87,221,46)",
+                    "display": "inline"
+                }
+            }
+        },
+        "126": {
+            "position": 19,
+            "id": 126,
+            "pos_x": 154,
+            "pos_y": 262,
+            "source": 43,
+            "calculate_kw": "none",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 0,
+            "type": "text",
+            "align": "middle",
+            "subType": "datasource",
+            "text": "Datasource 125",
+            "source_option": -1,
+            "source_option_lc": -1,
+            "source_display": "text",
+            "linebreak": 0,
+            "subtract": [],
+            "add": [],
+            "unit": "",
+            "source_action": 43,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_size": 11,
+            "font_family": "\"Arial\", sans-serif",
+            "override": {
+                "00:00": {
+                    "display": "none"
+                },
+                "default": {
+                    "display": "inline"
+                }
+            },
+            "group": null
+        },
+        "127": {
+            "position": 0,
+            "id": 127,
+            "pos_x": 154,
+            "pos_y": 262,
+            "source": 44,
+            "calculate_kw": "none",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 0,
+            "type": "text",
+            "align": "middle",
+            "subType": "datasource",
+            "text": "Datasource 125",
+            "source_option": -1,
+            "source_option_lc": -1,
+            "source_display": "text",
+            "linebreak": 0,
+            "subtract": [],
+            "add": [],
+            "unit": "",
+            "source_action": 44,
+            "color": "none",
+            "fill": "rgb(87, 221, 46)",
+            "font_size": 11,
+            "font_family": "\"Arial\", sans-serif",
+            "override": {
+                "00:00": {
+                    "display": "none"
+                },
+                "default": {
+                    "display": "inline"
+                }
+            },
+            "group": null
+        },
+        "128": {
+            "position": 19,
+            "type": "text",
+            "subType": "datasource",
+            "id": 128,
+            "pos_x": 73.5,
+            "pos_y": 80,
+            "color": "none",
+            "fill": "rgb(221, 123, 26)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "kWh",
+            "source": 49,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "group": null
+        },
+        "129": {
+            "position": 18,
+            "type": "text",
+            "subType": "datasource",
+            "id": 129,
+            "pos_x": 73.5,
+            "pos_y": 65,
+            "color": "none",
+            "fill": "rgb(115, 119, 128)",
+            "font_family": "Arial, sans-serif",
+            "font_size": 15,
+            "align": "middle",
+            "text": "ID 87",
+            "unit": "kWh",
+            "source": 50,
+            "source_option": -1,
+            "source_display": "value",
+            "shadow": "",
+            "threshold": 0,
+            "calculate_kw": "calc",
+            "counter_animation": false,
+            "convert": false,
+            "decimal_places": 1,
+            "action": "none",
+            "subtract": [
+                -1
+            ],
+            "add": [
+                -1
+            ],
+            "frame": "_overlay",
+            "group": null
+        }
+    },
+    "defs": {
+        "path_79_69": {
+            "type": "def",
+            "id": "path_79_69",
+            "d": "M280.1907786235773 166.73939570022995 H 286.5144671741464 A 15 15 0 0 0 301.5144671741464 151.73939570022995 V 102.26060429977007 A 15 15 0 0 1 316.5144671741464 87.26060429977007 H 311.8092213764227",
+            "startSlot": "right_top",
+            "endSlot": "left_bottom"
+        },
+        "path_79_75": {
+            "type": "def",
+            "id": "path_79_75",
+            "d": "M282 177 H 310",
+            "startSlot": "right",
+            "endSlot": "left"
+        },
+        "path_84_79": {
+            "type": "def",
+            "id": "path_84_79",
+            "d": "M164.26060429977008 106.19077862357724 V 151.73939570022995 A 15 15 0 0 0 179.26060429977008 166.73939570022995 H 221.80922137642276",
+            "startSlot": "bottom_right",
+            "endSlot": "left_top"
+        },
+        "path_85_79": {
+            "type": "def",
+            "id": "path_85_79",
+            "d": "M164.26060429977008 248.80922137642276 V 202.26060429977008 A 15 15 0 0 1 179.26060429977008 187.26060429977008 H 221.80922137642276",
+            "startSlot": "top_right",
+            "endSlot": "left_bottom"
+        },
+        "path_84_85": {
+            "type": "def",
+            "id": "path_84_85",
+            "d": "M154 108 V 247",
+            "startSlot": "bottom",
+            "endSlot": "top"
+        },
+        "path_84_88": {
+            "type": "def",
+            "id": "path_84_88",
+            "d": "M143.73939570022995 106.19077862357724 V 151.73939570022995 A 15 15 0 0 1 128.73939570022995 166.73939570022995 H 83.19077862357724",
+            "startSlot": "bottom_left",
+            "endSlot": "right_top"
+        },
+        "path_88_79": {
+            "type": "def",
+            "id": "path_88_79",
+            "d": "M85 177 H 220",
+            "startSlot": "right",
+            "endSlot": "left"
+        },
+        "path_79_81": {
+            "type": "def",
+            "id": "path_79_81",
+            "d": "M280.1907786235773 187.26060429977005 H 286.5144671741464 A 15 15 0 0 1 301.5144671741464 202.26060429977005 V 252.73939570022992 A 15 15 0 0 0 316.5144671741464 267.7393957002299 H 311.8092213764227",
+            "startSlot": "right_bottom",
+            "endSlot": "left_top"
+        },
+        "path_88_85": {
+            "type": "def",
+            "id": "path_88_85",
+            "startSlot": "right_bottom",
+            "endSlot": "top_left",
+            "d": "M83.19077862357724 187.26060429977005 H 128.73939570022995 A 15 15 0 0 1 143.73939570022995 202.26060429977005 V 248.80922137642276"
+        }
+    },
+    "lines": {
+        "line_path_79_69": {
+            "type": "line",
+            "id": "line_path_79_69",
+            "href": "#path_79_69",
+            "color": "rgb(221, 123, 26)",
+            "shadow": "",
+            "position": 5
+        },
+        "line_path_79_75": {
+            "type": "line",
+            "id": "line_path_79_75",
+            "href": "#path_79_75",
+            "color": "rgb(221, 123, 26)",
+            "shadow": "",
+            "override": {
+                "<1": {
+                    "display": "none"
+                },
+                ">1": {
+                    "display": "inline"
+                }
+            },
+            "position": 1
+        },
+        "line_path_84_79": {
+            "type": "line",
+            "id": "line_path_84_79",
+            "href": "#path_84_79",
+            "color": "rgb(0, 181, 221)",
+            "shadow": "",
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
+            "position": 6
+        },
+        "line_path_85_79": {
+            "type": "line",
+            "id": "line_path_85_79",
+            "href": "#path_85_79",
+            "color": "rgb(87, 221, 46)",
+            "shadow": "",
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
+            "position": 7
+        },
+        "line_path_84_85": {
+            "type": "line",
+            "id": "line_path_84_85",
+            "href": "#path_84_85",
+            "color": "rgb(0, 181, 221)",
+            "shadow": "",
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
+            "position": 8
+        },
+        "line_path_84_88": {
+            "type": "line",
+            "id": "line_path_84_88",
+            "href": "#path_84_88",
+            "color": "rgb(0, 181, 221)",
+            "shadow": "",
+            "override": {
+                "<=-100": {
+                    "display": "inline"
+                },
+                ">-100": {
+                    "display": "none"
+                }
+            },
+            "position": 4
+        },
+        "line_path_88_79": {
+            "type": "line",
+            "id": "line_path_88_79",
+            "href": "#path_88_79",
+            "color": "rgb(115, 119, 128)",
+            "shadow": "",
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
+            "position": 2
+        },
+        "line_path_79_81": {
+            "type": "line",
+            "id": "line_path_79_81",
+            "href": "#path_79_81",
+            "color": "rgb(221, 123, 26)",
+            "shadow": ""
+        },
+        "line_path_88_85": {
+            "type": "line",
+            "id": "line_path_88_85",
+            "color": "rgb(87, 221, 46)",
+            "href": "#path_88_85",
+            "position": 3,
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            }
+        }
+    },
+    "animations": {
+        "anim_path_79_69": {
+            "type": "animation",
+            "id": "anim_path_79_69",
+            "href": "#path_79_69",
+            "color": "rgb(221, 123, 26)",
+            "source": 30,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1
+        },
+        "anim_path_79_75": {
+            "type": "animation",
+            "id": "anim_path_79_75",
+            "href": "#path_79_75",
+            "color": "rgb(221, 123, 26)",
+            "source": -1,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1
+        },
+        "anim_path_84_79": {
+            "type": "animation",
+            "id": "anim_path_84_79",
+            "href": "#path_84_79",
+            "color": "rgb(0, 181, 221)",
+            "source": 31,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1,
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            }
+        },
+        "anim_path_85_79": {
+            "type": "animation",
+            "id": "anim_path_85_79",
+            "href": "#path_85_79",
+            "color": "rgb(87, 221, 46)",
+            "source": 29,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1,
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            }
+        },
+        "anim_path_84_85": {
+            "type": "animation",
+            "id": "anim_path_84_85",
+            "href": "#path_84_85",
+            "color": "rgb(0, 181, 221)",
+            "source": 45,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1,
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
+            "active_only": true
+        },
+        "anim_path_84_88": {
+            "type": "animation",
+            "id": "anim_path_84_88",
+            "href": "#path_84_88",
+            "color": "rgb(0, 181, 221)",
+            "source": 28,
+            "threshold": 0,
+            "animation_properties": "negative",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1,
+            "override": {
+                "<=-100": {
+                    "display": "inline"
+                },
+                ">-100": {
+                    "display": "none"
+                }
+            }
+        },
+        "anim_path_88_79": {
+            "type": "animation",
+            "id": "anim_path_88_79",
+            "href": "#path_88_79",
+            "color": "rgb(115, 119, 128)",
+            "source": 28,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1,
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            }
+        },
+        "anim_path_79_81": {
+            "type": "animation",
+            "id": "anim_path_79_81",
+            "href": "#path_79_81",
+            "color": "rgb(221, 123, 26)",
+            "source": -1,
+            "threshold": 0,
+            "animation_properties": "positive",
+            "animation_option": false,
+            "dots": 0,
+            "duration": 0,
+            "power": 0,
+            "animation_type": -1
+        },
+        "anim_path_88_85": {
+            "type": "animation",
+            "id": "anim_path_88_85",
+            "color": "rgb(87, 221, 46)",
+            "href": "#path_88_85",
+            "source": 42,
+            "animation_properties": "negative",
+            "animation_option": false,
+            "threshold": 0,
+            "dots": null,
+            "duration": null,
+            "power": null,
+            "animation_type": -1,
+            "css_general": "",
+            "css_active_positive": "",
+            "css_inactive_positive": "",
+            "css_active_negative": "",
+            "css_inactive_negative": "",
+            "override": {
+                ">=100": {
+                    "display": "inline"
+                },
+                "<100": {
+                    "display": "none"
+                }
+            },
+            "active_only": false
+        }
+    },
+    "datasources": {
+        "27": {
+            "source": "0_userdata.0.enphase.summary.SoC",
+            "alias": "SoC",
+            "factor": 1
+        },
+        "28": {
+            "source": "0_userdata.0.enphase.summary.grid.total.activePower_total",
+            "alias": "Grid",
+            "factor": 1
+        },
+        "29": {
+            "source": "0_userdata.0.enphase.summary.storage.total.activePower_total",
+            "alias": "Storage",
+            "factor": 1
+        },
+        "30": {
+            "source": "0_userdata.0.enphase.summary.load.total.activePower_total",
+            "alias": "Load",
+            "factor": 1
+        },
+        "31": {
+            "source": "0_userdata.0.enphase.summary.pv.total.activePower_total",
+            "alias": "PV",
+            "factor": 1
+        },
+        "36": {
+            "source": "0_userdata.0.enphase.summary.lifedataState",
+            "alias": "lifedataState",
+            "factor": 1
+        },
+        "39": {
+            "source": "0_userdata.0.enphase.summary.maxValues.power.maxProductionPower",
+            "alias": "maxProductionPower",
+            "factor": 1
+        },
+        "42": {
+            "source": "0_userdata.0.enphase.summary.powerflow.gridChargePower",
+            "alias": "gridChargePower",
+            "factor": 1
+        },
+        "43": {
+            "source": "0_userdata.0.enphase.summary.battery.timeToFullDischarge_h_min",
+            "alias": "timeToFullDischarge_h_min",
+            "factor": 1
+        },
+        "44": {
+            "source": "0_userdata.0.enphase.summary.battery.timeToFullCharge_h_min",
+            "alias": "timeToFullCharge_h_min",
+            "factor": 1
+        },
+        "45": {
+            "source": "0_userdata.0.enphase.summary.powerflow.storageChargePower",
+            "alias": "storageChargePower",
+            "factor": 1
+        },
+        "47": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.ProductionEnergy",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.ProductionEnergy",
+            "factor": 1
+        },
+        "48": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.autarkyEnergyEstimated",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.autarkyEnergyEstimated",
+            "factor": 1
+        },
+        "49": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.gridConsumptionEnergyEstimated",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.gridConsumptionEnergyEstimated",
+            "factor": 1
+        },
+        "50": {
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.feedInEnergyEstimated",
+            "alias": "0_userdata.0.enphase.summary.sumValues.energy.feedInEnergyEstimated",
+            "factor": 1
+        }
+    }
+}
