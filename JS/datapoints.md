@@ -109,13 +109,13 @@ In these history values you find the summary interval of the energy in the inter
 Note that the positive and negative values can accour in the interval. Maybe the result turns negativ and the come back to 0 Wh in e.g. an hour interval. You can see this perhaps on the batteries in winter. 
 
 - datapoint `consumptionEnergy_15min`: [Wh] actual consumption energy 15 minutes interval
-- datapoint `consumptionEnergy_1h`: [Wh] actual consumption energy 15 minutes interval
+- datapoint `consumptionEnergy_1h`: [Wh] actual consumption energy 1 hour interval
 - datapoint `feedInEnergy_15min`: [Wh] actual energy feed (sold) into grid 15 minutes interval
-- datapoint `feedInEnergy_1h`: [Wh] actual energy feed (sold) into grid 15 minutes interval
+- datapoint `feedInEnergy_1h`: [Wh] actual energy feed (sold) into grid 1 hour interval
 - datapoint `gridChargeEnergy_15min`: [Wh] actual energy from grid to charge your batteries 15 minutes interval
-- datapoint `gridChargeEnergy_1h`: [Wh] actual energy from grid to charge your batteries 15 minutes interval
+- datapoint `gridChargeEnergy_1h`: [Wh] actual energy from grid to charge your batteries 1 hour interval
 - datapoint `gridConsumptionEnergy_15min`: [Wh] actual energy consumption form grid 15 minutes interval
-- datapoint `gridConsumptionEnergy_1h`: [Wh] actual energy consumption form grid 15 minutes interval
+- datapoint `gridConsumptionEnergy_1h`: [Wh] actual energy consumption form grid 1 hour interval
 - datapoint `gridEnergy_15min`: [Wh] actual energy energy 15 minutes interval
 - datapoint `gridEnergy_1h`: [Wh] actual energy energy 1 hour interval
 - datapoint `productionEnergy_15min`: [Wh] actual production energy 15 minutes interval
