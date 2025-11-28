@@ -21,6 +21,13 @@ are able to adjust this to nearby 10 seconds - not really faster. To reduce loca
 frequencies for polling data of lower interest (in standard 5 and 15 minutes). Cloud data (using the cost free account 
 on enphase) are gatherd hourly - faster is not possible due to the restrictions of the cost free enphase cloud access.
 
+### Examples
+Below the folder `examples` you will find an visualisation widget for integration in ioBroker vis. 
+[(Link)](https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/tree/developement/examples/visualisation) <br>
+in This folder an [Readme.md](https://github.com/DieWaldfee/Enphase-IQ-Gateway-access/blob/developement/examples/visualisation/Readme.md) 
+describes installation and configuration - all you need to run the example. The example bases on the data from the three scripts 
+enphase_local.js, enphase_cloud.js and enphase_summary.js.
+
 ---
 
 ## Description
