@@ -117,7 +117,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
 ### 5. Daten im Objektebaum einfügen
  * Datenpunkt bearbeiten -> alte Daten im Datenpunkt löschen
  * Daten aus der Skriptvorlage einfügen
- * speichern / schreiben 
+ * schreiben 
    
 <img width="1514" height="1101" alt="image" src="https://github.com/user-attachments/assets/e5cc78f0-fbd0-4277-963f-bccf4ff83929" />
 
@@ -128,7 +128,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
 <img width="1461" height="362" alt="image" src="https://github.com/user-attachments/assets/1e70f348-3c83-49a4-bf8b-787976f7bc06" />
 
  * eChart umbenennen
- * umbenannten Chart anklicken
+ * unbenannten Chart anklicken
  * "Optionen" auswählen -> nach unten skrollen
  * web.0 klicken
    
@@ -137,6 +137,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Link in ein neues Browerfenster einfügen
 
 <img width="1066" height="633" alt="image" src="https://github.com/user-attachments/assets/d10b0066-d725-44fc-8be4-eead0b971ca3" />
+
 
 
 
