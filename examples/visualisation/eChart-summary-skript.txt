@@ -7,7 +7,7 @@
     "data": {
       "lines": [
         {
-          "name": "0 userdata 0 enphase summary histValues productionEnergy 15min",
+          "name": "production Energy",
           "id": "0_userdata.0.enphase.summary.histValues.productionEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
@@ -27,7 +27,7 @@
           "afterComma": "3"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues gridConsumptionEnergy 15min",
+          "name": "gridConsumptionEnergy",
           "id": "0_userdata.0.enphase.summary.histValues.gridConsumptionEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
@@ -44,7 +44,7 @@
           "afterComma": "3"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues storageConsumptionEnergy 15min",
+          "name": "storageConsumptionEnergy",
           "id": "0_userdata.0.enphase.summary.histValues.storageConsumptionEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 2,
@@ -60,7 +60,7 @@
           "ignoreNull": "0"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues consumptionEnergy 15min",
+          "name": "consumptionEnergy",
           "id": "0_userdata.0.enphase.summary.histValues.consumptionEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
@@ -78,7 +78,7 @@
           "convert": "val*-1"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues feedInEnergy 15min",
+          "name": "feedInEnergy",
           "id": "0_userdata.0.enphase.summary.histValues.feedInEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
@@ -96,7 +96,7 @@
           "convert": "val*-1"
         },
         {
-          "name": "0 userdata 0 enphase summary histValues storageChargeEnergy 15min",
+          "name": "storageChargeEnergy",
           "id": "0_userdata.0.enphase.summary.histValues.storageChargeEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 2,
@@ -177,5 +177,5 @@
   },
   "from": "system.adapter.admin.0",
   "user": "system.user.admin",
-  "ts": 1764216081207
+  "ts": 1764316065080
 }
