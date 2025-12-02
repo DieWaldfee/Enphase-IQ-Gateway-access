@@ -1613,7 +1613,7 @@
             "factor": 1
         },
         "49": {
-            "source": "0_userdata.0.enphase.summary.sumValues.energy.gridConsumptionEnergyEstimated",
+            "source": "0_userdata.0.enphase.summary.sumValues.energy.gridEnergyEstimated",
             "alias": "0_userdata.0.enphase.summary.sumValues.energy.gridConsumptionEnergyEstimated",
             "factor": 1
         },
