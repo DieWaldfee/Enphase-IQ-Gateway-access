@@ -92,7 +92,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
   
     * `0_userdata.0.enphase.summary.histValues.consumptionEnergy_15min`
     * `0_userdata.0.enphase.summary.histValues.feedInEnergy_15min`
-    * `0_userdata.0.enphase.summary.histValues.gridConsumptionEnergy_15min`
+    * `0_userdata.0.enphase.summary.histValues.gridEnergy_15min`
     * `0_userdata.0.enphase.summary.histValues.productionEnergy_15min`
     * `0_userdata.0.enphase.summary.histValues.storageChargeEnergy_15min`
     * `0_userdata.0.enphase.summary.histValues.storageConsumptionEnergy_15min`
@@ -137,6 +137,7 @@ Visualisierung der Bezugs- / Verbrauchsdaten
  * Link in ein neues Browerfenster einfügen
 
 <img width="1066" height="633" alt="image" src="https://github.com/user-attachments/assets/d10b0066-d725-44fc-8be4-eead0b971ca3" />
+
 
 
 
