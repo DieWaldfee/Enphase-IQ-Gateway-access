@@ -27,8 +27,8 @@
           "afterComma": "3"
         },
         {
-          "name": "gridConsumptionEnergy",
-          "id": "0_userdata.0.enphase.summary.histValues.gridConsumptionEnergy_15min",
+          "name": "gridEnergy",
+          "id": "0_userdata.0.enphase.summary.histValues.gridEnergy_15min",
           "instance": "system.adapter.history.0",
           "thickness": 1,
           "chartType": "bar",
@@ -177,5 +177,5 @@
   },
   "from": "system.adapter.admin.0",
   "user": "system.user.admin",
-  "ts": 1764316065080
+  "ts": 1764686399427
 }
