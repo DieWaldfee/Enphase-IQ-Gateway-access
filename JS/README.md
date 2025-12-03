@@ -109,6 +109,13 @@ iobroker fix
 - The modules are installed only for the JavaScript adapter.
 - This isolation prevents version conflicts with other adapters and keeps dependencies clean.
 
+**Graphical way to grand access to the needed modules**
+
+A graphical way to grand access to these modules is to enable the modules in the configruartion of the javascript-adapter. This way needs the modules to be installed in your ioBroker in general. Normaly most adapter you have installed yet have still loaded these three modules. See the configuration below:
+
+&nbsp;&nbsp;&nbsp;&nbsp;<img width="308" height="224" alt="504966638-38732018-b9d8-4025-87da-c88618aa8a3d" src="https://github.com/user-attachments/assets/d555c0c2-0fa1-44b3-b721-002821f2be88" />
+
+
 ---
 
 ## Datapoint configuration enphase.js
