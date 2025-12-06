@@ -355,6 +355,30 @@ if (bearer_token == '') {
 // -------------------------------------------------------------------------------------------------------------------
 // Requests a new Enphase bearer token from the Enphase cloud.
 // -------------------------------------------------------------------------------------------------------------------
+/**
+ * Validates the format of a bearer token.
+ * @param {string} token - The token to validate.
+ * @returns {boolean} - Returns true if the token is valid, false otherwise.
+ */
+function isValidToken(token) {
+   // Check if the token is a non-empty string
+   if (typeof token !== 'string' || token.trim() === '') {
+      return false;
+   }
+
+   // Check the length of the token (e.g., 128 characters)
+   if (token.length < 50 || token.length > 512) {
+      return false;
+   }
+
+   // Check for allowed characters (alphanumeric, dots, dashes, underscores)
+   const tokenRegex = /^[a-zA-Z0-9._-]+$/;
+   if (!tokenRegex.test(token)) {
+      return false;
+   }
+
+   return true;
+}
 /** Parameters:
  * @param {string} envoy_username - Enphase Enlighten Cloud username.
  * @param {string} envoy_password - Enphase Enlighten Cloud password.
@@ -403,6 +427,11 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
          },
       });
       const tokenRaw = await tokenResponse.text();
+      // Validate the token
+      if (!isValidToken(tokenRaw)) {
+         log('Invalid token received: ' + tokenRaw, 'error');
+         throw new Error('Token validation failed. Received an invalid token.');
+      }
       if (debug > 1) log('New token: ' + tokenRaw, 'info');
       return tokenRaw;
    } catch (error) {
