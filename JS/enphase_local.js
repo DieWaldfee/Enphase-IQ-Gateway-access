@@ -430,7 +430,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
       // Validate the token
       if (!isValidToken(tokenRaw)) {
          log('Invalid token received: ' + tokenRaw, 'error');
-         throw new Error('Token validation failed. Received an invalid token.');
+         throw new Error('Token validation failed. Received an invalid token');
       }
       if (debug > 1) log('New token: ' + tokenRaw, 'info');
       return tokenRaw;
