@@ -84,6 +84,7 @@ Key points combining these data:
 * V3.3.4  Bugfix in histValues: zero-schedule corrected
 * V3.3.5  visualisation example added
 * V3.3.6  Bugfix in example/visualisation
+* V3.3.7  storageChargePower - gridChargePower = >solarChargePower added + token validation in enphase_local.js added
 * V4.0.0  planed: redesign in typescript parallel to the javascript-version (free to choose js or ts) (2025 Q4)
 * V5.0.0  planed: redesign into ioBroker adapter (2026 Q2-Q3)
 
