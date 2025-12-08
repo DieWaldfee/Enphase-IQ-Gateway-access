@@ -2394,6 +2394,7 @@ async function calcActualPowerflow(timeDiff = 0) {
    let gridChargePower = 0;
    let storageConsumptionPower = 0;
    let storageChargePower = 0;
+   let solarChargePower = 0;
    let autarky = 0;
    // time difference in hours between current and last measurement
    let timeDiffHours = timeDiff / 3600000; // convert timeDiff from milliseconds to hours
@@ -2481,6 +2482,13 @@ async function calcActualPowerflow(timeDiff = 0) {
       gridChargePower = 0;
    }
    if (debug > 1) log(`Grid Charge Power: ${gridChargePower} W`, 'info');
+   // calculate solar charge power
+   if (storageChargePower > gridChargePower) {
+      solarChargePower = storageChargePower - gridChargePower;
+   } else {
+      solarChargePower = 0;
+   }
+   if (debug > 1) log(`Solar Charge Power: ${solarChargePower} W`, 'info');
    // calculate autarky
    if (consumptionPower == 0) {
       autarky = 100; // no consumption -> autarky 100%; avoid division by zero
@@ -2500,6 +2508,7 @@ async function calcActualPowerflow(timeDiff = 0) {
    gridChargeEnergyEstimated = gridChargePower * timeDiffHours;
    storageConsumptionEnergyEstimated = storageConsumptionPower * timeDiffHours;
    storageChargeEnergyEstimated = storageChargePower * timeDiffHours;
+   solarChargeEnergyEstimated = solarChargePower * timeDiffHours;
    if (debug > 1) log(`productionEnergyEstimated: ${productionEnergyEstimated} Wh`, 'info');
    if (debug > 1) log(`consumptionEnergyEstimated: ${consumptionEnergyEstimated} Wh`, 'info');
    if (debug > 1) log(`gridEnergyEstimated: ${gridEnergyEstimated} Wh`, 'info');
@@ -2511,6 +2520,7 @@ async function calcActualPowerflow(timeDiff = 0) {
    if (debug > 1) log(`gridChargeEnergyEstimated: ${gridChargeEnergyEstimated} Wh`, 'info');
    if (debug > 1) log(`storageConsumptionEnergyEstimated: ${storageConsumptionEnergyEstimated} Wh`, 'info');
    if (debug > 1) log(`storageChargeEnergyEstimated: ${storageChargeEnergyEstimated} Wh`, 'info');
+   if (debug > 1) log(`solarChargeEnergyEstimated: ${solarChargeEnergyEstimated} Wh`, 'info');
    autarkyEnergyEstimated = 0;
    let totalselfConsumptionEnergyEstimated = 0;
    let totalstorageConsumptionEnergyEstimated = 0;
@@ -2618,6 +2628,15 @@ async function calcActualPowerflow(timeDiff = 0) {
       def: 0,
       unit: 'W',
       desc: 'Storage Charge Power in W',
+   });
+   await ensureStateAsync(dst_summary + 'powerflow.solarChargePower', Math.round(solarChargePower * 10) / 10, {
+      read: true,
+      write: false,
+      type: 'number',
+      role: 'value',
+      def: 0,
+      unit: 'W',
+      desc: 'Solar Charge Power in W',
    });
    await ensureStateAsync(dst_summary + 'powerflow.autarky', Math.round(autarky), {
       read: true,
@@ -2824,6 +2843,25 @@ async function calcActualPowerflow(timeDiff = 0) {
          def: 0,
          unit: 'Wh',
          desc: 'Storage Charge Energy in Wh based on time difference',
+      }
+   );
+   if (existsState(dst_summary + 'sumValues.energy.solarChargeEnergyEstimated')) {
+      tempEnergy = getState(dst_summary + 'sumValues.energy.solarChargeEnergyEstimated').val;
+   } else {
+      tempEnergy = 0;
+   }
+   tempEnergy = tempEnergy + solarChargeEnergyEstimated;
+   await ensureStateAsync(
+      dst_summary + 'sumValues.energy.solarChargeEnergyEstimated',
+      Math.round(tempEnergy * 10) / 10,
+      {
+         read: true,
+         write: false,
+         type: 'number',
+         role: 'value',
+         def: 0,
+         unit: 'Wh',
+         desc: 'Solar Charge Energy in Wh based on time difference',
       }
    );
    // calculate autarky based on energy data
@@ -3436,6 +3474,7 @@ async function createPowerflowHistory(timeDiff) {
       'Storage charge energy in interval',
       timeDiff
    );
+   await createHistoryDatapoint('solarChargePower', 'solarChargeEnergy', 'Solar charge energy in interval', timeDiff);
    await createHistoryDatapoint(
       'storageConsumptionPower',
       'storageConsumptionEnergy',
