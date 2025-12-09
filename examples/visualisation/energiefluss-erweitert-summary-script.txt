@@ -1549,57 +1549,57 @@
     "datasources": {
         "27": {
             "source": "0_userdata.0.enphase.summary.SoC",
-            "alias": "SoC",
+            "alias": "0_userdata.0.enphase.summary.SoC",
             "factor": 1
         },
         "28": {
             "source": "0_userdata.0.enphase.summary.grid.total.activePower_total",
-            "alias": "Grid",
+            "alias": "0_userdata.0.enphase.summary.grid.total.activePower_total",
             "factor": 1
         },
         "29": {
             "source": "0_userdata.0.enphase.summary.storage.total.activePower_total",
-            "alias": "Storage",
+            "alias": "0_userdata.0.enphase.summary.storage.total.activePower_total",
             "factor": 1
         },
         "30": {
             "source": "0_userdata.0.enphase.summary.load.total.activePower_total",
-            "alias": "Load",
+            "alias": "0_userdata.0.enphase.summary.load.total.activePower_total",
             "factor": 1
         },
         "31": {
             "source": "0_userdata.0.enphase.summary.pv.total.activePower_total",
-            "alias": "PV",
+            "alias": "0_userdata.0.enphase.summary.pv.total.activePower_total",
             "factor": 1
         },
         "36": {
             "source": "0_userdata.0.enphase.summary.lifedataState",
-            "alias": "lifedataState",
+            "alias": "0_userdata.0.enphase.summary.lifedataState",
             "factor": 1
         },
         "39": {
             "source": "0_userdata.0.enphase.summary.maxValues.power.maxProductionPower",
-            "alias": "maxProductionPower",
+            "alias": "0_userdata.0.enphase.summary.maxValues.power.maxProductionPower",
             "factor": 1
         },
         "42": {
             "source": "0_userdata.0.enphase.summary.powerflow.gridChargePower",
-            "alias": "gridChargePower",
+            "alias": "0_userdata.0.enphase.summary.powerflow.gridChargePower",
             "factor": 1
         },
         "43": {
             "source": "0_userdata.0.enphase.summary.battery.timeToFullDischarge_h_min",
-            "alias": "timeToFullDischarge_h_min",
+            "alias": "0_userdata.0.enphase.summary.battery.timeToFullDischarge_h_min",
             "factor": 1
         },
         "44": {
             "source": "0_userdata.0.enphase.summary.battery.timeToFullCharge_h_min",
-            "alias": "timeToFullCharge_h_min",
+            "alias": "0_userdata.0.enphase.summary.battery.timeToFullCharge_h_min",
             "factor": 1
         },
         "45": {
-            "source": "0_userdata.0.enphase.summary.powerflow.storageChargePower",
-            "alias": "storageChargePower",
+            "source": "0_userdata.0.enphase.summary.powerflow.solarChargePower",
+            "alias": "0_userdata.0.enphase.summary.powerflow.solarChargePower",
             "factor": 1
         },
         "47": {
