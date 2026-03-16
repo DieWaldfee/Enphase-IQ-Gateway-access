@@ -5,30 +5,25 @@
 
 const fetch = require('node-fetch');
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const open = require('open');
-const { get } = require('http');
-const { clear } = require('console');
-const { type } = require('os');
 
 // -------------------------------------------------------------------------------------------------------------------
 // Check if required modules are loaded correctly (node-fetch, express, open)
 // -------------------------------------------------------------------------------------------------------------------
 if (typeof fetch !== 'function') {
-   log('Module node-fetch is not loaded as a function. Script stopped.', 'error');
+   log('Module node-fetch is not loaded as a function - Script stopped', 'error');
    stopMyScript();
    return;
 }
 // Check if express is loaded correctly
 if (typeof express !== 'function') {
-   log('Module express is not loaded as a function. Script stopped.', 'error');
+   log('Module express is not loaded as a function - Script stopped', 'error');
    stopMyScript();
    return;
 }
 // Check if open is loaded correctly
 if (typeof open !== 'function') {
-   log('Module open is not loaded as a function. Script stopped.', 'error');
+   log('Module open is not loaded as a function - Script stopped', 'error');
    stopMyScript();
    return;
 }
@@ -130,7 +125,7 @@ if (!serverURI.startsWith('http://') && !serverURI.startsWith('https://')) {
 if (typeof Port !== 'number' || Port < 1 || Port > 65535) {
    throw new Error('Port must be a number between 1 and 65535');
 }
-if (debug >= 0) log('Input validation passed', 'info');
+if (debug > 0) log('Input validation passed', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // Enphase specific values and server setup
@@ -197,19 +192,17 @@ app.get('/callback', async (req, res) => {
       const expiryTime = new Date(now + expiresIn * 1000);
       setState(dpExpire, expiryTime.toISOString(), true);
       setState(dpExpireTS, expiryTime.getTime(), true);
-      if (debug >= 0) log('Access token expires at: ' + expiryTime.toLocaleString(), 'info');
+      if (debug > 0) log('Access token expires at: ' + expiryTime.toLocaleString(), 'info');
 
       res.send(`<h3>Token saved ✅</h3>
               <p>Access token expires at:<br><b>${expiryTime.toLocaleString()}</b></p>
               <pre>${JSON.stringify(data, null, 2)}</pre>`);
    } catch (e) {
-      setState(dpAccess, '', true);
-      setState(dpRefresh, '', true);
-      setState(dpExpire, '', true);
-      res.send('Exception: ' + e.message);
-      log('Error during token request: ' + e.message, 'error');
-      log('Script stopped. Please re-authenticate by restarting the script', 'error');
-      stopMyScript();
+      const msg = e instanceof Error ? e.message : String(e);
+      log('Error during token request: ' + msg, 'error');
+      res.send(`<h3>Token exchange failed ❌</h3>
+               <p>${msg}</p>
+               <p><a href="/">Click here to retry authentication</a></p>`);
    }
 });
 if (debug >= 1) log('Express server callback done', 'info');
@@ -217,44 +210,77 @@ if (debug >= 1) log('Express server callback done', 'info');
 // -------------------------------------------------------------------------------------------------------------------
 // Token Refresh Funktion
 // -------------------------------------------------------------------------------------------------------------------
-// Manual token refresh via script function
-async function refreshToken() {
-   const refreshToken = getState(dpRefresh).val;
-   if (!refreshToken) {
-      log('No refresh token available', 'error');
-      return;
-   }
-   const basic = Buffer.from(`${Client_ID}:${Client_Secret}`).toString('base64');
-   const url = `${TOKEN_URL}?grant_type=refresh_token&refresh_token=${encodeURIComponent(refreshToken)}`;
+const FETCH_TIMEOUT_MS = 15000; // 15 seconds — fetch timeout for all HTTP calls
+let isRefreshing = false;       // Guard: prevents concurrent token refresh calls
 
-   const resp = await fetch(url, {
-      method: 'POST',
-      headers: { Authorization: `Basic ${basic}` },
-   });
-   const data = await resp.json();
+// Refreshes the access token using the stored refresh token.
+// Returns true on success, false on transient errors (network, 5xx).
+// Clears tokens and stops the script only on real auth errors (401/403).
+// Retry on failure happens automatically via the 6h schedule.
+async function refreshToken() {
+   if (isRefreshing) {
+      log('Token refresh already in progress - skipping duplicate call', 'warn');
+      return false;
+   }
+   const currentRefreshToken = getState(dpRefresh).val;
+   if (!currentRefreshToken) {
+      log('No refresh token available - Please re-authenticate', 'error');
+      return false;
+   }
+
+   isRefreshing = true;
+   const basic = Buffer.from(`${Client_ID}:${Client_Secret}`).toString('base64');
+   const url = `${TOKEN_URL}?grant_type=refresh_token&refresh_token=${encodeURIComponent(currentRefreshToken)}`;
+
+   let resp, data;
+   try {
+      resp = await fetch(url, {
+         method: 'POST',
+         headers: { Authorization: `Basic ${basic}` },
+         timeout: FETCH_TIMEOUT_MS,
+      });
+      data = await resp.json();
+   } catch (networkErr) {
+      const msg = networkErr instanceof Error ? networkErr.message : String(networkErr);
+      log('Token refresh network/timeout error: ' + msg + ' - will retry at next scheduled refresh', 'warn');
+      isRefreshing = false;
+      return false;
+   }
+
    if (resp.ok) {
       setState(dpAccess, data.access_token, true);
       setState(dpRefresh, data.refresh_token, true);
       log('Token successfully renewed', 'info');
-      // Ablaufzeit berechnen und speichern
       if (data.expires_in) {
          const now = Date.now();
          const expiryTime = new Date(now + data.expires_in * 1000);
          setState(dpExpire, expiryTime.toISOString(), true);
+         setState(dpExpireTS, expiryTime.getTime(), true);
          log('Access token expires at: ' + expiryTime.toLocaleString(), 'info');
       } else {
          setState(dpExpire, '', true);
+         setState(dpExpireTS, 0, true);
          log('No expires_in field in token response', 'warn');
       }
       if (debug >= 2) log('token renew response: ' + getState(dpExpire).val, 'info');
+      isRefreshing = false;
+      return true;
    } else {
-      setState(dpAccess, '', true);
-      setState(dpRefresh, '', true);
-      setState(dpExpire, '', true);
-      log('Refresh error: ' + JSON.stringify(data), 'error');
-      log('Script stopped. Please re-authenticate', 'error');
-      log('Script stopped. Please re-authenticate by restarting the script', 'error');
-      stopMyScript();
+      if (resp.status === 401 || resp.status === 403) {
+         // Token is genuinely invalid → clear tokens, keep server running, open browser for re-auth
+         setState(dpAccess, '', true);
+         setState(dpRefresh, '', true);
+         setState(dpExpire, '', true);
+         setState(dpExpireTS, 0, true);
+         log('Token refresh rejected with HTTP ' + resp.status + ' - tokens cleared - Opening browser for re-authentication', 'error');
+         isRefreshing = false;
+         open(`${serverURI}:${Port}/`);
+      } else {
+         // Temporary server error (5xx etc.) → keep existing token, retry at next schedule
+         log('Token refresh HTTP error ' + resp.status + ' - keeping existing token - will retry at next scheduled refresh', 'warn');
+         isRefreshing = false;
+      }
+      return false;
    }
 }
 
@@ -262,14 +288,23 @@ async function refreshToken() {
 // Start Express server and schedule token refresh
 // -------------------------------------------------------------------------------------------------------------------
 // Try to refresh the token regularly (e.g. every 6 hours)
-let tokenRenewalSchedule = schedule('0 */6 * * *', refreshToken);
+let tokenRenewalSchedule = schedule('0 */6 * * *', async () => { await refreshToken(); });
 
 // -------------------------------------------------------------------------------------------------------------------
 // Start Express server
 // -------------------------------------------------------------------------------------------------------------------
 server = app.listen(Port, () => {
-   open(`${serverURI}:${Port}/`);
    log('Enphase OAuth server is running at ' + serverURI + ':' + Port, 'info');
+   // Only open browser if no valid token exists
+   const existingToken = existsState(dpAccess) ? getState(dpAccess).val : '';
+   const existingExpireTS = existsState(dpExpireTS) ? getState(dpExpireTS).val : 0;
+   const tokenIsValid = existingToken && existingExpireTS > Date.now();
+   if (!tokenIsValid) {
+      log('No valid token found - Opening browser for authentication', 'info');
+      open(`${serverURI}:${Port}/`);
+   } else {
+      if (debug > 0) log('Valid token already present - Skipping browser open', 'info');
+   }
 });
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -425,23 +460,30 @@ function safeParseJSON(jsonStr) {
    try {
       return JSON.parse(jsonStr);
    } catch (e) {
-      log('Invalid JSON:', e.message, 'warn');
+      log('Invalid JSON: ' + (e instanceof Error ? e.message : String(e)), 'warn');
       return null;
    }
 }
 // result is returned as json text
 async function apiGet(endpoint, params = '') {
    const baseUrl = 'https://api.enphaseenergy.com/api/v4/';
-   const accessToken = getState(dpAccess).val;
+   let accessToken = getState(dpAccess).val;
    const apiKey = getState(dpApiKey).val;
    // check for access token and api key
    if (!accessToken) {
-      log('❌ Kein Access Token vorhanden. Bitte Authentifizierung durchführen', 'error');
+      log('❌ Kein Access Token vorhanden - Bitte Authentifizierung durchführen', 'error');
       return null;
    }
    if (!apiKey) {
-      log('❌ Kein API-Key vorhanden. Bitte in den Credentials-Datenpunkt eintragen', 'error');
+      log('❌ Kein API-Key vorhanden - Bitte in den Credentials-Datenpunkt eintragen', 'error');
       return null;
+   }
+   // Check if the access token is still valid; refresh proactively if expired or expiring within 60 seconds
+   const expireTS = existsState(dpExpireTS) ? getState(dpExpireTS).val : 0;
+   if (expireTS && Date.now() >= expireTS - 60000) {
+      log('Access token expired or about to expire - Triggering refresh before API call', 'warn');
+      await refreshToken();
+      accessToken = getState(dpAccess).val; // re-read token after refresh
    }
    // constructing requestUrl
    const url = baseUrl + endpoint + `?key=${apiKey}` + params;
@@ -454,6 +496,7 @@ async function apiGet(endpoint, params = '') {
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
          },
+         timeout: FETCH_TIMEOUT_MS,
       });
       // check response status
       if (!response.ok) {
@@ -461,12 +504,14 @@ async function apiGet(endpoint, params = '') {
          log(`💥 Fehler bei GET ${endpoint} → Status ${response.status}: ${text}`, 'error');
          return null;
       }
-      // output response text
+      // read body once into variable to avoid double-read bug
+      const responseText = await response.text();
       if (debug >= 2) log(`✅ GET ${endpoint} erfolgreich`, 'info');
-      if (debug >= 3) log(await response.text(), 'info');
-      return await response.text();
+      if (debug >= 3) log(responseText, 'info');
+      return responseText;
    } catch (err) {
-      log(`💥 Ausnahme bei GET ${endpoint}: ${err.message}`, 'error');
+      const msg = err instanceof Error ? err.message : String(err);
+      log(`💥 Ausnahme bei GET ${endpoint}: ${msg}`, 'error');
       return null;
    }
 }
@@ -496,13 +541,13 @@ async function getAndWrite(params, endPoint, title, debug = 0) {
    }
    if (debug > 1) log('Systems known from Array: ' + JSON.stringify(systems), 'info');
    //interation through all systems found
-   for (let system in systems) {
-      if (debug > 2) log('System ID:' + systems[system], 'info');
-      const cloudData = await apiGet(`systems/${systems[system]}/${endPoint}`, params);
+   for (const systemId of systems) {
+      if (debug > 2) log('System ID:' + systemId, 'info');
+      const cloudData = await apiGet(`systems/${systemId}/${endPoint}`, params);
       const resp_json = safeParseJSON(cloudData);
       if (debug > 2) log('Parsed JSON:' + JSON.stringify(resp_json, null, 2), 'info');
-      await IObSetState(dpBasicPath + `Systems.System_${systems[system]}.${title}`, resp_json, debug);
-      if (debug > 1) log(`System ${systems[system]} ${title} saved`, 'info');
+      await IObSetState(dpBasicPath + `Systems.System_${systemId}.${title}`, resp_json, debug);
+      if (debug > 1) log(`System ${systemId} ${title} saved`, 'info');
    }
 }
 
@@ -891,19 +936,19 @@ if (existsState(dpAccess)) {
 // Note: Be cautious with API rate limits when calling functions too frequently.
 // get events and alarms every day at midnight for the last day
 // @30 days -> 30 calls per month
-const oneDayAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * 1; // 1 day ago
 let checkEventsAndAlarms = schedule('0 0 * * *', async () => {
+   const oneDayAgo = Math.floor(Date.now() / 1000) - 60 * 60 * 24; // 1 day ago — calculated fresh each run
    try {
       await getSystemsEvents(oneDayAgo);
       if (debug > 3) log('getSystemsEvents executed successfully', 'info');
    } catch (err) {
-      log('Error in getSystemsEvents:', err.message, 'error');
+      log('Error in getSystemsEvents: ' + (err instanceof Error ? err.message : String(err)), 'error');
    }
    try {
       await getSystemsAlarms(oneDayAgo, null, true);
       if (debug > 3) log('getSystemsAlarms executed successfully', 'info');
    } catch (err) {
-      log('Error in getSystemsAlarms:', err.message, 'error');
+      log('Error in getSystemsAlarms: ' + (err instanceof Error ? err.message : String(err)), 'error');
    }
 });
 // Get devices every hour
@@ -913,6 +958,6 @@ let fetchDevices = schedule('0 */1 * * *', async () => {
       await getSystemsDevices();
       if (debug > 3) log('getSystemsDevices executed successfully', 'info');
    } catch (err) {
-      log('Error in getSystemsDevices:', err.message, 'error');
+      log('Error in getSystemsDevices: ' + (err instanceof Error ? err.message : String(err)), 'error');
    }
 });
