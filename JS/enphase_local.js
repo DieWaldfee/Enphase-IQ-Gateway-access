@@ -49,6 +49,11 @@ let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x 
 // http response and error count
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
+// gateway offline detection
+let consecutiveErrors = 0; // Counts consecutive network errors for gateway offline detection
+let gatewayOffline = false; // True when gateway is detected as offline/rebooting
+const MAX_CONSECUTIVE_ERRORS = 3; // Number of consecutive errors before marking gateway as offline
+const REQUEST_TIMEOUT_MS = 10000; // Timeout for HTTP requests in milliseconds (10 sec)
 let dpPrefix = '0_userdata.0.enphase.local.'; // Prefix for ioBroker datapoints
 // credentials for enphase IQ Gateway
 const dpBasicConfigPath = '0_userdata.0.enphase.config.local.'; // datapoint path to store the values
@@ -205,8 +210,8 @@ if (envoy_username === '' || envoy_password === '' || envoy_serial_no === '' || 
    log('⚠️ One or more Enphase credentials are not set – script stopped', 'error');
    log('Please set the Enphase credentials in the corresponding datapoints under ' + dpCredentialsPath, 'info');
    log('Mandatory datapoints are: username, password, serial_no (12 digit), ip (IPv4 address)', 'info');
-   log('The script created the necessary datapoints if they did not exist.', 'info');
-   log('After setting the credentials please restart this script.', 'info');
+   log('The script created the necessary datapoints if they did not exist', 'info');
+   log('After setting the credentials please restart this script', 'info');
    stopMyScript();
    return; // prevent further execution (parallel call of schedules)
 }
@@ -302,19 +307,19 @@ function stopMyScript() {
 
 if (envoy_username === null || envoy_username === undefined || envoy_username === '') {
    log('⚠️ variable envoy_username not set – script stopped', 'error');
-   log('Please set the variable envoy_username to your Enphase Enlighten Cloud username.', 'info');
+   log('Please set the variable envoy_username to your Enphase Enlighten Cloud username', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_password === null || envoy_password === undefined || envoy_password === '') {
    log('⚠️ variable envoy_password not set – script stopped', 'error');
-   log('Please set the variable envoy_password to your Enphase Enlighten Cloud password.', 'info');
+   log('Please set the variable envoy_password to your Enphase Enlighten Cloud password', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
 if (envoy_serial_no === null || envoy_serial_no === undefined || envoy_serial_no === '') {
    log('⚠️ variable envoy_serial_no not set – script stopped', 'error');
-   log('Please set the variable envoy_serial_no to the serial number of your Envoy device.', 'info');
+   log('Please set the variable envoy_serial_no to the serial number of your Envoy device', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
@@ -322,7 +327,7 @@ if (!/^\d{12}$/.test(envoy_serial_no)) {
    //check, if exactly 12 digits
    log('⚠️ envoy_serial_no must be exactly 12 digits – script stopped', 'error');
    log(
-      'Please check the variable envoy_serial_no. It must contain exactly 12 digits (no letters, no special characters).',
+      'Please check the variable envoy_serial_no. It must contain exactly 12 digits (no letters, no special characters)',
       'info'
    );
    stopMyScript(); // stop script
@@ -330,7 +335,7 @@ if (!/^\d{12}$/.test(envoy_serial_no)) {
 }
 if (envoy_ip === null || envoy_ip === undefined || envoy_ip === '') {
    log('⚠️ variable envoy_ip not set – script stopped', 'error');
-   log('Please set the variable envoy_ip to the IP address of your Envoy device.', 'info');
+   log('Please set the variable envoy_ip to the IP address of your Envoy device', 'info');
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
@@ -340,7 +345,7 @@ if (!isValidIPv4(envoy_ip)) {
    stopMyScript(); // stop script
    return; // prevent further execution (parallel call of schedules)
 }
-if (debug > 0) log('All mandatory variables are set. Proceeding...', 'info');
+if (debug > 0) log('All mandatory variables are set. Proceeding', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // get bearer token
@@ -394,7 +399,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
       'user[password]': envoy_password,
    });
 
-   if (debug > 0) log('Renew token. 1. Login to enlighten.enphaseenergy.com to get session_id...', 'info');
+   if (debug > 0) log('Renew token. 1. Login to enlighten.enphaseenergy.com to get session_id', 'info');
 
    try {
       const loginResponse = await fetch('https://enlighten.enphaseenergy.com/login/login.json', {
@@ -418,7 +423,7 @@ async function renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, 
       if (debug > 1) log('Login successful. Session ID: ' + responseData.session_id, 'info');
       if (debug > 2) log('Proceeding to token request with data: ' + JSON.stringify(tokenData), 'info');
 
-      if (debug > 0) log('2. Login to entrez.enphaseenergy.com to get new token...', 'info');
+      if (debug > 0) log('2. Login to entrez.enphaseenergy.com to get new token', 'info');
       const tokenResponse = await fetch('https://entrez.enphaseenergy.com/tokens', {
          method: 'POST',
          body: JSON.stringify(tokenData),
@@ -590,6 +595,9 @@ function httpsRequestAsyncGet(options) {
             resolve(data);
          });
       });
+      req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+         req.destroy(new Error('Request timed out after ' + REQUEST_TIMEOUT_MS + 'ms'));
+      });
       req.on('error', (error) => {
          reject(error);
       });
@@ -609,12 +617,36 @@ function httpsRequestAsyncPost(options) {
          });
       });
       req.write(JSON.stringify({ enable: 1 }));
+      req.setTimeout(REQUEST_TIMEOUT_MS, () => {
+         req.destroy(new Error('Request timed out after ' + REQUEST_TIMEOUT_MS + 'ms'));
+      });
       req.on('error', (error) => {
          reject(error);
       });
       req.end();
    });
 }
+//Helper function to convert html-respones to escaped text
+function escapeHtml(html) {
+    return html
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+// Helper funtion checks if the response is an HTML error page instead of JSON/Token
+function isHtmlError(response) {
+    if (typeof response !== 'string') return false;
+    
+    const html = response.toLowerCase();
+    return (
+        html.includes('<html') ||
+        html.includes('<!doctype html') ||
+        html.includes('<body') ||
+        (html.includes('error') && html.includes('unauthorized'))
+    );
+   }
 // get envoy data from local envoy
 async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug = 0) {
    // Set up HTTPS request options for local Envoy
@@ -633,25 +665,35 @@ async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug =
    if (debug > 0) log(log_msg + '...started', 'info');
    if (debug > 1) log('Query local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
    let jsonData;
+
+  // start request and check for errors
    try {
       const response = await httpsRequestAsyncGet(options);
       if (debug > 1) log('Query local Envoy IP: ' + envoy_ip, 'info');
       if (debug > 2) log('Response from local Envoy: ' + response, 'info');
-      jsonData = JSON.parse(response);
+      if (isHtmlError(response)) {
+        log('Error querying local Envoy at IP ' + envoy_ip + ': response is HTML error page - not JSON', 'error');
+        log('Response: ' + escapeHtml(response), 'error');
+        jsonData = {};
+      } else {
+         jsonData = JSON.parse(response);
+      }
    } catch (error) {
-      // Error handling for request failure or JSON parsing error -> stop script here
-      throw new Error(`Error querying local Envoy at IP ${envoy_ip}: ${error.message}`);
+      // Network error (timeout, connection refused, gateway reboot, etc.)
+      // State management (consecutiveErrors, gatewayOffline) is handled at cycle level by updateGatewayState()
+      if (!gatewayOffline) {
+         log('⚠️ Error querying gateway at IP ' + envoy_ip + ': ' + escapeHtml(error instanceof Error ? error.message : String(error)), 'error');
+      }
+      return false;
    }
 
    try {
       http_resp_json = JSON.stringify(jsonData, null, 2);
-      error_cnt -= 1;
       if (debug > 2) log('JSON data to be processed: ' + JSON.stringify(jsonData), 'info');
       if (debug > 1) log(log_msg + 'ok', 'info');
       return true;
    } catch (error) {
-      error_cnt += 1;
-      log(log_msg + error.message + ' | Error cnt: ' + String(error_cnt), 'error');
+      if (!gatewayOffline) log(log_msg + (error instanceof Error ? error.message : String(error)) + ' | Error cnt: ' + String(error_cnt), 'error');
       return false;
    }
 }
@@ -670,25 +712,34 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
    if (debug > 0) log(log_msg + '...started', 'info');
    if (debug > 1) log('Query local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
    let jsonData;
+
+  // start request and check for errors
    try {
       const response = await httpsRequestAsyncPost(options);
       if (debug > 1) log('Query local Envoy IP: ' + envoy_ip, 'info');
       if (debug > 2) log('Response from local Envoy: ' + response, 'info');
-      jsonData = JSON.parse(response);
+      if (isHtmlError(response)) {
+        log('Error querying local Envoy at IP ' + envoy_ip + ': response is HTML error page - not JSON', 'error');
+        log('Response: ' + escapeHtml(response), 'error');
+        jsonData = {};
+      } else {
+         jsonData = JSON.parse(response);
+      }
    } catch (error) {
-      // Error handling for request failure or JSON parsing error -> stop script here
-      throw new Error(`Error querying local Envoy at IP ${envoy_ip}: ${error.message}`);
+      // Network error – state management handled at cycle level by updateGatewayState()
+      if (!gatewayOffline) {
+         log('⚠️ Error querying gateway at IP ' + envoy_ip + ': ' + escapeHtml(error instanceof Error ? error.message : String(error)), 'error');
+      }
+      return false;
    }
 
    try {
       http_resp_json = JSON.stringify(jsonData, null, 2);
-      error_cnt -= 1;
       if (debug > 2) log('JSON data to be processed: ' + JSON.stringify(jsonData), 'info');
       if (debug > 1) log(log_msg + 'ok', 'info');
       return true;
    } catch (error) {
-      error_cnt += 1;
-      log(log_msg + ': ' + error.message + ' | Error cnt: ' + String(error_cnt), 'error');
+      if (!gatewayOffline) log(log_msg + ': ' + (error instanceof Error ? error.message : String(error)) + ' | Error cnt: ' + String(error_cnt), 'error');
       return false;
    }
 }
@@ -714,10 +765,81 @@ function safeParseJSON(jsonStr) {
       return {};
    }
 }
+/**
+ * Updates gateway state after a complete polling cycle.
+ * Must be called once per cycle with the total number of failed requests in that cycle.
+ * Recovery and offline detection are tracked at cycle level (not per-request) to avoid
+ * false recoveries when only the first of several requests in a cycle succeeds.
+ * @param {number} cycleErrors - Number of failed GetEnvoyData calls in this cycle.
+ */
+function updateGatewayState(cycleErrors) {
+   if (cycleErrors === 0) {
+      // Entire cycle succeeded
+      if (consecutiveErrors > 0) {
+         if (gatewayOffline) {
+            log('✅ Gateway ' + envoy_ip + ' is back online after ' + consecutiveErrors + ' cycle(s) with errors.', 'info');
+         }
+         consecutiveErrors = 0;
+         gatewayOffline = false;
+         error_cnt = 0;
+      }
+   } else {
+      // At least one request in this cycle failed
+      consecutiveErrors++;
+      error_cnt++;
+      if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS && !gatewayOffline) {
+         gatewayOffline = true;
+         log('⚠️ Gateway ' + envoy_ip + ' appears to be offline or rebooting – error logging suppressed until recovery.', 'warn');
+      }
+   }
+}
+/**
+ * Sends a single lightweight HTTP request to check if the gateway SERVICE is responding.
+ * Used as recovery probe when gatewayOffline=true instead of running all endpoints.
+ * Note: Network reachability alone is not sufficient – the gateway service may still be booting
+ * after a reboot even when the host is ping-reachable.
+ * @returns {Promise<boolean>} - true if gateway responds with valid JSON, false otherwise.
+ */
+async function probeGateway() {
+   const options = {
+      hostname: envoy_ip,
+      port: 443,
+      path: ivp_production_v1, // lightweight endpoint for service probe
+      method: 'GET',
+      rejectUnauthorized: false,
+      headers: {
+         Authorization: `Bearer ${bearer_token}`,
+         Accept: 'application/json',
+      },
+   };
+   try {
+      const response = await httpsRequestAsyncGet(options);
+      const responseStr = String(response);
+      if (isHtmlError(responseStr)) {
+         // A 401/Unauthorized HTML response may indicate an expired token rather than an
+         // offline gateway. Attempt token renewal now so the next probe uses a fresh token.
+         if (responseStr.toLowerCase().includes('unauthorized') || responseStr.toLowerCase().includes('401')) {
+            log('⚠️ Probe received 401 – token may have expired. Attempting renewal.', 'warn');
+            const newToken = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
+            if (newToken) {
+               bearer_token = newToken;
+               log('✅ Token renewed during offline probe – will retry on next probe cycle.', 'info');
+            } else {
+               log('⚠️ Token renewal failed during probe – will retry at next scheduled renewal.', 'warn');
+            }
+         }
+         return false;
+      }
+      JSON.parse(responseStr); // Valid JSON = service is up and responding
+      return true;
+   } catch (error) {
+      return false; // Service still not responding
+   }
+}
 // single requests of data
 // 1. Get PV EH DEVS
 if (await GetEnvoyData(envoy_ip, ivp_eh_devs, bearer_token, 'Get EH DEVS data : ', debug)) {
-   if (debug > 1) log('Processing eh devs data...', 'info');
+   if (debug > 1) log('Processing eh devs data', 'info');
    const ehDevsData = safeParseJSON(http_resp_json);
    await IObSetState(dpPrefix + 'eh_devs', ehDevsData);
 }
@@ -729,24 +851,27 @@ pollingCron = `28 */${lowPollingInterval} * * * *`; // every x minutes with 28 s
 // start cyclic polling schedule
 const lowCyclicSchedule = schedule(pollingCron, async () => {
    try {
+      if (gatewayOffline) return; // High-freq cycle handles probe – skip low-freq entirely
       if (error_cnt <= 0) {
          if (debug > 0)
             log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes', 'info');
          if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
+         let cycleErrors = 0;
          // A. Get PV DEVICE LIST
          if (await GetEnvoyData(envoy_ip, ivp_device_list, bearer_token, 'Get DEVICE LIST data : ', debug)) {
-            if (debug > 1) log('Processing device list data...', 'info');
+            if (debug > 1) log('Processing device list data', 'info');
             const deviceListData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'device_list', deviceListData);
-         }
+         } else { cycleErrors++; }
          // B. status meters
          if (await GetEnvoyData(envoy_ip, ivp_meters_status, bearer_token, 'Get Meters status data : ', debug)) {
-            if (debug > 1) log('Processing meters status data...', 'info');
+            if (debug > 1) log('Processing meters status data', 'info');
             const metersStatusData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'meters.status', metersStatusData);
-         }
+         } else { cycleErrors++; }
+         updateGatewayState(cycleErrors);
       }
    } catch (err) {
       log('Error in low freq. scheduled polling loop: ' + err.message, 'error');
@@ -760,50 +885,53 @@ pollingCron = `13 */${medPollingInterval} * * * *`; // every x minutes with 13 s
 // start cyclic polling schedule
 const medCyclicSchedule = schedule(pollingCron, async () => {
    try {
+      if (gatewayOffline) return; // High-freq cycle handles probe – skip med-freq entirely
       if (error_cnt <= 0) {
          if (debug > 0)
             log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes', 'info');
          if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
+         let cycleErrors = 0;
          // 1. Get PV METER PRODUCTION
          if (await GetEnvoyData(envoy_ip, ivp_prod, bearer_token, 'Get Prod. data: ', debug)) {
-            if (debug > 1) log('Processing production data...', 'info');
+            if (debug > 1) log('Processing production data', 'info');
             const prodData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'production', prodData);
-         }
+         } else { cycleErrors++; }
          // 2. Get PV METER CONSUMPTION
          if (await GetEnvoyData(envoy_ip, ivp_cons, bearer_token, 'Get Cons. data: ', debug)) {
-            if (debug > 1) log('Processing consumption data...', 'info');
+            if (debug > 1) log('Processing consumption data', 'info');
             const consData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'consumption', consData);
-         }
+         } else { cycleErrors++; }
          // 3. Get PV PRODUCTION.JSON
          if (await GetEnvoyData(envoy_ip, ivp_production, bearer_token, 'Get production.json data: ', debug)) {
-            if (debug > 1) log('Processing production.json data...', 'info');
+            if (debug > 1) log('Processing production.json data', 'info');
             // Note: This URL is deprecated but still includes the "whToday" counter
             // which is not included in the new "/ivp/meters/reports/production" URL
             const prodStatData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'prod_stat', prodStatData);
-         }
+         } else { cycleErrors++; }
          // 4. Get PV MICRO INVERTER
          if (await GetEnvoyData(envoy_ip, ivp_inverters, bearer_token, 'Get Inv. data : ', debug)) {
-            if (debug > 1) log('Processing inverter data...', 'info');
+            if (debug > 1) log('Processing inverter data', 'info');
             const inverterData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'inverter', inverterData);
-         }
+         } else { cycleErrors++; }
          // 5. Get PV INVENTORY
          if (await GetEnvoyData(envoy_ip, ivp_inventory, bearer_token, 'Get INVENTORY data : ', debug)) {
-            if (debug > 1) log('Processing inventory data...', 'info');
+            if (debug > 1) log('Processing inventory data', 'info');
             const inventoryData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'inventory', inventoryData);
-         }
+         } else { cycleErrors++; }
          // 6. Get PV PRODUCTION V1
          if (await GetEnvoyData(envoy_ip, ivp_production_v1, bearer_token, 'Get PRODUCTION V1 data : ', debug)) {
-            if (debug > 1) log('Processing PRODUCTION V1 data...', 'info');
+            if (debug > 1) log('Processing PRODUCTION V1 data', 'info');
             const productionV1Data = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'production', productionV1Data);
-         }
+         } else { cycleErrors++; }
+         updateGatewayState(cycleErrors);
       }
    } catch (err) {
       log('Error in mid freq. scheduled polling loop: ' + err.message, 'error');
@@ -831,6 +959,18 @@ if (highPollingIntervalSec == 0) {
 // start cyclic polling schedule
 const highCyclicSchedule = schedule(pollingCron, async () => {
    try {
+      if (gatewayOffline) {
+         // Gateway is offline – send a single lightweight probe to detect service recovery
+         if (debug > 0) log('Gateway offline – sending probe request to ' + envoy_ip, 'info');
+         const recovered = await probeGateway();
+         if (recovered) {
+            log('✅ Gateway ' + envoy_ip + ' service is responding – resuming normal polling on next cycle.', 'info');
+            gatewayOffline = false;
+            consecutiveErrors = 0;
+            error_cnt = 0;
+         }
+         return;
+      }
       if (error_cnt <= 0) {
          if (debug > 0)
             log(
@@ -844,36 +984,35 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
          if (debug > 1) log('Resulting high cyclic polling interval: ' + pollingCron, 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
-         // Reset error count before starting new polling cycle
-         // Variable 'error_cnt' counts Envoy errors to slow down polling in case of errors
-         error_cnt = 0;
+         let cycleErrors = 0;
          // 1. Get PV METER READINGS
          if (await GetEnvoyData(envoy_ip, ivp_read, bearer_token, 'Get Meter data: ', debug)) {
-            if (debug > 1) log('Processing meter readings data...', 'info');
+            if (debug > 1) log('Processing meter readings data', 'info');
             const meterData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'meters', meterData);
-         }
+         } else { cycleErrors++; }
          // 2. Get PV LIVEDATA
          if (await GetEnvoyData(envoy_ip, ivp_livedata, bearer_token, 'Get LIVEDATA data : ', debug)) {
-            if (debug > 1) log('Processing livedata data...', 'info');
+            if (debug > 1) log('Processing livedata data', 'info');
             const livedataData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'livedata', livedataData);
-         }
+         } else { cycleErrors++; }
          // 3. Get PV METER Grid Reading
          if (await GetEnvoyData(envoy_ip, ivp_grid_reading, bearer_token, 'Get Grid Reading data : ', debug)) {
-            if (debug > 1) log('Processing grid reading data...', 'info');
+            if (debug > 1) log('Processing grid reading data', 'info');
             const gridReadingData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'meters.gridReading', gridReadingData);
-         }
+         } else { cycleErrors++; }
          // 4. Get PV METER PDM Energy
          if (await GetEnvoyData(envoy_ip, ivp_pdm_energy, bearer_token, 'Get PDM Energy data : ', debug)) {
-            if (debug > 1) log('Processing PDM Energy data...', 'info');
+            if (debug > 1) log('Processing PDM Energy data', 'info');
             const pdmEnergyData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'PDM.energy', pdmEnergyData);
-         }
+         } else { cycleErrors++; }
+         updateGatewayState(cycleErrors);
       } else {
          // Slow down polling in case of errors
-         log('Previous errors detected - skipping cycle. Error count: ' + error_cnt, 'info');
+         if (!gatewayOffline && debug > 0) log('Previous errors detected - skipping cycle. Error count: ' + error_cnt, 'info');
          error_cnt = typeof error_cnt === 'number' ? error_cnt : 0;
          error_cnt -= 1;
       }
@@ -888,9 +1027,8 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
 // sc stream update after state change in ioBroker to disabled
 // -------------------------------------------------------------------------------------------------------------------
 on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj) => {
-   let value = obj.state.val;
    if ((obj.state ? obj.state.val : 'disabled') == 'disabled') {
-      if (debug > 0) log('SC stream is disabled. Attempting to enable it...', 'info');
+      if (debug > 0) log('SC stream is disabled. Attempting to enable it', 'info');
       await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
    }
 });
@@ -901,6 +1039,12 @@ on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj)
 // Periodic token renewal. Default: Daily at midnight. Adjust as needed.
 // -------------------------------------------------------------------------------------------------------------------
 const tokenRenewalSchedule = schedule('0 0 0 * * *', async () => {
-   if (debug > 0) log('Automatic token renewal started...', 'info');
-   bearer_token = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
+   if (debug > 0) log('Automatic token renewal started', 'info');
+   const newToken = await renewEnvoyToken(envoy_username, envoy_password, envoy_serial_no, debug);
+   if (newToken) {
+      bearer_token = newToken;
+      if (debug > 0) log('Token renewal successful.', 'info');
+   } else {
+      log('⚠️ Token renewal failed – keeping existing token. Will retry at next scheduled renewal.', 'warn');
+   }
 });
