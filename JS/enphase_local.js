@@ -706,7 +706,7 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
       path: envoy_path,
       method: 'POST',
       rejectUnauthorized: false, // Ignore invalid certificate
-      headers: { Authorization: `Bearer ${bearer_token}` },
+      headers: { Authorization: `Bearer ${bearer_token}`, 'Content-Type': 'application/json' }
    };
 
    if (debug > 0) log(log_msg + '...started', 'info');
@@ -996,6 +996,15 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
             if (debug > 1) log('Processing livedata data', 'info');
             const livedataData = safeParseJSON(http_resp_json);
             await IObSetState(dpPrefix + 'livedata', livedataData);
+            // sc_stream retry: if stream is disabled in polling cycle, trigger POST to enable it
+            // (complements the on()-handler which only fires on value changes)
+            const scStreamState = existsState(dpPrefix + 'livedata.connection.sc_stream')
+               ? getState(dpPrefix + 'livedata.connection.sc_stream')
+               : null;
+            if (!scStreamState || scStreamState.val === 'disabled') {
+               if (debug > 0) log('SC stream is disabled in polling cycle. Attempting to enable it.', 'info');
+               await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream (polling): ', debug);
+            }
          } else { cycleErrors++; }
          // 3. Get PV METER Grid Reading
          if (await GetEnvoyData(envoy_ip, ivp_grid_reading, bearer_token, 'Get Grid Reading data : ', debug)) {
@@ -1029,7 +1038,14 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
 on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj) => {
    if ((obj.state ? obj.state.val : 'disabled') == 'disabled') {
       if (debug > 0) log('SC stream is disabled. Attempting to enable it', 'info');
-      await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
+      const success = await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
+      // Immediately re-read livedata so sc_stream reflects the new state without waiting for the next polling cycle
+      if (success) {
+         if (await GetEnvoyData(envoy_ip, ivp_livedata, bearer_token, 'Refresh LIVEDATA after sc_stream enable: ', debug)) {
+            const livedataData = safeParseJSON(http_resp_json);
+            await IObSetState(dpPrefix + 'livedata', livedataData);
+         }
+      }
    }
 });
 
