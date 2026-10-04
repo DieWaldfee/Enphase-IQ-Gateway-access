@@ -58,7 +58,7 @@ let debug = 0; // Debug level (0 = none, 1 = error, 2 = info, 3 = debug)
 If you want to adjust the update rate, you can change the polling interval from the default value of 1 minute to your preference.
 therfore use the datapoints under `.config.local.polling` to adjust. After adjustment please restart enphase_local.js to read your adjustments.
 
-&nbsp;&nbsp;&nbsp;&nbsp;<img width="900" height="175" alt="Image" src="https://github.com/user-attachments/assets/43ca44ab-07ca-41a3-adce-4705d9237176" />
+&nbsp;&nbsp;&nbsp;&nbsp;<img width="900" height="175" alt="grafik" src="https://github.com/user-attachments/assets/9cc2e9ae-2dee-4744-a753-feed701f0494" />
 
 When turning the `highPollingIntervalSec` to 10 seconds the amount of requests from this script rises over the standard limit of 1000 requests per minute an an error will be thrown.
 ```console
