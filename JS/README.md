@@ -60,6 +60,11 @@ therfore use the datapoints under `.config.local.polling` to adjust. After adjus
 
 &nbsp;&nbsp;&nbsp;&nbsp;<img width="900" height="175" alt="grafik" src="https://github.com/user-attachments/assets/9cc2e9ae-2dee-4744-a753-feed701f0494" />
 
+Default values are:
+* `highPollingIntervalSec` = 30 s
+* `midPollingIntervalSec` = 300 s
+* `lowPollingIntervalSec` = 900 s
+
 When turning the `highPollingIntervalSec` to 10 seconds the amount of requests from this script rises over the standard limit of 1000 requests per minute an an error will be thrown.
 ```console
 javascript.0 | 11:20:48.341 | error | Script script.js.Enphase.Enphase_local is calling setState more than 1000 times per minute! Stopping Script now! Please check your script!
