@@ -13,14 +13,21 @@
 // - The Envoy must be configured to allow requests from the ioBroker host (see Envoy documentation)
 // -------------------------------------------------------------------------------------------------------------------
 // Configuration:
-// - Set the IP address of the Envoy in the variable "envoyIP"
-// - Set the polling interval in minutes in the variable "pollingInterval"
+// - Enter username, password, serial number and IP address of the Envoy in the datapoints
+//   0_userdata.0.enphase.config.local.credentials.* (created at the first start)
+// - Set the polling intervals in SECONDS in the datapoints 0_userdata.0.enphase.config.local.polling.*
+//   (highPollingIntervalSec, medPollingIntervalSec, lowPollingIntervalSec); the values are checked at start
+//   and changes need a restart of the script
 // -------------------------------------------------------------------------------------------------------------------
 // Version 0.0.1 - initial version by greoj
 // Version 0.0.2 - lifedata added by steffe-s
 // Version ... - further development by steffe-s
 // Version 0.1.0 - complete transfer into plain javascript by Matthias Rauchschwalbe
 // Version now monitored by GitHub - see stable release
+// Version 3.5.0 - single connection to the gateway: one shared https agent (maxSockets 1) and a dispatcher that
+//                 executes exactly one job at a time (OneConnect, Issue #42)
+//               - polling intervals in seconds instead of minutes + seconds (Issue #43)
+//               - configuration is validated at start (abort with error message), changes at runtime need a restart
 // -------------------------------------------------------------------------------------------------------------------
 // Note: extracted values are in milliWatt (1/1000 W), so a value of 1000 equals 1 Watt
 
@@ -40,25 +47,39 @@ let bearer_token = ''; // Add existing Envoy token (optional, default='') will b
 // -------------------------------------------------------------------------------------------------------------------
 // initialization of variables
 // -------------------------------------------------------------------------------------------------------------------
-// polling interval variables - will be overwritten from datapoints if existing
-let pollingCron = ''; // Polling interval in cron format (e.g. '*/5 * * * *' for every 5 minutes; change as needed)
-let lowPollingInterval = 15; // Polling interval in minutes (min: 0, max: 59; change as needed)
-let medPollingInterval = 5; // Polling interval in minutes (min: 0, max: 59; change as needed)
-let highPollingIntervalSec = 30; // Polling interval in seconds; valid x sec & 0 min (min: 10, max: 59; change as needed)
-let highPollingIntervalMin = 0; // Polling interval in minutes; valid 0 sec & x min (min: 1, max: 59; change as needed)
+// polling intervals in seconds - read from the datapoints at start (limits and defaults: see below)
+let lowPollingIntervalSec = 900; // Polling interval in seconds (min: 60, max: 3600; default 900)
+let medPollingIntervalSec = 300; // Polling interval in seconds (min: 60, max: 3600; default 300)
+let highPollingIntervalSec = 30; // Polling interval in seconds (min: 10, max: 3600; default 30)
+// Defaults and limits are the single source for datapoint creation, validation and error message.
+// Rule: highPollingIntervalSec < medPollingIntervalSec < lowPollingIntervalSec (strict)
+const POLLING_LEVELS = ['high', 'med', 'low']; // order = priority if two cycles are due at the same time
+const POLLING_DEFAULTS = { high: 30, med: 300, low: 900 }; // seconds
+const POLLING_LIMITS = {
+   high: { min: 10, max: 3600 },
+   med: { min: 60, max: 3600 },
+   low: { min: 60, max: 3600 },
+}; // seconds
+// dispatcher: all gateway requests are executed one after another by a single timer
+const DISPATCH_TICK_MS = 1000; // Dispatcher checks once per second whether a job is due
+const START_OFFSET_SEC = { high: 0, med: 13, low: 45 }; // first run of each cycle after script start (seconds)
+let dispatcherTimer = null; // timer of the dispatcher (cleared in stopMyScript)
 // http response and error count
 let error_cnt = 0; // Counts errors to slow down polling in case of errors
 let http_resp_json = ''; // Variable to hold the JSON response from the Envoy
 // gateway offline detection
 let consecutiveErrors = 0; // Counts consecutive network errors for gateway offline detection
 let gatewayOffline = false; // True when gateway is detected as offline/rebooting
+let lastCycleErrors; // failed requests of the last executed cycle (undefined if the cycle did not run) - for status datapoints
 const MAX_CONSECUTIVE_ERRORS = 3; // Number of consecutive errors before marking gateway as offline
 const REQUEST_TIMEOUT_MS = 10000; // Timeout for HTTP requests in milliseconds (10 sec)
 let dpPrefix = '0_userdata.0.enphase.local.'; // Prefix for ioBroker datapoints
+const dpStatusPath = '0_userdata.0.enphase.status.local.'; // datapoint path for the status of the polling
 // credentials for enphase IQ Gateway
 const dpBasicConfigPath = '0_userdata.0.enphase.config.local.'; // datapoint path to store the values
 const dpCredentialsPath = dpBasicConfigPath + 'credentials.'; // datapoint path to store user credentials
 const dpPollingPath = dpBasicConfigPath + 'polling.'; // datapoint path to store polling intervals
+const SC_STREAM_ENABLE_BODY = JSON.stringify({ enable: 1 }); // body of the POST to enable the livedata stream
 // endpoint for a single call
 let ivp_eh_devs = '/ivp/eh/devs'; // URL path to get EH devs from local Envoy
 // endpoint for low frequency calls
@@ -127,64 +148,117 @@ await ensureCredentialsStates();
 if (debug > 0) log('credentials, serial_no and gateway_ip datapoints created', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
-// read polling interval from iobroker datapoints if existing
+// create polling datapoints (seconds), migrate old values, create status datapoints
 // -------------------------------------------------------------------------------------------------------------------
-async function readPollingIntervals() {
-   if (!existsState(dpPollingPath + 'lowPollingInterval')) {
-      await createStateAsync(dpPollingPath + 'lowPollingInterval', lowPollingInterval, {
-         read: true,
-         write: true,
-         type: 'number',
-         role: 'value',
-         def: lowPollingInterval,
-         min: 1,
-         max: 59,
-         unit: 'min',
-         desc: 'Low frequency polling interval in minutes (min: 1, max: 59)',
-      });
+/** @param {string} level - 'high' | 'med' | 'low' */
+function pollingStateName(level) {
+   return level + 'PollingIntervalSec';
+}
+/** common attributes of the polling datapoints (seconds) */
+function pollingCommon(level) {
+   const names = { high: 'High', med: 'Medium', low: 'Low' };
+   const lim = POLLING_LIMITS[level];
+   return {
+      read: true,
+      write: true,
+      type: 'number',
+      role: 'value',
+      def: POLLING_DEFAULTS[level],
+      min: lim.min,
+      max: lim.max,
+      unit: 's',
+      desc:
+         names[level] + ' frequency polling interval in seconds (min: ' + lim.min + ', max: ' + lim.max +
+         ', default: ' + POLLING_DEFAULTS[level] + ')',
+   };
+}
+/**
+ * Updates attributes of an existing datapoint's common part only if one of them differs.
+ * Uses createState with forceCreation (always allowed) instead of extendObject, which is blocked by default in
+ * the javascript adapter. Existing attributes (e.g. custom settings) and the current value are kept.
+ */
+async function updateCommonIfChanged(id, common) {
+   const obj = getObject(id);
+   if (!obj || !obj.common) return;
+   const changed = Object.keys(common).some((key) => obj.common[key] !== common[key]);
+   if (!changed) return;
+   const current = getState(id);
+   const initial = current && current.val !== null && current.val !== undefined ? current.val : undefined;
+   await createStateAsync(id, initial, true, Object.assign({}, obj.common, common));
+}
+/** Creates the read-only status datapoints (written by the dispatcher). */
+async function ensureStatusStates() {
+   const defs = [
+      ['gatewayOffline', { type: 'boolean', role: 'indicator', def: false, desc: 'True while the gateway offline detection is active' }, false],
+      ['consecutiveErrors', { type: 'number', role: 'value', def: 0, desc: 'Consecutive cycles with errors' }, 0],
+      ['pendingJobs', { type: 'number', role: 'value', def: 0, desc: 'Number of waiting one-time and event jobs' }, 0],
+   ];
+   for (const level of POLLING_LEVELS) {
+      const p = level + '.';
+      defs.push([p + 'lastStart', { type: 'number', role: 'date', unit: 'ms', def: 0, desc: 'Start of the last ' + level + ' cycle (unix time in ms)' }, 0]);
+      defs.push([p + 'lastDurationMs', { type: 'number', role: 'value', unit: 'ms', def: 0, desc: 'Duration of the last ' + level + ' cycle' }, 0]);
+      defs.push([p + 'lastLagMs', { type: 'number', role: 'value', unit: 'ms', def: 0, desc: 'Wait time between due time and start of the last ' + level + ' cycle' }, 0]);
+      defs.push([p + 'lastErrors', { type: 'number', role: 'value', def: 0, desc: 'Failed requests in the last ' + level + ' cycle' }, 0]);
    }
-   if (!existsState(dpPollingPath + 'medPollingInterval')) {
-      await createStateAsync(dpPollingPath + 'medPollingInterval', medPollingInterval, {
-         read: true,
-         write: true,
-         type: 'number',
-         role: 'value',
-         def: medPollingInterval,
-         min: 1,
-         max: 59,
-         unit: 'min',
-         desc: 'Medium frequency polling interval in minutes (min: 1, max: 59)',
-      });
-   }
-   if (!existsState(dpPollingPath + 'highPollingIntervalSec')) {
-      await createStateAsync(dpPollingPath + 'highPollingIntervalSec', highPollingIntervalSec, {
-         read: true,
-         write: true,
-         type: 'number',
-         role: 'value',
-         def: highPollingIntervalSec,
-         min: 0,
-         max: 59,
-         unit: 'sec',
-         desc: 'High frequency polling interval in seconds (min: 10, max: 59) if 0 sec then disabled',
-      });
-   }
-   if (!existsState(dpPollingPath + 'highPollingIntervalMin')) {
-      await createStateAsync(dpPollingPath + 'highPollingIntervalMin', highPollingIntervalMin, {
-         read: true,
-         write: true,
-         type: 'number',
-         role: 'value',
-         def: highPollingIntervalMin,
-         min: 0,
-         max: 59,
-         unit: 'min',
-         desc: 'High frequency polling interval in minutes (min: 1, max: 59) if 0 min then disabled',
-      });
+   for (const [name, common, initial] of defs) {
+      if (!existsState(dpStatusPath + name)) {
+         await createStateAsync(dpStatusPath + name, initial, Object.assign({ read: true, write: false }, common));
+      }
    }
 }
+// Creates the datapoints in seconds if not existing and migrates the old minute values (V3.4.1 and older).
+// Old datapoints stay as DEPRECATED. The new values are validated afterwards (validatePollingConfig).
+async function readPollingIntervals() {
+   // low and med: new = old (min) x 60 if the new datapoint does not exist yet
+   for (const level of ['low', 'med']) {
+      const newId = dpPollingPath + pollingStateName(level);
+      const oldId = dpPollingPath + level + 'PollingInterval';
+      if (!existsState(newId)) {
+         let initial = POLLING_DEFAULTS[level];
+         if (existsState(oldId)) {
+            const oldVal = Number(getState(oldId).val);
+            if (Number.isFinite(oldVal) && oldVal > 0) {
+               initial = oldVal * 60;
+               log('Polling interval migrated: ' + level + 'PollingInterval ' + oldVal + ' min -> ' + pollingStateName(level) + ' ' + initial + ' s', 'info');
+            }
+         }
+         await createStateAsync(newId, initial, pollingCommon(level));
+      }
+   }
+   // high: highPollingIntervalSec keeps its name (old range 0-59 s), highPollingIntervalMin > 0 -> sec = min x 60
+   const highId = dpPollingPath + pollingStateName('high');
+   const highMinId = dpPollingPath + 'highPollingIntervalMin';
+   if (!existsState(highId)) {
+      await createStateAsync(highId, POLLING_DEFAULTS.high, pollingCommon('high'));
+   } else {
+      await updateCommonIfChanged(highId, pollingCommon('high')); // new range, unit and description
+      const oldMin = existsState(highMinId) ? Number(getState(highMinId).val) : 0;
+      if (Number.isFinite(oldMin) && oldMin > 0) {
+         await setStateAsync(highId, oldMin * 60, true);
+         await setStateAsync(highMinId, 0, true); // marker: migrated
+         log('Polling interval migrated: highPollingIntervalMin ' + oldMin + ' min -> ' + pollingStateName('high') + ' ' + oldMin * 60 + ' s', 'info');
+      } else if (getState(highId).val === 0) {
+         await setStateAsync(highId, POLLING_DEFAULTS.high, true); // old value 0 (= disabled) is below the minimum
+         log('Polling interval migrated: highPollingIntervalSec 0 -> ' + POLLING_DEFAULTS.high + ' s (default)', 'info');
+      }
+   }
+   // mark the old datapoints as deprecated
+   const deprecated = {
+      lowPollingInterval: 'lowPollingIntervalSec',
+      medPollingInterval: 'medPollingIntervalSec',
+      highPollingIntervalMin: 'highPollingIntervalSec',
+   };
+   for (const oldName of Object.keys(deprecated)) {
+      if (existsState(dpPollingPath + oldName)) {
+         await updateCommonIfChanged(dpPollingPath + oldName, {
+            desc: 'DEPRECATED since V3.5.0, not used any more, use ' + deprecated[oldName],
+         });
+      }
+   }
+   await ensureStatusStates();
+}
 await readPollingIntervals();
-if (debug > 0) log('polling intervals datapoints datapoints created', 'info');
+if (debug > 0) log('polling intervals datapoints (seconds) and status datapoints created', 'info');
 
 // -------------------------------------------------------------------------------------------------------------------
 // read credentials from iobroker datapoints
@@ -217,68 +291,81 @@ if (envoy_username === '' || envoy_password === '' || envoy_serial_no === '' || 
 }
 
 // -------------------------------------------------------------------------------------------------------------------
-// read polling intervals from iobroker datapoints
+// read and check polling intervals from iobroker datapoints (only at script start)
 // -------------------------------------------------------------------------------------------------------------------
+/**
+ * Checks the three polling intervals. All errors are collected.
+ * R1: value is a number | R2: value is an integer | R3: value is within the limits of its level
+ * R4: high < med < low (strict)
+ * @param {{high: any, med: any, low: any}} values - values read from the datapoints (seconds)
+ * @returns {string[]} - list of error texts, empty if the configuration is valid
+ */
+function validatePollingConfig(values) {
+   const errors = [];
+   const show = (v) => (v === null || v === undefined || v === '' ? '(empty)' : JSON.stringify(v));
+   const isNum = {};
+   for (const level of POLLING_LEVELS) {
+      const name = pollingStateName(level);
+      const v = values[level];
+      const lim = POLLING_LIMITS[level];
+      isNum[level] = typeof v === 'number' && Number.isFinite(v);
+      if (!isNum[level]) {
+         errors.push(name + ' = ' + show(v) + ': not a number (R1)');
+      } else if (!Number.isInteger(v)) {
+         errors.push(name + ' = ' + v + ': not a whole number of seconds (R2)');
+      } else if (v < lim.min) {
+         errors.push(name + ' = ' + v + ': below minimum (' + lim.min + ' s) (R3)');
+      } else if (v > lim.max) {
+         errors.push(name + ' = ' + v + ': above maximum (' + lim.max + ' s) (R3)');
+      }
+   }
+   if (isNum.high && isNum.med && values.med <= values.high) {
+      errors.push(
+         pollingStateName('med') + ' = ' + values.med + ' is not greater than ' + pollingStateName('high') + ' = ' + values.high + ' (R4)'
+      );
+   }
+   if (isNum.med && isNum.low && values.low <= values.med) {
+      errors.push(
+         pollingStateName('low') + ' = ' + values.low + ' is not greater than ' + pollingStateName('med') + ' = ' + values.med + ' (R4)'
+      );
+   }
+   return errors;
+}
+/** Builds the one-time error message for an invalid polling configuration. */
+function buildPollingErrorMessage(errors) {
+   const range = POLLING_LEVELS.map((l) => l + ' ' + POLLING_LIMITS[l].min + '-' + POLLING_LIMITS[l].max).join(' | ');
+   const defs = POLLING_LEVELS.map((l) => l + ' ' + POLLING_DEFAULTS[l]).join(' | ');
+   return [
+      '⚠️ Invalid polling configuration – script stopped',
+      ...errors,
+      'Allowed range in s: ' + range,
+      'Rule: ' + pollingStateName('high') + ' < ' + pollingStateName('med') + ' < ' + pollingStateName('low'),
+      'Defaults in s: ' + defs,
+      'Please correct the datapoints in ' + dpPollingPath,
+      'and restart the script.',
+   ].join('\n');
+}
+const pollingValues = {};
 try {
-   lowPollingInterval = getState(dpPollingPath + 'lowPollingInterval').val;
-   medPollingInterval = getState(dpPollingPath + 'medPollingInterval').val;
-   highPollingIntervalSec = getState(dpPollingPath + 'highPollingIntervalSec').val;
-   highPollingIntervalMin = getState(dpPollingPath + 'highPollingIntervalMin').val;
+   for (const level of POLLING_LEVELS) {
+      pollingValues[level] = getState(dpPollingPath + pollingStateName(level)).val;
+   }
 } catch (error) {
    log('Error reading polling intervals from datapoints: ' + error.message, 'error');
    stopMyScript();
+   return; // prevent further execution
 }
-
-// -------------------------------------------------------------------------------------------------------------------
-// check polling intervals from iobroker datapoints
-// -------------------------------------------------------------------------------------------------------------------
-if (lowPollingInterval === null || lowPollingInterval === undefined || lowPollingInterval === '') {
-   log('⚠️ variable lowPollingInterval not set – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
+const pollingErrors = validatePollingConfig(pollingValues);
+if (pollingErrors.length > 0) {
+   log(buildPollingErrorMessage(pollingErrors), 'error');
+   stopMyScript(); // stop script, the datapoint values are not changed
+   return; // prevent further execution
 }
-if (medPollingInterval === null || medPollingInterval === undefined || medPollingInterval === '') {
-   log('⚠️ variable medPollingInterval not set – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (highPollingIntervalSec === null || highPollingIntervalSec === undefined || highPollingIntervalSec === '') {
-   log('⚠️ variable highPollingIntervalSec not set – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (highPollingIntervalMin === null || highPollingIntervalMin === undefined || highPollingIntervalMin === '') {
-   log('⚠️ variable highPollingIntervalMin not set – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (lowPollingInterval < 1 || lowPollingInterval > 60) {
-   log('⚠️ variable lowPollingInterval out of range (1-59) – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (medPollingInterval < 1 || medPollingInterval > 60) {
-   log('⚠️ variable medPollingInterval out of range (1-59) – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (highPollingIntervalSec < 0 || highPollingIntervalSec > 59) {
-   log('⚠️ variable highPollingIntervalSec out of range (0-59) – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (highPollingIntervalMin < 0 || highPollingIntervalMin > 59) {
-   log('⚠️ variable highPollingIntervalMin out of range (0-59) – script stopped', 'error');
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
-}
-if (highPollingIntervalSec == 0 && highPollingIntervalMin == 0) {
-   log(
-      '⚠️ variable highPollingIntervalSec and highPollingIntervalMin are both 0 - choose at least one – script stopped',
-      'error'
-   );
-   stopMyScript(); // stop script
-   return; // prevent further execution (parallel call of schedules)
+highPollingIntervalSec = pollingValues.high;
+medPollingIntervalSec = pollingValues.med;
+lowPollingIntervalSec = pollingValues.low;
+if (debug > 0) {
+   log('Polling intervals in s: high ' + highPollingIntervalSec + ' | med ' + medPollingIntervalSec + ' | low ' + lowPollingIntervalSec, 'info');
 }
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -294,13 +381,7 @@ function stopMyScript() {
       clearSchedule(tokenRenewalSchedule);
    } catch (error) {}
    try {
-      clearSchedule(lowCyclicSchedule);
-   } catch (error) {}
-   try {
-      clearSchedule(medCyclicSchedule);
-   } catch (error) {}
-   try {
-      clearSchedule(highCyclicSchedule);
+      if (dispatcherTimer) clearInterval(dispatcherTimer);
    } catch (error) {}
    stopScript(); // stop script
 }
@@ -616,7 +697,7 @@ function httpsRequestAsyncPost(options) {
             resolve(data);
          });
       });
-      req.write(JSON.stringify({ enable: 1 }));
+      req.write(SC_STREAM_ENABLE_BODY);
       req.setTimeout(REQUEST_TIMEOUT_MS, () => {
          req.destroy(new Error('Request timed out after ' + REQUEST_TIMEOUT_MS + 'ms'));
       });
@@ -647,6 +728,18 @@ function isHtmlError(response) {
         (html.includes('error') && html.includes('unauthorized'))
     );
    }
+// Shared HTTPS agent for ALL gateway requests (GetEnvoyData, PostEnvoyData, probeGateway):
+// - maxSockets: 1 -> never more than one connection to the gateway at the same time (OneConnect, Issue #42).
+//   The dispatcher additionally makes sure that only one request is running at a time.
+// - keepAlive: true -> the connection is reused, fewer TLS handshakes
+// Background: firmware D8.3.5528.260506 reboots when too many connections are opened at once
+const envoyAgent = new https.Agent({
+   keepAlive: true,
+   keepAliveMsecs: 1000,
+   maxSockets: 1,
+   maxFreeSockets: 1,
+});
+
 // get envoy data from local envoy
 async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug = 0) {
    // Set up HTTPS request options for local Envoy
@@ -656,6 +749,7 @@ async function GetEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug =
       path: envoy_path,
       method: 'GET',
       rejectUnauthorized: false, // Ignore invalid certificate
+      agent: envoyAgent,
       headers: {
          Authorization: `Bearer ${bearer_token}`,
          Accept: 'application/json', // Request JSON response
@@ -706,7 +800,12 @@ async function PostEnvoyData(envoy_ip, envoy_path, bearer_token, log_msg, debug 
       path: envoy_path,
       method: 'POST',
       rejectUnauthorized: false, // Ignore invalid certificate
-      headers: { Authorization: `Bearer ${bearer_token}`, 'Content-Type': 'application/json' }
+      agent: envoyAgent,
+      headers: {
+         Authorization: `Bearer ${bearer_token}`,
+         'Content-Type': 'application/json',
+         'Content-Length': Buffer.byteLength(SC_STREAM_ENABLE_BODY),
+      },
    };
 
    if (debug > 0) log(log_msg + '...started', 'info');
@@ -773,6 +872,7 @@ function safeParseJSON(jsonStr) {
  * @param {number} cycleErrors - Number of failed GetEnvoyData calls in this cycle.
  */
 function updateGatewayState(cycleErrors) {
+   lastCycleErrors = cycleErrors; // for the status datapoints
    if (cycleErrors === 0) {
       // Entire cycle succeeded
       if (consecutiveErrors > 0) {
@@ -807,6 +907,7 @@ async function probeGateway() {
       path: ivp_production_v1, // lightweight endpoint for service probe
       method: 'GET',
       rejectUnauthorized: false,
+      agent: envoyAgent,
       headers: {
          Authorization: `Bearer ${bearer_token}`,
          Accept: 'application/json',
@@ -836,26 +937,23 @@ async function probeGateway() {
       return false; // Service still not responding
    }
 }
-// single requests of data
-// 1. Get PV EH DEVS
-if (await GetEnvoyData(envoy_ip, ivp_eh_devs, bearer_token, 'Get EH DEVS data : ', debug)) {
-   if (debug > 1) log('Processing eh devs data', 'info');
-   const ehDevsData = safeParseJSON(http_resp_json);
-   await IObSetState(dpPrefix + 'eh_devs', ehDevsData);
+// single requests of data (job "startup-eh_devs" of the dispatcher, runs once as the first job)
+async function runStartup() {
+   // 1. Get PV EH DEVS
+   if (await GetEnvoyData(envoy_ip, ivp_eh_devs, bearer_token, 'Get EH DEVS data : ', debug)) {
+      if (debug > 1) log('Processing eh devs data', 'info');
+      const ehDevsData = safeParseJSON(http_resp_json);
+      await IObSetState(dpPrefix + 'eh_devs', ehDevsData);
+   }
 }
+// Cycle functions: the dispatcher (below) calls them one after another, never in parallel.
 // Main cyclic program loop low frequency
-// Ensure pollingInterval stays within bounds
-if (lowPollingInterval < 1) lowPollingInterval = 1;
-if (lowPollingInterval > 59) lowPollingInterval = 59;
-pollingCron = `28 */${lowPollingInterval} * * * *`; // every x minutes with 28 seconds delay
-// start cyclic polling schedule
-const lowCyclicSchedule = schedule(pollingCron, async () => {
+async function runLowCycle() {
    try {
       if (gatewayOffline) return; // High-freq cycle handles probe – skip low-freq entirely
       if (error_cnt <= 0) {
          if (debug > 0)
-            log('Cyclic polling started (low). Polling interval: ' + lowPollingInterval + ' minutes', 'info');
-         if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
+            log('Cyclic polling started (low). Polling interval: ' + lowPollingIntervalSec + ' s', 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
          let cycleErrors = 0;
@@ -874,22 +972,16 @@ const lowCyclicSchedule = schedule(pollingCron, async () => {
          updateGatewayState(cycleErrors);
       }
    } catch (err) {
-      log('Error in low freq. scheduled polling loop: ' + err.message, 'error');
+      log('Error in low freq. polling loop: ' + err.message, 'error');
    }
-});
+}
 // Main cyclic program loop med frequency
-// Ensure pollingInterval stays within bounds
-if (medPollingInterval < 1) medPollingInterval = 1;
-if (medPollingInterval > 59) medPollingInterval = 59;
-pollingCron = `13 */${medPollingInterval} * * * *`; // every x minutes with 13 seconds delay
-// start cyclic polling schedule
-const medCyclicSchedule = schedule(pollingCron, async () => {
+async function runMedCycle() {
    try {
       if (gatewayOffline) return; // High-freq cycle handles probe – skip med-freq entirely
       if (error_cnt <= 0) {
          if (debug > 0)
-            log('Cyclic polling started (medium). Polling interval: ' + medPollingInterval + ' minutes', 'info');
-         if (debug > 1) log('Resulting polling interval: ' + pollingCron, 'info');
+            log('Cyclic polling started (medium). Polling interval: ' + medPollingIntervalSec + ' s', 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
          let cycleErrors = 0;
@@ -934,30 +1026,11 @@ const medCyclicSchedule = schedule(pollingCron, async () => {
          updateGatewayState(cycleErrors);
       }
    } catch (err) {
-      log('Error in mid freq. scheduled polling loop: ' + err.message, 'error');
+      log('Error in mid freq. polling loop: ' + err.message, 'error');
    }
-});
+}
 // Main cyclic program loop high frequency
-// Ensure pollingInterval stays within bounds
-if (highPollingIntervalSec < 0) highPollingIntervalSec = 0;
-if (highPollingIntervalSec > 59) highPollingIntervalSec = 59;
-if (highPollingIntervalMin < 0) highPollingIntervalMin = 0;
-if (highPollingIntervalMin > 59) highPollingIntervalMin = 59;
-if (highPollingIntervalSec == 0 && highPollingIntervalMin == 0) {
-   log('please choose either seconds or minutes as polling interval', 'info');
-   highPollingIntervalSec = 30; // minimum polling interval is 30 seconds
-}
-if (highPollingIntervalSec != 0 && highPollingIntervalMin != 0) {
-   log('please choose either seconds or minutes as polling interval', 'info');
-   highPollingIntervalSec = 0; // choose the minutes value
-}
-if (highPollingIntervalSec == 0) {
-   pollingCron = `0 */${highPollingIntervalMin} * * * *`; // every x minutes - no seconds
-} else {
-   pollingCron = `*/${highPollingIntervalSec} * * * * *`; // every x seconds - no minutes
-}
-// start cyclic polling schedule
-const highCyclicSchedule = schedule(pollingCron, async () => {
+async function runHighCycle() {
    try {
       if (gatewayOffline) {
          // Gateway is offline – send a single lightweight probe to detect service recovery
@@ -972,16 +1045,7 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
          return;
       }
       if (error_cnt <= 0) {
-         if (debug > 0)
-            log(
-               'High cyclic polling started. Polling interval: ' +
-                  highPollingIntervalMin +
-                  ' minutes' +
-                  highPollingIntervalSec +
-                  ' seconds',
-               'info'
-            );
-         if (debug > 1) log('Resulting high cyclic polling interval: ' + pollingCron, 'info');
+         if (debug > 0) log('High cyclic polling started. Polling interval: ' + highPollingIntervalSec + ' s', 'info');
          if (debug > 2) log('Current error count: ' + error_cnt, 'info');
          if (debug > 1) log('Fetching data from local Envoy IP: ' + envoy_ip + ' ...process started', 'info');
          let cycleErrors = 0;
@@ -1026,28 +1090,148 @@ const highCyclicSchedule = schedule(pollingCron, async () => {
          error_cnt -= 1;
       }
    } catch (err) {
-      log('Error in high freq. scheduled polling loop: ' + err.message, 'error');
+      log('Error in high freq. polling loop: ' + err.message, 'error');
    }
-});
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+// sc stream enable (event job)
+// -------------------------------------------------------------------------------------------------------------------
+async function runScStreamEnable() {
+   if (debug > 0) log('SC stream is disabled. Attempting to enable it', 'info');
+   const success = await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
+   // Immediately re-read livedata so sc_stream reflects the new state without waiting for the next polling cycle
+   if (success) {
+      if (await GetEnvoyData(envoy_ip, ivp_livedata, bearer_token, 'Refresh LIVEDATA after sc_stream enable: ', debug)) {
+         const livedataData = safeParseJSON(http_resp_json);
+         await IObSetState(dpPrefix + 'livedata', livedataData);
+      }
+   }
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+// dispatcher: exactly one gateway job at a time (OneConnect)
+// -------------------------------------------------------------------------------------------------------------------
+// Jobs: one-time and event jobs (FIFO, always first), then the cycles high/med/low. If several cycles are due,
+// the one with the earliest due time runs first (tie: high, med, low). If a cycle is delayed by a running job it
+// starts afterwards (lag). Cycles keep a fixed grid without backlog: missed runs are not caught up.
+// -------------------------------------------------------------------------------------------------------------------
+const dispatcherStart = Date.now();
+const cycleRunners = { high: runHighCycle, med: runMedCycle, low: runLowCycle };
+const cycleIntervalSec = { high: highPollingIntervalSec, med: medPollingIntervalSec, low: lowPollingIntervalSec };
+/** cyclic jobs in priority order (high, med, low) */
+const cycleJobs = POLLING_LEVELS.map((level) => ({
+   name: level,
+   every: cycleIntervalSec[level] * 1000,
+   due: dispatcherStart + START_OFFSET_SEC[level] * 1000,
+   run: cycleRunners[level],
+}));
+/** one-time and event jobs (FIFO) */
+const jobQueue = [{ name: 'startup-eh_devs', run: runStartup }];
+let dispatcherRunning = false;
+const statusCache = {}; // last written status values - only changes are written
+
+/** Adds a one-time/event job to the queue, a job with the same name that is already waiting is not added twice. */
+function enqueueJob(name, run) {
+   if (jobQueue.some((job) => job.name === name)) {
+      if (debug > 1) log('Job ' + name + ' is already waiting', 'info');
+      return;
+   }
+   jobQueue.push({ name: name, run: run });
+}
+/** Returns the due cycle with the earliest due time (tie: order high, med, low) or null. */
+function dueCycle() {
+   const now = Date.now();
+   let best = null;
+   for (const job of cycleJobs) {
+      if (job.due <= now && (best === null || job.due < best.due)) best = job;
+   }
+   return best;
+}
+/** Writes a status value only if it changed (keeps the number of setState calls low). */
+function setStatus(name, value) {
+   if (statusCache[name] === value) return;
+   statusCache[name] = value;
+   setState(dpStatusPath + name, value, true);
+}
+/** Writes the status datapoints after a job. */
+function writeStatus(job, startedAt, durationMs, lagMs, errors) {
+   if (job.every) {
+      setStatus(job.name + '.lastStart', startedAt);
+      setStatus(job.name + '.lastDurationMs', durationMs);
+      setStatus(job.name + '.lastLagMs', lagMs);
+      if (errors !== undefined) setStatus(job.name + '.lastErrors', errors);
+   }
+   setStatus('gatewayOffline', gatewayOffline);
+   setStatus('consecutiveErrors', consecutiveErrors);
+   setStatus('pendingJobs', jobQueue.length);
+}
+async function dispatcherTick() {
+   if (dispatcherRunning) return; // exactly one job at a time
+   const job = jobQueue.shift() || dueCycle(); // event/one-time job first, otherwise a due cycle
+   if (!job) return;
+   dispatcherRunning = true;
+   const startedAt = Date.now();
+   const lagMs = job.every ? Math.max(0, startedAt - job.due) : 0;
+   lastCycleErrors = undefined;
+   try {
+      await job.run();
+   } catch (err) {
+      log('Dispatcher: error in job ' + job.name + ': ' + (err instanceof Error ? err.message : String(err)), 'error');
+   } finally {
+      dispatcherRunning = false;
+      if (job.every) {
+         // fixed grid without backlog
+         while (job.due <= Date.now()) job.due += job.every;
+      }
+   }
+   try {
+      const durationMs = Date.now() - startedAt;
+      if (job.every && lagMs > job.every) {
+         log('Dispatcher: cycle ' + job.name + ' started ' + Math.round(lagMs / 1000) + ' s late (interval ' + job.every / 1000 + ' s). Intervals too short for the response time of the gateway?', 'warn');
+      }
+      if (debug > 1) log('Dispatcher: job ' + job.name + ' finished (duration ' + durationMs + ' ms, lag ' + lagMs + ' ms)', 'info');
+      writeStatus(job, startedAt, durationMs, lagMs, lastCycleErrors);
+   } catch (err) {
+      log('Dispatcher: error writing status: ' + (err instanceof Error ? err.message : String(err)), 'error');
+   }
+}
+dispatcherTimer = setInterval(dispatcherTick, DISPATCH_TICK_MS);
 
 // -------------------------------------------------------------------------------------------------------------------
 // automatic sc stream update
 // -------------------------------------------------------------------------------------------------------------------
-// sc stream update after state change in ioBroker to disabled
+// sc stream update after state change in ioBroker to disabled: the POST is executed as a job of the dispatcher
 // -------------------------------------------------------------------------------------------------------------------
-on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, async (obj) => {
+on({ id: dpPrefix + 'livedata.connection.sc_stream', change: 'ne' }, (obj) => {
    if ((obj.state ? obj.state.val : 'disabled') == 'disabled') {
-      if (debug > 0) log('SC stream is disabled. Attempting to enable it', 'info');
-      const success = await PostEnvoyData(envoy_ip, ivp_livedata_stream, bearer_token, 'POST sc_stream data: ', debug);
-      // Immediately re-read livedata so sc_stream reflects the new state without waiting for the next polling cycle
-      if (success) {
-         if (await GetEnvoyData(envoy_ip, ivp_livedata, bearer_token, 'Refresh LIVEDATA after sc_stream enable: ', debug)) {
-            const livedataData = safeParseJSON(http_resp_json);
-            await IObSetState(dpPrefix + 'livedata', livedataData);
-         }
-      }
+      enqueueJob('sc_stream-enable', runScStreamEnable);
    }
 });
+
+// -------------------------------------------------------------------------------------------------------------------
+// change of the polling configuration while the script is running
+// -------------------------------------------------------------------------------------------------------------------
+// Changes by the user (ack = false) are NOT applied. Once per script run an info is logged: restart required.
+// The values are checked at the next start (validatePollingConfig).
+// -------------------------------------------------------------------------------------------------------------------
+let pollingChangeInfoShown = false;
+on(
+   { id: POLLING_LEVELS.map((level) => dpPollingPath + pollingStateName(level)), change: 'ne', ack: false },
+   (obj) => {
+      if (pollingChangeInfoShown) return;
+      pollingChangeInfoShown = true;
+      const name = String(obj.id).substring(String(obj.id).lastIndexOf('.') + 1);
+      const oldVal = obj.oldState ? obj.oldState.val : '?';
+      const newVal = obj.state ? obj.state.val : '?';
+      log(
+         'ℹ️ Polling configuration changed (' + name + ': ' + oldVal + ' -> ' + newVal + ').\n' +
+            'The new values are not applied while the script is running.\n' +
+            'Please restart the script to apply them. The values are checked at startup.',
+         'info'
+      );
+   }
+);
 
 // -------------------------------------------------------------------------------------------------------------------
 // automatic token renewal
